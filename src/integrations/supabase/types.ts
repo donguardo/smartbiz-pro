@@ -14,13 +14,218 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chat_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: Json
+          thread_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: Json
+          thread_id: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: Json
+          thread_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "chat_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_threads: {
+        Row: {
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          category: string
+          cost: number
+          created_at: string
+          id: string
+          name: string
+          price: number
+          reorder_level: number
+          sku: string
+          stock: number
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          cost?: number
+          created_at?: string
+          id?: string
+          name: string
+          price?: number
+          reorder_level?: number
+          sku: string
+          stock?: number
+          user_id?: string
+        }
+        Update: {
+          category?: string
+          cost?: number
+          created_at?: string
+          id?: string
+          name?: string
+          price?: number
+          reorder_level?: number
+          sku?: string
+          stock?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          business_name: string
+          created_at: string
+          full_name: string | null
+          id: string
+        }
+        Insert: {
+          business_name?: string
+          created_at?: string
+          full_name?: string | null
+          id: string
+        }
+        Update: {
+          business_name?: string
+          created_at?: string
+          full_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      sale_items: {
+        Row: {
+          category: string
+          cost: number
+          created_at: string
+          id: string
+          name: string
+          price: number
+          product_id: string | null
+          qty: number
+          sale_id: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          cost?: number
+          created_at?: string
+          id?: string
+          name: string
+          price: number
+          product_id?: string | null
+          qty: number
+          sale_id: string
+          user_id?: string
+        }
+        Update: {
+          category?: string
+          cost?: number
+          created_at?: string
+          id?: string
+          name?: string
+          price?: number
+          product_id?: string | null
+          qty?: number
+          sale_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_items_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales: {
+        Row: {
+          amount_tendered: number | null
+          cost_total: number
+          created_at: string
+          id: string
+          payment_method: string
+          receipt_no: string
+          total: number
+          user_id: string
+        }
+        Insert: {
+          amount_tendered?: number | null
+          cost_total?: number
+          created_at?: string
+          id?: string
+          payment_method: string
+          receipt_no: string
+          total: number
+          user_id?: string
+        }
+        Update: {
+          amount_tendered?: number | null
+          cost_total?: number
+          created_at?: string
+          id?: string
+          payment_method?: string
+          receipt_no?: string
+          total?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      decrement_stock: {
+        Args: { _product_id: string; _qty: number }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
