@@ -30,7 +30,7 @@ function Inventory() {
     if (!form) return;
     const row = { name: form.name, sku: form.sku || `SKU-${Date.now().toString(36)}`, category: form.category || "General", price: Number(form.price), cost: Number(form.cost), stock: Number(form.stock), reorder_level: Number(form.reorder_level) };
     const { error } = form.id ? await supabase.from("products").update(row).eq("id", form.id) : await supabase.from("products").insert(row);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success(form.id ? "Product updated" : "Product added");
     setForm(null);
     qc.invalidateQueries({ queryKey: qk.products });
@@ -38,7 +38,7 @@ function Inventory() {
   const del = async (p: Product) => {
     if (!confirm(`Delete ${p.name}?`)) return;
     const { error } = await supabase.from("products").delete().eq("id", p.id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     qc.invalidateQueries({ queryKey: qk.products });
   };
 

@@ -31,8 +31,8 @@ export function DemoDashboard() {
     const base = totals.revenue / SHAPE.reduce((a, b) => a + b, 0);
     return DAYS.map((d, i) => ({
       day: d,
-      thisWeek: Math.round(base * SHAPE[i] * (1 + growth / 100)),
-      lastWeek: Math.round(base * SHAPE[i]),
+      thisWeek: Math.round(base * SHAPE[i]! * (1 + growth / 100)),
+      lastWeek: Math.round(base * SHAPE[i]!),
     }));
   }, [totals.revenue, growth]);
 

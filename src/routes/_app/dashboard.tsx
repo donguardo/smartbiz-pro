@@ -48,7 +48,7 @@ function Dashboard() {
     const byProd = new Map<string, number>();
     for (const i of curItems) byProd.set(i.name, (byProd.get(i.name) ?? 0) + Number(i.price) * i.qty);
     const top = [...byProd.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name, value]) => ({ name, value }));
-    const methods = ["cash", "ewallet", "card"].map((m) => ({ name: m === "ewallet" ? "E-wallet/QR" : m[0].toUpperCase() + m.slice(1), value: cur.filter((s) => s.payment_method === m).reduce((a, s) => a + Number(s.total), 0) }));
+    const methods = ["cash", "ewallet", "card"].map((m) => ({ name: m === "ewallet" ? "E-wallet/QR" : m.charAt(0).toUpperCase() + m.slice(1), value: cur.filter((s) => s.payment_method === m).reduce((a, s) => a + Number(s.total), 0) }));
     return { rev, prevRev, profit: rev - cost, orders: cur.length, days, cats, top, methods };
   }, [sales.data, items.data, range]);
 

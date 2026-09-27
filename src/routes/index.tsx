@@ -29,7 +29,7 @@ const STEPS = [
 
 function Landing() {
   const [step, setStep] = useState(0);
-  const S = STEPS[step];
+  const S = STEPS[step]!;
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur">

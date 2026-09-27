@@ -29,7 +29,7 @@ export async function fetchProfile() {
   if (!u.user) return null;
   const { data } = await supabase.from("profiles").select("*").eq("id", u.user.id).maybeSingle();
   if (data) return data;
-  const business_name = (u.user.user_metadata?.business_name as string) || "My Store";
+  const business_name = (u.user.user_metadata?.['business_name'] as string) || "My Store";
   const { data: created } = await supabase.from("profiles").insert({ id: u.user.id, business_name }).select().single();
   return created;
 }
@@ -56,12 +56,12 @@ export async function loadSampleData() {
   for (let d = 20; d >= 0; d--) {
     const n = 3 + Math.floor(Math.random() * 5);
     for (let k = 0; k < n; k++) {
-      const picks = Array.from({ length: 1 + Math.floor(Math.random() * 3) }, () => sellable[Math.floor(Math.random() * sellable.length)]);
+      const picks = Array.from({ length: 1 + Math.floor(Math.random() * 3) }, () => sellable[Math.floor(Math.random() * sellable.length)]!);
       const items = picks.map((p) => ({ p, qty: 1 + Math.floor(Math.random() * 3) }));
       const total = items.reduce((s, i) => s + Number(i.p.price) * i.qty, 0);
       const cost_total = items.reduce((s, i) => s + Number(i.p.cost) * i.qty, 0);
       const at = new Date(Date.now() - d * 86400000 - Math.random() * 36000000).toISOString();
-      const method = ["cash", "ewallet", "card"][Math.floor(Math.random() * 3)];
+      const method = (["cash", "ewallet", "card"] as const)[Math.floor(Math.random() * 3)]!;
       const { data: sale, error: e1 } = await supabase.from("sales")
         .insert({ receipt_no: `S-${Date.now().toString(36).toUpperCase()}${k}`, total, cost_total, payment_method: method, created_at: at })
         .select().single();
