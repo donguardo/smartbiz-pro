@@ -174,3 +174,64 @@
 @utility receipt-edge {
   mask-image: linear-gradient(135deg, transparent 6px, #000 0), linear-gradient(-135deg, transparent 6px, #000 0);
 }
+
+@keyframes bizbot-hover {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-12px) rotate(2deg); }
+}
+
+@keyframes bizbot-wiggle {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  25% { transform: translateY(-8px) rotate(-7deg); }
+  70% { transform: translateY(-4px) rotate(6deg); }
+}
+
+@keyframes bizbot-scan {
+  0%, 100% { transform: translateY(0) scale(1); }
+  45% { transform: translateY(-9px) scale(1.06); }
+  60% { transform: translateY(-9px) scale(1.02); }
+}
+
+@keyframes bizbot-boost {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  35% { transform: translateY(-18px) rotate(5deg); }
+  55% { transform: translateY(-7px) rotate(-3deg); }
+}
+
+@keyframes bizbot-spin {
+  0%, 15%, 100% { transform: translateY(0) rotate(0) scale(1); }
+  45% { transform: translateY(-10px) rotate(180deg) scale(0.92); }
+  75% { transform: translateY(-4px) rotate(360deg) scale(1); }
+}
+
+@keyframes bizbot-peek {
+  0%, 100% { transform: translateX(0) rotate(0) scale(1); }
+  35% { transform: translateX(-28px) rotate(-10deg) scale(0.9); }
+  55% { transform: translateX(18px) rotate(8deg) scale(1.08); }
+  72% { transform: translateX(0) rotate(-3deg) scale(1); }
+}
+
+@keyframes bizbot-closeup {
+  0%, 100% { transform: translateY(0) scale(1); }
+  35% { transform: translateY(-16px) scale(1.42); }
+  58% { transform: translateY(-12px) rotate(-5deg) scale(1.34); }
+  74% { transform: translateY(-10px) rotate(5deg) scale(1.32); }
+}
+
+.bizbot-motion-0 { animation: bizbot-hover 3.2s ease-in-out infinite; }
+.bizbot-motion-1 { animation: bizbot-wiggle 2.4s ease-in-out infinite; }
+.bizbot-motion-2 { animation: bizbot-scan 2.8s ease-in-out infinite; }
+.bizbot-motion-3 { animation: bizbot-boost 2.6s ease-in-out infinite; }
+.bizbot-motion-4 { animation: bizbot-spin 3.4s ease-in-out infinite; }
+.bizbot-motion-5 { animation: bizbot-peek 3s ease-in-out infinite; }
+.bizbot-motion-6 { animation: bizbot-closeup 3.2s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bizbot-motion-0,
+  .bizbot-motion-1,
+  .bizbot-motion-2,
+  .bizbot-motion-3,
+  .bizbot-motion-4,
+  .bizbot-motion-5,
+  .bizbot-motion-6 { animation: none; }
+}
