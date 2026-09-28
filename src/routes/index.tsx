@@ -55,7 +55,7 @@ function Landing() {
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 font-mono text-xs text-muted-foreground">
               <span className="h-1.5 w-1.5 rounded-full bg-success" /> POS · Inventory · AI Copilot
             </span>
-            <p className="mt-6 font-display text-5xl font-bold uppercase leading-none text-primary md:text-7xl">MAS KITA,<br />MAS TUBO!</p>
+            <p className="mt-6 font-display text-5xl font-bold uppercase leading-none md:text-7xl"><span className="text-white">MAS KITA,</span><br /><span className="text-primary">MAS TUBO!</span></p>
             <h1 className="mt-5 max-w-xl text-2xl font-semibold leading-tight md:text-4xl">
               Your store's register<br />with a <span className="text-primary">business manager</span> built in.
             </h1>
