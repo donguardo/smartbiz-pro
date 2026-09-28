@@ -174,3 +174,38 @@
 @utility receipt-edge {
   mask-image: linear-gradient(135deg, transparent 6px, #000 0), linear-gradient(-135deg, transparent 6px, #000 0);
 }
+
+@keyframes bizbot-hover {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-12px) rotate(2deg); }
+}
+
+@keyframes bizbot-wiggle {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  25% { transform: translateY(-8px) rotate(-7deg); }
+  70% { transform: translateY(-4px) rotate(6deg); }
+}
+
+@keyframes bizbot-scan {
+  0%, 100% { transform: translateY(0) scale(1); }
+  45% { transform: translateY(-9px) scale(1.06); }
+  60% { transform: translateY(-9px) scale(1.02); }
+}
+
+@keyframes bizbot-boost {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  35% { transform: translateY(-18px) rotate(5deg); }
+  55% { transform: translateY(-7px) rotate(-3deg); }
+}
+
+.bizbot-motion-0 { animation: bizbot-hover 3.2s ease-in-out infinite; }
+.bizbot-motion-1 { animation: bizbot-wiggle 2.4s ease-in-out infinite; }
+.bizbot-motion-2 { animation: bizbot-scan 2.8s ease-in-out infinite; }
+.bizbot-motion-3 { animation: bizbot-boost 2.6s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bizbot-motion-0,
+  .bizbot-motion-1,
+  .bizbot-motion-2,
+  .bizbot-motion-3 { animation: none; }
+}
