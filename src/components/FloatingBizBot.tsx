@@ -88,6 +88,7 @@ export function FloatingBizBot() {
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const voiceReplyRef = useRef(false);
   const dragRef = useRef<{ dx: number; dy: number; moved: boolean } | null>(null);
+  const suppressClickRef = useRef(false);
 
   const transport = useMemo(
     () =>
@@ -199,6 +200,7 @@ export function FloatingBizBot() {
     };
     const onUp = () => {
       if (!dragRef.current) return;
+      suppressClickRef.current = dragRef.current.moved;
       localStorage.setItem(POSITION_KEY, JSON.stringify(position));
       dragRef.current = null;
     };
@@ -268,7 +270,10 @@ export function FloatingBizBot() {
   };
 
   const onBotClick = () => {
-    if (dragRef.current?.moved) return;
+    if (suppressClickRef.current) {
+      suppressClickRef.current = false;
+      return;
+    }
     setOpen((current) => !current);
   };
 
