@@ -16,6 +16,7 @@ import { Route as AppCopilotRouteImport } from './routes/_app/copilot'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppInventoryRouteImport } from './routes/_app/inventory'
 import { Route as AppPosRouteImport } from './routes/_app/pos'
+import { Route as ApiPublicBizbotRouteImport } from './routes/api/public/bizbot'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -51,6 +52,11 @@ const AppPosRoute = AppPosRouteImport.update({
   path: '/pos',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const ApiPublicBizbotRoute = ApiPublicBizbotRouteImport.update({
+  id: '/api/public/bizbot',
+  path: '/api/public/bizbot',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AppDashboardRoute
   '/inventory': typeof AppInventoryRoute
   '/pos': typeof AppPosRoute
+  '/api/public/bizbot': typeof ApiPublicBizbotRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AppDashboardRoute
   '/inventory': typeof AppInventoryRoute
   '/pos': typeof AppPosRoute
+  '/api/public/bizbot': typeof ApiPublicBizbotRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -77,12 +85,27 @@ export interface FileRoutesById {
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/inventory': typeof AppInventoryRoute
   '/_app/pos': typeof AppPosRoute
+  '/api/public/bizbot': typeof ApiPublicBizbotRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/copilot' | '/dashboard' | '/inventory' | '/pos'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/copilot'
+    | '/dashboard'
+    | '/inventory'
+    | '/pos'
+    | '/api/public/bizbot'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/copilot' | '/dashboard' | '/inventory' | '/pos'
+  to:
+    | '/'
+    | '/auth'
+    | '/copilot'
+    | '/dashboard'
+    | '/inventory'
+    | '/pos'
+    | '/api/public/bizbot'
   id:
     | '__root__'
     | '/'
@@ -92,12 +115,14 @@ export interface FileRouteTypes {
     | '/_app/dashboard'
     | '/_app/inventory'
     | '/_app/pos'
+    | '/api/public/bizbot'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRouteRoute: typeof AppRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicBizbotRoute: typeof ApiPublicBizbotRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -151,6 +176,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPosRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/api/public/bizbot': {
+      id: '/api/public/bizbot'
+      path: '/api/public/bizbot'
+      fullPath: '/api/public/bizbot'
+      preLoaderRoute: typeof ApiPublicBizbotRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -176,6 +208,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRouteRoute: AppRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicBizbotRoute: ApiPublicBizbotRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
