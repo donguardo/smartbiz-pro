@@ -158,6 +158,7 @@
     linear-gradient(to right, color-mix(in oklch, var(--foreground) 6%, transparent) 1px, transparent 1px),
     linear-gradient(to bottom, color-mix(in oklch, var(--foreground) 6%, transparent) 1px, transparent 1px);
   background-size: 32px 32px;
+  background-attachment: fixed;
 }
 
 @utility receipt-edge {
