@@ -48,10 +48,21 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   return <I18nCtx.Provider value={{ lang, setLang, t }}>{children}</I18nCtx.Provider>;
 }
 
+// Safe default: if the provider is momentarily missing (e.g. after a hot reload
+// swaps the context instance), render English fallback text instead of crashing.
+const FALLBACK_EN = fallback("en");
+const DEFAULT_CTX: Ctx = {
+  lang: "en",
+  setLang: () => {},
+  t: (key, vars) => {
+    let s = FALLBACK_EN[key] ?? key;
+    if (vars) for (const [k, v] of Object.entries(vars)) s = s.split(`{${k}}`).join(String(v));
+    return s;
+  },
+};
+
 export function useT() {
-  const c = useContext(I18nCtx);
-  if (!c) throw new Error("useT must be used inside I18nProvider");
-  return c;
+  return useContext(I18nCtx) ?? DEFAULT_CTX;
 }
 
 function FlagPH() {
