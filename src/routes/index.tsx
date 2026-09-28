@@ -56,7 +56,7 @@ function Landing() {
         <div className="relative mx-auto grid max-w-6xl gap-10 px-4 py-16 md:grid-cols-[1.2fr_1fr] md:py-24">
           <div className="relative z-10">
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 font-mono text-xs text-muted-foreground">
-              <span className="h-1.5 w-1.5 rounded-full bg-success" /> POS · Inventory · AI Copilot
+              <span className="h-1.5 w-1.5 rounded-full bg-success" /> {t("hero.badge")}
             </span>
             <p className="mt-6 font-display text-5xl font-bold uppercase leading-none md:text-7xl"><span className="text-foreground dark:text-white">MAS KITA,</span><br /><span className="text-primary">MAS TUBO!</span></p>
             <h1 className="mt-5 max-w-xl text-2xl font-semibold leading-tight md:text-4xl">
