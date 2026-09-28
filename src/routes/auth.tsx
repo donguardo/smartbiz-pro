@@ -12,9 +12,9 @@ import { AnimatedBackdrop } from "@/components/AnimatedBackdrop";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in — BizManager.ai | MAS KITA, MAS TUBO!" },
+      { title: "Sign in — MVP BizManager.ai" },
       { name: "description", content: "Create your BizManager.ai account and start selling in minutes." },
-      { property: "og:title", content: "Sign in — BizManager.ai | MAS KITA, MAS TUBO!" },
+      { property: "og:title", content: "Sign in — MVP BizManager.ai" },
       { property: "og:description", content: "Create your store account in under a minute." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
