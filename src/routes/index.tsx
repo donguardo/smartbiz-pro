@@ -33,7 +33,7 @@ function Landing() {
   const S = STEPS[step]!;
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur">
+      <header className="sticky top-0 z-30 border-b border-border bg-primary/30 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           <Logo />
           <nav className="hidden gap-6 text-sm text-muted-foreground md:flex">
