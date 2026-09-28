@@ -23,10 +23,10 @@ export const Route = createFileRoute("/")({
 });
 
 const STEPS = [
-  { icon: UserPlus, title: "setup.s4.t", body: "setup.s4.b" },
-  { icon: Store, title: "Add your products", body: "Add items with price, cost and stock, or load a sample catalog to explore." },
-  { icon: ScanLine, title: "Ring up sales", body: "Scan or search barcodes, take Cash, GCash/Maya QR or Card, and print receipts." },
-  { icon: Bot, title: "Ask your AI manager", body: "Get reorder alerts, dead-stock warnings and plain answers about how your store is doing." },
+  { icon: UserPlus, title: "setup.s1.t", body: "setup.s1.b" },
+  { icon: Store, title: "setup.s2.t", body: "setup.s2.b" },
+  { icon: ScanLine, title: "setup.s3.t", body: "setup.s3.b" },
+  { icon: Bot, title: "setup.s4.t", body: "setup.s4.b" },
 ];
 
 function Landing() {
