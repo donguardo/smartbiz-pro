@@ -11,10 +11,12 @@ import { PRICE_PER_USER } from "@/lib/format";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in or create your store — BizManager.ai" },
+      { title: "Sign in — BizManager.ai | MAS KITA, MAS TUBO!" },
       { name: "description", content: "Create your BizManager.ai account and start selling in minutes." },
-      { property: "og:title", content: "Sign in — BizManager.ai" },
+      { property: "og:title", content: "Sign in — BizManager.ai | MAS KITA, MAS TUBO!" },
       { property: "og:description", content: "Create your store account in under a minute." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: AuthPage,
