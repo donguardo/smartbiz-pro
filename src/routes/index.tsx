@@ -167,7 +167,7 @@ function Landing() {
       </section>
 
       <section id="pricing" className="mx-auto max-w-6xl px-4 pb-20">
-        <div className="grid items-center gap-8 overflow-hidden rounded-3xl bg-ink p-8 text-ink-foreground md:grid-cols-2 md:p-12">
+        <div className="grid items-center gap-8 overflow-hidden rounded-3xl border border-primary/50 bg-primary/40 p-8 text-ink-foreground backdrop-blur-md md:grid-cols-2 md:p-12">
           <div>
             <p className="font-mono text-xs uppercase tracking-widest opacity-70">One simple plan</p>
             <p className="mt-3 font-display text-6xl font-bold">₱{PRICE_PER_USER}<span className="text-xl font-medium opacity-70">/user/month</span></p>
