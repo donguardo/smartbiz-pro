@@ -7,3 +7,5 @@
 - [x] Purple–magenta theme with an animated Three.js background
 - [x] Make the hero slogan dominant and reduce the supporting headline
 - [x] Contain the hero animation and simplify it to a sphere and hexagon
+- [x] Pitch black background (dark theme default)
+- [x] Smoked-glass frames on cards, sidebar, and headers

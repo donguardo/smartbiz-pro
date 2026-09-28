@@ -68,7 +68,7 @@ function AuthPage() {
       <AnimatedBackdrop />
       <div className="relative z-10 flex items-center justify-between p-4"><Logo /><ThemeToggle /></div>
       <div className="relative z-10 flex flex-1 items-center justify-center p-4">
-        <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-xl">
+        <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-xl backdrop-blur-xl">
           <h1 className="text-2xl font-bold">{mode === "signup" ? "Create your store" : "Welcome back"}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {mode === "signup" ? `One plan: ₱${PRICE_PER_USER} per user / month.` : "Sign in to your register and dashboard."}
