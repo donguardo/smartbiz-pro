@@ -7,6 +7,7 @@ import { useSession } from "@/lib/auth";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/lib/theme";
 import { PRICE_PER_USER } from "@/lib/format";
+import { AnimatedBackdrop } from "@/components/AnimatedBackdrop";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -63,9 +64,10 @@ function AuthPage() {
   };
 
   return (
-    <div className="grid-paper flex min-h-screen flex-col">
-      <div className="flex items-center justify-between p-4"><Logo /><ThemeToggle /></div>
-      <div className="flex flex-1 items-center justify-center p-4">
+    <div className="grid-paper relative flex min-h-screen flex-col overflow-hidden">
+      <AnimatedBackdrop />
+      <div className="relative z-10 flex items-center justify-between p-4"><Logo /><ThemeToggle /></div>
+      <div className="relative z-10 flex flex-1 items-center justify-center p-4">
         <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-xl">
           <h1 className="text-2xl font-bold">{mode === "signup" ? "Create your store" : "Welcome back"}</h1>
           <p className="mt-1 text-sm text-muted-foreground">

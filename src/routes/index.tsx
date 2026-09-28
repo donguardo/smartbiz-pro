@@ -5,6 +5,7 @@ import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/lib/theme";
 import { DemoDashboard } from "@/components/DemoDashboard";
 import { PRICE_PER_USER } from "@/lib/format";
+import { AnimatedBackdrop } from "@/components/AnimatedBackdrop";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -48,15 +49,16 @@ function Landing() {
       </header>
 
       <section className="grid-paper relative overflow-hidden">
-        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 md:grid-cols-[1.2fr_1fr] md:py-24">
-          <div>
+        <AnimatedBackdrop />
+        <div className="relative mx-auto grid max-w-6xl gap-10 px-4 py-16 md:grid-cols-[1.2fr_1fr] md:py-24">
+          <div className="relative z-10">
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 font-mono text-xs text-muted-foreground">
               <span className="h-1.5 w-1.5 rounded-full bg-success" /> POS · Inventory · AI Copilot
             </span>
-            <h1 className="mt-5 text-4xl font-bold leading-[1.05] md:text-6xl">
+            <p className="mt-6 font-display text-5xl font-bold uppercase leading-none text-primary md:text-7xl">MAS KITA,<br />MAS TUBO!</p>
+            <h1 className="mt-5 max-w-xl text-2xl font-semibold leading-tight md:text-4xl">
               Your store's register<br />with a <span className="text-primary">business manager</span> built in.
             </h1>
-            <p className="mt-4 font-mono text-sm font-semibold uppercase text-primary md:text-base">MAS KITA, MAS TUBO!</p>
             <p className="mt-5 max-w-xl text-lg text-muted-foreground">
               Ring up sales, watch profit move in real time, and let an AI copilot tell you what to reorder, what's not selling, and how this week compares.
             </p>
@@ -69,7 +71,7 @@ function Landing() {
             <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground"><Smartphone className="h-4 w-4" /> Installs on Android & iPhone from your browser.</p>
           </div>
 
-          <div className="relative">
+          <div className="relative z-10">
             <div className="receipt-edge rounded-t-2xl bg-card p-6 font-mono text-sm shadow-2xl shadow-primary/10">
               <p className="text-center font-semibold">SARI-SARI PLUS</p>
               <p className="text-center text-xs text-muted-foreground">Receipt #000482</p>

@@ -81,7 +81,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "BizManager.ai — MAS KITA, MAS TUBO!" },
       { name: "description", content: "POS register, inventory and an AI business copilot for SMEs. ₱499 per user a month." },
-      { name: "theme-color", content: "#e8742a" },
+      { name: "theme-color", content: "#7c3aed" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-title", content: "BizManager" },
       { name: "mobile-web-app-capable", content: "yes" },
