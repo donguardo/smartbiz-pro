@@ -5,7 +5,7 @@
 - [x] AI Manager: reorder + dead-stock alerts
 - [x] Floating AI Manager chat with one browser-saved conversation and voice input/output
 - [x] Double the floating BIZBOT size
-- [ ] Add random rotating, peeking, zooming, and playful BIZBOT motions
+- [x] Add random rotating, peeking, zooming, and playful BIZBOT motions
 - [x] Purple–magenta theme with an animated Three.js background
 - [x] Make the hero slogan dominant and reduce the supporting headline
 - [x] Contain the hero animation and simplify it to a sphere and hexagon

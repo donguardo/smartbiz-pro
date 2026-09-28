@@ -188,7 +188,7 @@ export function FloatingBizBot() {
   }, []);
 
   useEffect(() => {
-    const interval = window.setInterval(() => setMotion(Math.floor(Math.random() * 4)), 4200 + Math.random() * 2200);
+    const interval = window.setInterval(() => setMotion(Math.floor(Math.random() * 7)), 3800 + Math.random() * 2200);
     return () => window.clearInterval(interval);
   }, []);
 
