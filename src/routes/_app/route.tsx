@@ -62,7 +62,7 @@ function AppLayout() {
         </div>
       </aside>
 
-      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background/90 px-4 py-3 backdrop-blur md:hidden">
+      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-primary/30 px-4 py-3 backdrop-blur-md md:hidden">
         <Logo to="/dashboard" />
         <div className="flex gap-2">
           <ThemeToggle />
