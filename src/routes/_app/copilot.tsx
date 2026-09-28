@@ -5,7 +5,14 @@ import { AlertTriangle, Bot, PackageX } from "lucide-react";
 import { computeInsights, fetchItems, fetchProducts, qk } from "@/lib/store";
 
 export const Route = createFileRoute("/_app/copilot")({
-  head: () => ({ meta: [{ title: "AI Manager — BizManager.ai" }, { name: "description", content: "Proactive inventory insights for your store." }] }),
+  head: () => ({ meta: [
+    { title: "AI Manager — BizManager.ai | MAS KITA, MAS TUBO!" },
+    { name: "description", content: "Proactive inventory insights for your store." },
+    { property: "og:title", content: "AI Manager — BizManager.ai | MAS KITA, MAS TUBO!" },
+    { property: "og:description", content: "Proactive inventory insights for your store." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
+  ] }),
   component: Copilot,
 });
 

@@ -8,7 +8,14 @@ import { computeInsights, fetchItems, fetchProducts, qk, type Product } from "@/
 import { peso } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/inventory")({
-  head: () => ({ meta: [{ title: "Inventory — BizManager.ai" }, { name: "description", content: "Manage products, stock and reorder levels." }] }),
+  head: () => ({ meta: [
+    { title: "Inventory — BizManager.ai | MAS KITA, MAS TUBO!" },
+    { name: "description", content: "Manage products, stock and reorder levels." },
+    { property: "og:title", content: "Inventory — BizManager.ai | MAS KITA, MAS TUBO!" },
+    { property: "og:description", content: "Manage products, stock and reorder levels." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
+  ] }),
   component: Inventory,
 });
 

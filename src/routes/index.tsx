@@ -9,9 +9,9 @@ import { PRICE_PER_USER } from "@/lib/format";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "AI Business Manager — POS + AI copilot for SMEs | ₱499/user" },
+      { title: "BizManager.ai — MAS KITA, MAS TUBO! | ₱499/user" },
       { name: "description", content: "Run your store with a fast POS register, live dashboards and an AI copilot that flags reorders and dead stock. ₱499 per user per month." },
-      { property: "og:title", content: "AI Business Manager — POS + AI copilot for SMEs" },
+      { property: "og:title", content: "BizManager.ai — MAS KITA, MAS TUBO!" },
       { property: "og:description", content: "POS checkout, inventory insights and an AI business copilot. Try the live demo, no login." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -56,6 +56,7 @@ function Landing() {
             <h1 className="mt-5 text-4xl font-bold leading-[1.05] md:text-6xl">
               Your store's register<br />with a <span className="text-primary">business manager</span> built in.
             </h1>
+            <p className="mt-4 font-mono text-sm font-semibold uppercase text-primary md:text-base">MAS KITA, MAS TUBO!</p>
             <p className="mt-5 max-w-xl text-lg text-muted-foreground">
               Ring up sales, watch profit move in real time, and let an AI copilot tell you what to reorder, what's not selling, and how this week compares.
             </p>
@@ -179,7 +180,7 @@ function Landing() {
         </div>
       </section>
 
-      <footer className="border-t border-border py-8 text-center text-sm text-muted-foreground">© {new Date().getFullYear()} BizManager.ai · by Orangeware USA</footer>
+      <footer className="border-t border-border py-8 text-center text-sm text-muted-foreground">© {new Date().getFullYear()} BizManager.ai · MAS KITA, MAS TUBO! · by Orangeware USA</footer>
     </div>
   );
 }

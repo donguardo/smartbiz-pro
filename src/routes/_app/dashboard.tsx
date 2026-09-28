@@ -8,7 +8,14 @@ import { computeInsights, fetchItems, fetchProducts, fetchSales, loadSampleData,
 import { peso, pesoShort } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — BizManager.ai" }, { name: "description", content: "Revenue, margins and AI insights for your store." }] }),
+  head: () => ({ meta: [
+    { title: "Dashboard — BizManager.ai | MAS KITA, MAS TUBO!" },
+    { name: "description", content: "Revenue, margins and AI insights for your store." },
+    { property: "og:title", content: "Dashboard — BizManager.ai | MAS KITA, MAS TUBO!" },
+    { property: "og:description", content: "Revenue, margins and AI insights for your store." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
+  ] }),
   component: Dashboard,
 });
 
