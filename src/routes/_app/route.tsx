@@ -35,7 +35,7 @@ function AppLayout() {
 
   return (
     <div className="min-h-screen md:grid md:grid-cols-[232px_1fr]">
-      <aside className="sticky top-0 hidden h-screen flex-col border-r border-sidebar-border bg-sidebar p-4 md:flex">
+      <aside className="sticky top-0 hidden h-screen flex-col border-r border-sidebar-border bg-sidebar p-4 backdrop-blur-xl md:flex">
         <Logo to="/dashboard" />
         <p className="mt-6 truncate px-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">{profile?.business_name ?? "…"}</p>
         <nav className="mt-2 space-y-1">
@@ -74,7 +74,7 @@ function AppLayout() {
         <Outlet />
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-border bg-card pb-[env(safe-area-inset-bottom)] md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-border bg-card pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
         {NAV.map((n) => {
           const active = path.startsWith(n.to);
           return (
