@@ -48,7 +48,7 @@ export function DemoDashboard() {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
-      <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="rounded-2xl border border-primary/50 bg-primary/40 p-5 backdrop-blur-md">
         <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Try it — edit the numbers</p>
         <div className="mt-4 space-y-4">
           {cats.map((c, i) => (
@@ -86,7 +86,7 @@ export function DemoDashboard() {
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-4 rounded-2xl border border-primary/50 bg-primary/40 p-4 backdrop-blur-md">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {metrics.map((m) => (
             <div key={m.label} className="rounded-2xl border border-border bg-card p-4">
