@@ -8,6 +8,13 @@
       "when": 1790542928679,
       "tag": "0000_pos_core_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790577808257,
+      "tag": "0001_translations_and_language_pref",
+      "breakpoints": true
     }
   ]
 }

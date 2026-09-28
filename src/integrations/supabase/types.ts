@@ -115,18 +115,21 @@ export type Database = {
           created_at: string
           full_name: string | null
           id: string
+          language: string
         }
         Insert: {
           business_name?: string
           created_at?: string
           full_name?: string | null
           id: string
+          language?: string
         }
         Update: {
           business_name?: string
           created_at?: string
           full_name?: string | null
           id?: string
+          language?: string
         }
         Relationships: []
       }
@@ -214,6 +217,27 @@ export type Database = {
           receipt_no?: string
           total?: number
           user_id?: string
+        }
+        Relationships: []
+      }
+      translations: {
+        Row: {
+          key: string
+          lang: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          key: string
+          lang: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          key?: string
+          lang?: string
+          updated_at?: string
+          value?: string
         }
         Relationships: []
       }
