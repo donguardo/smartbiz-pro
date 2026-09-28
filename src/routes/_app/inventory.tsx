@@ -9,9 +9,9 @@ import { peso } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/inventory")({
   head: () => ({ meta: [
-    { title: "Inventory — BizManager.ai | MAS KITA, MAS TUBO!" },
+    { title: "Inventory — MVP BizManager.ai" },
     { name: "description", content: "Manage products, stock and reorder levels." },
-    { property: "og:title", content: "Inventory — BizManager.ai | MAS KITA, MAS TUBO!" },
+    { property: "og:title", content: "Inventory — MVP BizManager.ai" },
     { property: "og:description", content: "Manage products, stock and reorder levels." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },

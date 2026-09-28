@@ -9,9 +9,9 @@ import { peso } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/pos")({
   head: () => ({ meta: [
-    { title: "Register — BizManager.ai | MAS KITA, MAS TUBO!" },
+    { title: "Register — MVP BizManager.ai" },
     { name: "description", content: "Scan items, take payment and print receipts." },
-    { property: "og:title", content: "Register — BizManager.ai | MAS KITA, MAS TUBO!" },
+    { property: "og:title", content: "Register — MVP BizManager.ai" },
     { property: "og:description", content: "Scan items, take payment and print receipts." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
