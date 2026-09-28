@@ -27,15 +27,15 @@ function FloatingForms({ colors, motion }: { colors: SceneColors; motion: boolea
     <group ref={group} rotation={[0.2, -0.35, 0.1]}>
       <mesh position={[-3.8, 1.2, -1]} rotation={[0.4, 0.2, 0]}>
         <icosahedronGeometry args={[2.8, 2]} />
-        <meshBasicMaterial color={colors.purple} wireframe transparent opacity={0.17} />
+        <meshBasicMaterial color={colors.purple} wireframe transparent opacity={0.28} />
       </mesh>
       <mesh ref={ring} position={[3.7, -0.8, 0]} rotation={[1, 0.2, 0.5]}>
         <torusKnotGeometry args={[2.1, 0.32, 96, 12, 2, 3]} />
-        <meshBasicMaterial color={colors.magenta} wireframe transparent opacity={0.2} />
+        <meshBasicMaterial color={colors.magenta} wireframe transparent opacity={0.34} />
       </mesh>
       <mesh position={[0.8, 2.7, -2]} rotation={[0.5, 0, 0.3]}>
         <octahedronGeometry args={[1.45, 1]} />
-        <meshBasicMaterial color={colors.glow} transparent opacity={0.1} />
+        <meshBasicMaterial color={colors.glow} transparent opacity={0.18} />
       </mesh>
     </group>
   );
