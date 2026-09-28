@@ -10,9 +10,9 @@ import { AnimatedBackdrop } from "@/components/AnimatedBackdrop";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "BizManager.ai — MAS KITA, MAS TUBO! | ₱499/user" },
+      { title: "MVP BizManager.ai | ₱499/user" },
       { name: "description", content: "Run your store with a fast POS register, live dashboards and an AI copilot that flags reorders and dead stock. ₱499 per user per month." },
-      { property: "og:title", content: "BizManager.ai — MAS KITA, MAS TUBO!" },
+      { property: "og:title", content: "MVP BizManager.ai" },
       { property: "og:description", content: "POS checkout, inventory insights and an AI business copilot. Try the live demo, no login." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
