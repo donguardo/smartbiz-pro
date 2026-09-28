@@ -9,5 +9,5 @@
 - [x] Contain the hero animation and simplify it to a sphere and hexagon
 - [x] Pitch black background (dark theme default)
 - [x] Smoked-glass frames on cards, sidebar, and headers
-- [ ] Tagalog / English switcher with flags, wording stored in the database
-- [ ] Legible text contrast in light mode
+- [x] Tagalog / English switcher with flags, wording stored in the database
+- [x] Legible text contrast in light mode
