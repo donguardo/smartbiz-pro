@@ -363,26 +363,28 @@ export function FloatingBizBot() {
         </section>
       )}
 
-      <button
-        type="button"
-        aria-label={open ? t("bot.close") : t("bot.open")}
-        title={t("bot.dragHint")}
-        onPointerDown={onBotPointerDown}
-        onClick={onBotClick}
-        className="fixed z-[80] touch-none select-none rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        style={{ left: position.x, top: position.y }}
-      >
-        <span className="absolute inset-2 rounded-full bg-primary/25 blur-xl" aria-hidden />
-        <img
-          src={bizBotImage}
-          alt=""
-          draggable={false}
-          className={cn("relative h-56 w-56 object-contain drop-shadow-[0_0_20px_var(--scene-magenta)]", `bizbot-motion-${motion}`)}
-        />
-        <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-primary/60 bg-popover/95 px-2 py-0.5 font-mono text-[10px] font-bold text-foreground shadow backdrop-blur-md">
-          {listening ? t("bot.listening") : "BIZBOT"}
-        </span>
-      </button>
+      {!open && (
+        <button
+          type="button"
+          aria-label={t("bot.open")}
+          title={t("bot.dragHint")}
+          onPointerDown={onBotPointerDown}
+          onClick={onBotClick}
+          className="fixed z-[80] touch-none select-none rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          style={{ left: position.x, top: position.y }}
+        >
+          <span className="absolute inset-2 rounded-full bg-primary/25 blur-xl" aria-hidden />
+          <img
+            src={bizBotImage}
+            alt=""
+            draggable={false}
+            className={cn("relative h-56 w-56 object-contain drop-shadow-[0_0_20px_var(--scene-magenta)]", `bizbot-motion-${motion}`)}
+          />
+          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-primary/60 bg-popover/95 px-2 py-0.5 font-mono text-[10px] font-bold text-foreground shadow backdrop-blur-md">
+            {listening ? t("bot.listening") : "BIZBOT"}
+          </span>
+        </button>
+      )}
     </>
   );
 }
