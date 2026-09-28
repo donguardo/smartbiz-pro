@@ -34,6 +34,7 @@ import { cn } from "@/lib/utils";
 const CHAT_KEY = "bizbot-conversation-v1";
 const POSITION_KEY = "bizbot-position-v1";
 const MAX_CONTEXT_PRODUCTS = 80;
+const BOT_SIZE = 224;
 
 type BotPosition = { x: number; y: number };
 type SpeechRecognitionEventLike = Event & {
@@ -71,8 +72,8 @@ const loadMessages = (): UIMessage[] => {
 };
 
 const clampPosition = (position: BotPosition): BotPosition => ({
-  x: Math.max(8, Math.min(window.innerWidth - 112, position.x)),
-  y: Math.max(72, Math.min(window.innerHeight - 124, position.y)),
+  x: Math.max(8, Math.min(window.innerWidth - BOT_SIZE - 8, position.x)),
+  y: Math.max(72, Math.min(window.innerHeight - BOT_SIZE - 24, position.y)),
 });
 
 export function FloatingBizBot() {
@@ -129,7 +130,7 @@ export function FloatingBizBot() {
 
   useEffect(() => {
     const savedPosition = localStorage.getItem(POSITION_KEY);
-    let initial = { x: window.innerWidth - 144, y: window.innerHeight - 180 };
+    let initial = { x: window.innerWidth - BOT_SIZE - 24, y: window.innerHeight - BOT_SIZE - 40 };
     if (savedPosition) {
       try {
         initial = JSON.parse(savedPosition) as BotPosition;
@@ -376,7 +377,7 @@ export function FloatingBizBot() {
           src={bizBotImage}
           alt=""
           draggable={false}
-          className={cn("relative h-28 w-28 object-contain drop-shadow-[0_0_14px_var(--scene-magenta)]", `bizbot-motion-${motion}`)}
+          className={cn("relative h-56 w-56 object-contain drop-shadow-[0_0_20px_var(--scene-magenta)]", `bizbot-motion-${motion}`)}
         />
         <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-primary/60 bg-popover/95 px-2 py-0.5 font-mono text-[10px] font-bold text-foreground shadow backdrop-blur-md">
           {listening ? t("bot.listening") : "BIZBOT"}
