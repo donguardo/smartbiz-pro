@@ -14,4 +14,4 @@
 - [x] Tagalog / English switcher with flags, wording stored in the database
 - [x] Legible text contrast in light mode
 
-- [ ] First-visit opening intro video with skip and remembered completion
+- [x] First-visit opening intro video with skip and remembered completion

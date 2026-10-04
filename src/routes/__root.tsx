@@ -17,6 +17,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { I18nProvider } from "@/lib/i18n";
 import { FloatingBizBot } from "@/components/FloatingBizBot";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { FirstVisitIntro } from "@/components/FirstVisitIntro";
 
 function NotFoundComponent() {
   return (
@@ -132,6 +133,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
+        <FirstVisitIntro />
         <Outlet />
         <FloatingBizBot />
         <InstallPrompt />
