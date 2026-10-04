@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Download, Share, X } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import logoAsset from "@/assets/logo.png.asset.json";
+import { INTRO_COMPLETE_EVENT, INTRO_SEEN_KEY } from "@/components/FirstVisitIntro";
 
 type BIPEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> };
 const KEY = "install-prompt-seen-v1";
@@ -18,10 +19,18 @@ export function InstallPrompt() {
     setIsIOS(/iphone|ipad|ipod/i.test(navigator.userAgent));
     const onBIP = (e: Event) => { e.preventDefault(); setEvt(e as BIPEvent); };
     const onInstalled = () => { localStorage.setItem(KEY, "1"); setShow(false); };
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const schedule = () => { timer = setTimeout(() => setShow(true), 1500); };
     window.addEventListener("beforeinstallprompt", onBIP);
     window.addEventListener("appinstalled", onInstalled);
-    const timer = setTimeout(() => setShow(true), 1500);
-    return () => { clearTimeout(timer); window.removeEventListener("beforeinstallprompt", onBIP); window.removeEventListener("appinstalled", onInstalled); };
+    if (localStorage.getItem(INTRO_SEEN_KEY)) schedule();
+    else window.addEventListener(INTRO_COMPLETE_EVENT, schedule, { once: true });
+    return () => {
+      if (timer) clearTimeout(timer);
+      window.removeEventListener("beforeinstallprompt", onBIP);
+      window.removeEventListener("appinstalled", onInstalled);
+      window.removeEventListener(INTRO_COMPLETE_EVENT, schedule);
+    };
   }, []);
 
   const [showSteps, setShowSteps] = useState(false);

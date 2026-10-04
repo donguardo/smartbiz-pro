@@ -13,3 +13,5 @@
 - [x] Smoked-glass frames on cards, sidebar, and headers
 - [x] Tagalog / English switcher with flags, wording stored in the database
 - [x] Legible text contrast in light mode
+
+- [x] First-visit opening intro video with skip and remembered completion

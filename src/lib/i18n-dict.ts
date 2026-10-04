@@ -89,6 +89,8 @@ export const DICT: Record<string, { en: string; tl: string }> = {
   "install.later": { en: "Not now", tl: "Mamaya na" },
   "install.ios": { en: "Tap the Share button, then \"Add to Home Screen\".", tl: "I-tap ang Share, tapos \"Add to Home Screen\"." },
   "install.manual": { en: "Open your browser menu and choose \"Install app\" or \"Add to Home screen\".", tl: "Buksan ang menu ng browser at piliin ang \"Install app\" o \"Add to Home screen\"." },
+  "intro.title": { en: "Welcome to MVP BizManager.ai", tl: "Maligayang pagdating sa MVP BizManager.ai" },
+  "intro.skip": { en: "Skip", tl: "Laktawan" },
 };
 
 export function fallback(lang: Lang): Record<string, string> {
