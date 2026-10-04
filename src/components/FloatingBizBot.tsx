@@ -34,7 +34,8 @@ import { cn } from "@/lib/utils";
 const CHAT_KEY = "bizbot-conversation-v1";
 const POSITION_KEY = "bizbot-position-v1";
 const MAX_CONTEXT_PRODUCTS = 80;
-const BOT_SIZE = 224;
+const BOT_SIZE_DESKTOP = 224;
+const BOT_SIZE_MOBILE = Math.round(BOT_SIZE_DESKTOP * 2 / 3);
 
 type BotPosition = { x: number; y: number };
 type SpeechRecognitionEventLike = Event & {
@@ -71,10 +72,13 @@ const loadMessages = (): UIMessage[] => {
   }
 };
 
-const clampPosition = (position: BotPosition): BotPosition => ({
-  x: Math.max(8, Math.min(window.innerWidth - BOT_SIZE - 8, position.x)),
-  y: Math.max(72, Math.min(window.innerHeight - BOT_SIZE - 24, position.y)),
+const clampPosition = (position: BotPosition, size: number): BotPosition => ({
+  x: Math.max(8, Math.min(window.innerWidth - size - 8, position.x)),
+  y: Math.max(72, Math.min(window.innerHeight - size - 24, position.y)),
 });
+
+const isDesktopViewport = () =>
+  typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches;
 
 export function FloatingBizBot() {
   const { lang, t } = useT();
