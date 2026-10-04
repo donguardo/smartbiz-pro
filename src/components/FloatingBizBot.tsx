@@ -135,7 +135,8 @@ export function FloatingBizBot() {
 
   useEffect(() => {
     const savedPosition = localStorage.getItem(POSITION_KEY);
-    let initial = { x: window.innerWidth - BOT_SIZE - 24, y: window.innerHeight - BOT_SIZE - 40 };
+    const size = isDesktopViewport() ? BOT_SIZE_DESKTOP : BOT_SIZE_MOBILE;
+    let initial = { x: window.innerWidth - size - 24, y: window.innerHeight - size - 40 };
     if (savedPosition) {
       try {
         initial = JSON.parse(savedPosition) as BotPosition;
@@ -143,7 +144,7 @@ export function FloatingBizBot() {
         localStorage.removeItem(POSITION_KEY);
       }
     }
-    setPosition(clampPosition(initial, isDesktopViewport() ? BOT_SIZE_DESKTOP : BOT_SIZE_MOBILE));
+    setPosition(clampPosition(initial, size));
     setMessages(loadMessages());
     setHydrated(true);
   }, [setMessages]);
