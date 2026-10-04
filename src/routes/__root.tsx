@@ -15,6 +15,7 @@ import { themeInitScript } from "../lib/theme";
 import { Toaster } from "@/components/ui/sonner";
 import { I18nProvider } from "@/lib/i18n";
 import { FloatingBizBot } from "@/components/FloatingBizBot";
+import { InstallPrompt } from "@/components/InstallPrompt";
 
 function NotFoundComponent() {
   return (
@@ -132,6 +133,7 @@ function RootComponent() {
       <I18nProvider>
         <Outlet />
         <FloatingBizBot />
+        <InstallPrompt />
       </I18nProvider>
       <Toaster richColors position="top-center" />
     </QueryClientProvider>
