@@ -195,14 +195,14 @@ export function FloatingBizBot() {
 
   useEffect(() => {
     const onOpen = () => setOpen(true);
-    const onResize = () => setPosition((current) => clampPosition(current));
+    const onResize = () => setPosition((current) => clampPosition(current, botSize));
     window.addEventListener("open-bizbot", onOpen);
     window.addEventListener("resize", onResize);
     return () => {
       window.removeEventListener("open-bizbot", onOpen);
       window.removeEventListener("resize", onResize);
     };
-  }, []);
+  }, [botSize]);
 
   useEffect(() => {
     const interval = window.setInterval(() => setMotion(Math.floor(Math.random() * 7)), 3800 + Math.random() * 2200);
