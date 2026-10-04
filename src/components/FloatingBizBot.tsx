@@ -34,7 +34,8 @@ import { cn } from "@/lib/utils";
 const CHAT_KEY = "bizbot-conversation-v1";
 const POSITION_KEY = "bizbot-position-v1";
 const MAX_CONTEXT_PRODUCTS = 80;
-const BOT_SIZE = 224;
+const BOT_SIZE_DESKTOP = 224;
+const BOT_SIZE_MOBILE = Math.round(BOT_SIZE_DESKTOP * 2 / 3);
 
 type BotPosition = { x: number; y: number };
 type SpeechRecognitionEventLike = Event & {
@@ -71,10 +72,13 @@ const loadMessages = (): UIMessage[] => {
   }
 };
 
-const clampPosition = (position: BotPosition): BotPosition => ({
-  x: Math.max(8, Math.min(window.innerWidth - BOT_SIZE - 8, position.x)),
-  y: Math.max(72, Math.min(window.innerHeight - BOT_SIZE - 24, position.y)),
+const clampPosition = (position: BotPosition, size: number): BotPosition => ({
+  x: Math.max(8, Math.min(window.innerWidth - size - 8, position.x)),
+  y: Math.max(72, Math.min(window.innerHeight - size - 24, position.y)),
 });
+
+const isDesktopViewport = () =>
+  typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches;
 
 export function FloatingBizBot() {
   const { lang, t } = useT();
@@ -85,6 +89,7 @@ export function FloatingBizBot() {
   const [storeContext, setStoreContext] = useState("");
   const [motion, setMotion] = useState(0);
   const [position, setPosition] = useState<BotPosition>({ x: 24, y: 120 });
+  const [botSize, setBotSize] = useState(BOT_SIZE_DESKTOP);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const voiceReplyRef = useRef(false);
@@ -130,7 +135,8 @@ export function FloatingBizBot() {
 
   useEffect(() => {
     const savedPosition = localStorage.getItem(POSITION_KEY);
-    let initial = { x: window.innerWidth - BOT_SIZE - 24, y: window.innerHeight - BOT_SIZE - 40 };
+    const size = isDesktopViewport() ? BOT_SIZE_DESKTOP : BOT_SIZE_MOBILE;
+    let initial = { x: window.innerWidth - size - 24, y: window.innerHeight - size - 40 };
     if (savedPosition) {
       try {
         initial = JSON.parse(savedPosition) as BotPosition;
@@ -138,10 +144,22 @@ export function FloatingBizBot() {
         localStorage.removeItem(POSITION_KEY);
       }
     }
-    setPosition(clampPosition(initial));
+    setPosition(clampPosition(initial, size));
     setMessages(loadMessages());
     setHydrated(true);
   }, [setMessages]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 768px)");
+    const apply = () => {
+      const size = mediaQuery.matches ? BOT_SIZE_DESKTOP : BOT_SIZE_MOBILE;
+      setBotSize(size);
+      setPosition((current) => clampPosition(current, size));
+    };
+    apply();
+    mediaQuery.addEventListener("change", apply);
+    return () => mediaQuery.removeEventListener("change", apply);
+  }, []);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -178,14 +196,14 @@ export function FloatingBizBot() {
 
   useEffect(() => {
     const onOpen = () => setOpen(true);
-    const onResize = () => setPosition((current) => clampPosition(current));
+    const onResize = () => setPosition((current) => clampPosition(current, botSize));
     window.addEventListener("open-bizbot", onOpen);
     window.addEventListener("resize", onResize);
     return () => {
       window.removeEventListener("open-bizbot", onOpen);
       window.removeEventListener("resize", onResize);
     };
-  }, []);
+  }, [botSize]);
 
   useEffect(() => {
     const interval = window.setInterval(() => setMotion(Math.floor(Math.random() * 7)), 3800 + Math.random() * 2200);
@@ -197,7 +215,7 @@ export function FloatingBizBot() {
       const drag = dragRef.current;
       if (!drag) return;
       drag.moved = true;
-      setPosition(clampPosition({ x: event.clientX - drag.dx, y: event.clientY - drag.dy }));
+      setPosition(clampPosition({ x: event.clientX - drag.dx, y: event.clientY - drag.dy }, botSize));
     };
     const onUp = () => {
       if (!dragRef.current) return;
@@ -211,7 +229,7 @@ export function FloatingBizBot() {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
     };
-  }, [position]);
+  }, [position, botSize]);
 
   useEffect(() => () => {
     recognitionRef.current?.stop();
@@ -378,7 +396,8 @@ export function FloatingBizBot() {
             src={bizBotImage}
             alt=""
             draggable={false}
-            className={cn("relative h-56 w-56 object-contain drop-shadow-[0_0_20px_var(--scene-magenta)]", `bizbot-motion-${motion}`)}
+            style={{ width: botSize, height: botSize }}
+            className={cn("relative object-contain drop-shadow-[0_0_20px_var(--scene-magenta)]", `bizbot-motion-${motion}`)}
           />
           <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-primary/60 bg-popover/95 px-2 py-0.5 font-mono text-[10px] font-bold text-foreground shadow backdrop-blur-md">
             {listening ? t("bot.listening") : "BIZBOT"}
