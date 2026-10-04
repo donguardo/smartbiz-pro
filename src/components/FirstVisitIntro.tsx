@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { SkipForward } from "lucide-react";
 import introVideo from "@/assets/bizmanager-intro.mp4.asset.json";
+import introVideoWebm from "@/assets/bizmanager-intro.webm.asset.json";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 
@@ -39,7 +40,6 @@ export function FirstVisitIntro() {
     <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-background" role="dialog" aria-label={t("intro.title")}>
       <video
         ref={videoRef}
-        src={introVideo.url}
         className="h-full w-full object-contain"
         autoPlay
         muted
@@ -47,7 +47,10 @@ export function FirstVisitIntro() {
         preload="auto"
         onEnded={finish}
         onError={finish}
-      />
+      >
+        <source src={introVideoWebm.url} type="video/webm" />
+        <source src={introVideo.url} type="video/mp4" />
+      </video>
       <Button
         type="button"
         variant="secondary"
