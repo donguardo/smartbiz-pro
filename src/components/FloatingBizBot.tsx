@@ -229,7 +229,7 @@ export function FloatingBizBot() {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
     };
-  }, [position]);
+  }, [position, botSize]);
 
   useEffect(() => () => {
     recognitionRef.current?.stop();
