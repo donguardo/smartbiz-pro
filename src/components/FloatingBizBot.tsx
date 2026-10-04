@@ -395,7 +395,8 @@ export function FloatingBizBot() {
             src={bizBotImage}
             alt=""
             draggable={false}
-            className={cn("relative h-56 w-56 object-contain drop-shadow-[0_0_20px_var(--scene-magenta)]", `bizbot-motion-${motion}`)}
+            style={{ width: botSize, height: botSize }}
+            className={cn("relative object-contain drop-shadow-[0_0_20px_var(--scene-magenta)]", `bizbot-motion-${motion}`)}
           />
           <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-primary/60 bg-popover/95 px-2 py-0.5 font-mono text-[10px] font-bold text-foreground shadow backdrop-blur-md">
             {listening ? t("bot.listening") : "BIZBOT"}
