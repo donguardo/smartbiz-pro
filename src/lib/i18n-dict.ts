@@ -83,6 +83,12 @@ export const DICT: Record<string, { en: string; tl: string }> = {
   "bot.promptFeatures": { en: "What can this app do?", tl: "Ano ang kayang gawin ng app?" },
   "bot.promptReorder": { en: "What should I reorder?", tl: "Ano ang dapat kong i-reorder?" },
   "bot.promptPricing": { en: "Explain the ₱499 plan", tl: "Ipaliwanag ang ₱499 plan" },
+  "install.title": { en: "Install MVP BizManager.ai", tl: "I-install ang MVP BizManager.ai" },
+  "install.body": { en: "Get the app on your home screen for one-tap access, full screen.", tl: "Ilagay ang app sa home screen mo para isang tap lang, full screen." },
+  "install.cta": { en: "Install app", tl: "I-install" },
+  "install.later": { en: "Not now", tl: "Mamaya na" },
+  "install.ios": { en: "Tap the Share button, then \"Add to Home Screen\".", tl: "I-tap ang Share, tapos \"Add to Home Screen\"." },
+  "install.manual": { en: "Open your browser menu and choose \"Install app\" or \"Add to Home screen\".", tl: "Buksan ang menu ng browser at piliin ang \"Install app\" o \"Add to Home screen\"." },
 };
 
 export function fallback(lang: Lang): Record<string, string> {
