@@ -89,6 +89,7 @@ export function FloatingBizBot() {
   const [storeContext, setStoreContext] = useState("");
   const [motion, setMotion] = useState(0);
   const [position, setPosition] = useState<BotPosition>({ x: 24, y: 120 });
+  const [botSize, setBotSize] = useState(BOT_SIZE_DESKTOP);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const voiceReplyRef = useRef(false);
@@ -142,10 +143,22 @@ export function FloatingBizBot() {
         localStorage.removeItem(POSITION_KEY);
       }
     }
-    setPosition(clampPosition(initial));
+    setPosition(clampPosition(initial, isDesktopViewport() ? BOT_SIZE_DESKTOP : BOT_SIZE_MOBILE));
     setMessages(loadMessages());
     setHydrated(true);
   }, [setMessages]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 768px)");
+    const apply = () => {
+      const size = mediaQuery.matches ? BOT_SIZE_DESKTOP : BOT_SIZE_MOBILE;
+      setBotSize(size);
+      setPosition((current) => clampPosition(current, size));
+    };
+    apply();
+    mediaQuery.addEventListener("change", apply);
+    return () => mediaQuery.removeEventListener("change", apply);
+  }, []);
 
   useEffect(() => {
     if (!hydrated) return;
