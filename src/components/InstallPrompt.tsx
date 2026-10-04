@@ -24,12 +24,14 @@ export function InstallPrompt() {
     return () => { clearTimeout(timer); window.removeEventListener("beforeinstallprompt", onBIP); window.removeEventListener("appinstalled", onInstalled); };
   }, []);
 
+  const [showSteps, setShowSteps] = useState(false);
   const close = () => { localStorage.setItem(KEY, "1"); setShow(false); };
   const install = async () => {
-    if (!evt) return;
+    if (!evt) { setShowSteps(true); return; }
     await evt.prompt();
-    await evt.userChoice;
-    close();
+    const { outcome } = await evt.userChoice;
+    if (outcome === "accepted") close();
+    else setShowSteps(true);
   };
 
   if (!show) return null;
@@ -41,7 +43,7 @@ export function InstallPrompt() {
         <div className="min-w-0">
           <p className="font-display font-bold">{t("install.title")}</p>
           <p className="mt-1 text-sm opacity-80">{t("install.body")}</p>
-          {!evt && (
+          {(!evt || showSteps) && (
             <p className="mt-2 flex items-center gap-1.5 text-sm">
               {isIOS && <Share className="h-4 w-4 shrink-0" />}{isIOS ? t("install.ios") : t("install.manual")}
             </p>
@@ -50,11 +52,9 @@ export function InstallPrompt() {
       </div>
       <div className="mt-3 flex justify-end gap-2">
         <button onClick={close} className="rounded-lg border border-border px-3 py-2 text-sm">{t("install.later")}</button>
-        {evt && (
-          <button onClick={install} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
-            <Download className="h-4 w-4" />{t("install.cta")}
-          </button>
-        )}
+        <button onClick={install} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+          <Download className="h-4 w-4" />{t("install.cta")}
+        </button>
       </div>
     </div>
   );
