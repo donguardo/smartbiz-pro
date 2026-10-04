@@ -215,7 +215,7 @@ export function FloatingBizBot() {
       const drag = dragRef.current;
       if (!drag) return;
       drag.moved = true;
-      setPosition(clampPosition({ x: event.clientX - drag.dx, y: event.clientY - drag.dy }));
+      setPosition(clampPosition({ x: event.clientX - drag.dx, y: event.clientY - drag.dy }, botSize));
     };
     const onUp = () => {
       if (!dragRef.current) return;
