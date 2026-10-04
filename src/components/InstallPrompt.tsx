@@ -24,12 +24,14 @@ export function InstallPrompt() {
     return () => { clearTimeout(timer); window.removeEventListener("beforeinstallprompt", onBIP); window.removeEventListener("appinstalled", onInstalled); };
   }, []);
 
+  const [showSteps, setShowSteps] = useState(false);
   const close = () => { localStorage.setItem(KEY, "1"); setShow(false); };
   const install = async () => {
-    if (!evt) return;
+    if (!evt) { setShowSteps(true); return; }
     await evt.prompt();
-    await evt.userChoice;
-    close();
+    const { outcome } = await evt.userChoice;
+    if (outcome === "accepted") close();
+    else setShowSteps(true);
   };
 
   if (!show) return null;
