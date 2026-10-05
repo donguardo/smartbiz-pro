@@ -189,9 +189,7 @@ export function ShowcaseCarousel() {
                 key={`${s.slug}-${i}`}
                 className="showcase-cell"
                 aria-hidden={!active}
-                onClick={() => {
-                  if (!active) goTo(realI);
-                }}
+                onClick={() => onCellClick(active, s.slug)}
               >
                 <div
                   data-business-theme={s.theme}
@@ -200,9 +198,9 @@ export function ShowcaseCarousel() {
                   aria-label={active ? slideLabel(realI) : undefined}
                   className={`showcase-theme showcase-cell-inner overflow-hidden rounded-2xl border border-border bg-card shadow-xl transition-[opacity,transform,filter] duration-700 ${
                     active
-                      ? "scale-100 opacity-100"
-                      : "pointer-events-none scale-[0.94] opacity-50 blur-[1px]"
-                  } ${!active ? "cursor-pointer" : ""}`}
+                      ? "scale-100 cursor-pointer opacity-100"
+                      : "pointer-events-none scale-[0.94] cursor-pointer opacity-50 blur-[1px]"
+                  }`}
                 >
                 <div className="flex items-center gap-3 border-b border-border bg-muted/60 px-5 py-3">
                   <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
