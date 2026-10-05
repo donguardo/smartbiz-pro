@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { SHOWCASE_SCENARIOS } from "@/lib/showcase-scenarios";
 import { useT } from "@/lib/i18n";
 import { peso } from "@/lib/format";
@@ -10,21 +10,24 @@ const AUTOPLAY_MS = 5000;
 export function ShowcaseCarousel() {
   const { t, lang } = useT();
   const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
+  const [userPaused, setUserPaused] = useState(false);
+  const [hoverPaused, setHoverPaused] = useState(false);
+  const [touchPaused, setTouchPaused] = useState(false);
   const touchStartX = useRef<number | null>(null);
   const count = SHOWCASE_SCENARIOS.length;
+  const paused = userPaused || hoverPaused || touchPaused;
 
   const goPrev = () => setIndex((i) => (i - 1 + count) % count);
   const goNext = () => setIndex((i) => (i + 1) % count);
 
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0]?.clientX ?? null;
-    setPaused(true);
+    setTouchPaused(true);
   };
   const onTouchEnd = (e: React.TouchEvent) => {
     const start = touchStartX.current;
     touchStartX.current = null;
-    setPaused(false);
+    setTouchPaused(false);
     if (start == null) return;
     const delta = (e.changedTouches[0]?.clientX ?? start) - start;
     if (Math.abs(delta) < 40) return;
@@ -45,8 +48,8 @@ export function ShowcaseCarousel() {
   return (
     <div
       className="relative"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
+      onMouseEnter={() => setHoverPaused(true)}
+      onMouseLeave={() => setHoverPaused(false)}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
       aria-roledescription="carousel"
