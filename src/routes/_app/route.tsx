@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ThemeToggle, syncThemeFromAccount } from "@/lib/theme";
 import { LanguageToggle, useT } from "@/lib/i18n";
 import { StoreIdentity } from "@/components/StoreIdentity";
+import { StockAlertsBell } from "@/components/StockAlerts";
 import { useShopProfile } from "@/lib/shop-profile";
 import { fetchProfile, fetchShopContext, qk } from "@/lib/store";
 import { Button } from "@/components/ui/button";
@@ -75,6 +76,7 @@ function AppLayout() {
             {t("app.plan")}: <span className="font-semibold text-foreground">₱499/user/mo</span>
           </div>
           <div className="flex items-center gap-2">
+            {shop?.member_role === "owner" && <StockAlertsBell />}
             <ThemeToggle />
             <button onClick={() => supabase.auth.signOut()} className="flex h-9 flex-1 items-center justify-center gap-2 rounded-lg border border-border text-sm hover:bg-muted">
               <LogOut className="h-4 w-4" /> {t("app.signOut")}
@@ -86,6 +88,7 @@ function AppLayout() {
       <header className="sticky top-0 z-20 flex items-center justify-between gap-1 border-b border-border bg-card/95 px-3 py-3 backdrop-blur-md md:hidden">
         <StoreIdentity name={businessName} logoSrc={business?.logoSrc} />
         <div className="flex shrink-0 gap-1">
+          {shop?.member_role === "owner" && <StockAlertsBell />}
           <Button variant="ghost" size="icon" onClick={openInstallPrompt} aria-label={t("install.open")} title={t("install.open")} className="hidden min-[420px]:inline-flex">
             <Download className="h-4 w-4" />
           </Button>
