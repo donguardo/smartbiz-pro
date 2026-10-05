@@ -22,21 +22,28 @@ export function InstallPrompt() {
     setIsIOS(/iphone|ipad|ipod/i.test(navigator.userAgent));
     const onBIP = (e: Event) => { e.preventDefault(); setEvt(e as BIPEvent); };
     const onInstalled = () => { localStorage.setItem(KEY, "1"); setInstalled(true); setEvt(null); setShow(true); };
-    const onOpen = () => { setInstalled(isInstalledApp()); setShowSteps(false); setShow(true); };
     let timer: ReturnType<typeof setTimeout> | undefined;
     const schedule = () => { timer = setTimeout(() => setShow(true), 1500); };
     window.addEventListener("beforeinstallprompt", onBIP);
     window.addEventListener("appinstalled", onInstalled);
-    window.addEventListener(OPEN_INSTALL_EVENT, onOpen);
     if (!standalone && !localStorage.getItem(KEY) && localStorage.getItem(INTRO_SEEN_KEY)) schedule();
     else window.addEventListener(INTRO_COMPLETE_EVENT, schedule, { once: true });
     return () => {
       if (timer) clearTimeout(timer);
       window.removeEventListener("beforeinstallprompt", onBIP);
       window.removeEventListener("appinstalled", onInstalled);
-      window.removeEventListener(OPEN_INSTALL_EVENT, onOpen);
       window.removeEventListener(INTRO_COMPLETE_EVENT, schedule);
     };
+  }, []);
+
+  useEffect(() => {
+    const onOpen = () => {
+      setInstalled(isInstalledApp());
+      setShowSteps(false);
+      setShow(true);
+    };
+    window.addEventListener(OPEN_INSTALL_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_INSTALL_EVENT, onOpen);
   }, []);
 
   const [showSteps, setShowSteps] = useState(false);
