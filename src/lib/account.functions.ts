@@ -36,12 +36,20 @@ export const deleteMyAccount = createServerFn({ method: "POST" })
     const userHash = createHash("sha256").update(`mvp-bizmanager:${userId}`).digest("hex");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    const { data: owned } = await supabaseAdmin.from("shop_members").select("shop_id").eq("user_id", userId).eq("role", "owner");
     const { data: files, error: dataError } = await supabaseAdmin.rpc("delete_account_data", { _user_id: userId, _user_hash: userHash });
     if (dataError) { console.error("delete_account_data failed", dataError.message); throw new Error("Deletion failed"); }
 
-    const paths = (files ?? []).map((f: { file_path: string }) => f.file_path).filter(Boolean);
-    for (let i = 0; i < paths.length; i += 100) {
-      const { error } = await supabaseAdmin.storage.from("shop-documents").remove(paths.slice(i, i + 100));
+    const paths = new Set((files ?? []).map((f: { file_path: string }) => f.file_path).filter(Boolean));
+    for (const { shop_id } of owned ?? []) {
+      const { data: still } = await supabaseAdmin.from("shops").select("id").eq("id", shop_id).maybeSingle();
+      if (still) continue;
+      const { data: listed } = await supabaseAdmin.storage.from("shop-documents").list(shop_id, { limit: 1000 });
+      for (const f of listed ?? []) paths.add(`${shop_id}/${f.name}`);
+    }
+    const all = [...paths];
+    for (let i = 0; i < all.length; i += 100) {
+      const { error } = await supabaseAdmin.storage.from("shop-documents").remove(all.slice(i, i + 100));
       if (error) console.error("storage cleanup failed", error.message);
     }
 
