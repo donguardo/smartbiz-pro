@@ -47,6 +47,8 @@ export function ShowcaseCarousel() {
       className="relative"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
       aria-roledescription="carousel"
       aria-label={t("nav.showcase")}
     >
