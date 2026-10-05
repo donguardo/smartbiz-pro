@@ -27,14 +27,16 @@ export function ShowcaseCarousel() {
   const { t, lang } = useT();
   const reduced = usePrefersReducedMotion();
   const count = SHOWCASE_SCENARIOS.length;
-  // Track renders [last, ...all, first] so a neighbour always peeks on both edges.
+  // Track renders the deck three times so navigation can keep sliding past the
+  // edges in the same direction; the position is re-centred invisibly after
+  // each slide finishes, making the loop truly endless.
   const extended = [
-    SHOWCASE_SCENARIOS[count - 1]!,
     ...SHOWCASE_SCENARIOS,
-    SHOWCASE_SCENARIOS[0]!,
+    ...SHOWCASE_SCENARIOS,
+    ...SHOWCASE_SCENARIOS,
   ];
-  // pos is the position in `extended`; real slides live at 1..count.
-  const [pos, setPos] = useState(1);
+  // pos is the position in `extended`; the middle copy's slides live at count..2*count-1.
+  const [pos, setPos] = useState(count);
   const [snap, setSnap] = useState(false); // true = jump without transition
   const [userPaused, setUserPaused] = useState(false);
   const [hoverPaused, setHoverPaused] = useState(false);
@@ -44,7 +46,9 @@ export function ShowcaseCarousel() {
   const touchStartX = useRef<number | null>(null);
   // Reduced-motion users get no autoplay; the rest pause for hover, touch or focus.
   const paused = userPaused || hoverPaused || touchPaused || focusPaused;
-  const realIndex = ((pos - 1) % count + count) % count;
+  const realIndex = (((pos - count) % count) + count) % count;
+  // Equivalent middle-copy position for the same visual slide.
+  const normalize = (p: number) => count + ((((p - count) % count) + count) % count);
 
   const slideLabel = (i: number) =>
     t("carousel.slideOf")
@@ -54,43 +58,47 @@ export function ShowcaseCarousel() {
 
   const goTo = (real: number) => {
     setSnap(false);
-    setPos(real + 1);
+    setPos(count + real);
     setAnnounce(slideLabel(real));
   };
-  const goPrev = () => {
+  const jumpTo = (real: number) => {
+    // Reduced motion: no transition runs, so land directly on the slide.
+    setSnap(true);
+    setPos(count + real);
+    setAnnounce(slideLabel(real));
+  };
+  // Step one slide in `dir`; if the next step would run past the rendered
+  // copies, re-centre on the equivalent slide first, then slide as normal.
+  const step = (dir: 1 | -1, target: number) => {
     if (reduced) {
-      // No transition runs, so onTransitionEnd never fires — wrap instantly.
-      const next = (realIndex - 1 + count) % count;
-      setSnap(true);
-      setPos(next + 1);
-      setAnnounce(slideLabel(next));
+      jumpTo(target);
       return;
     }
-    const target = realIndex === 0 ? count - 1 : realIndex - 1;
-    setAnnounce(slideLabel(target));
-    setPos((p) => Math.max(0, p - 1));
-  };
-  const goNext = () => {
-    if (reduced) {
-      const next = (realIndex + 1) % count;
+    const next = pos + dir;
+    if (next < 1 || next > extended.length - 2) {
       setSnap(true);
-      setPos(next + 1);
-      setAnnounce(slideLabel(next));
-      return;
+      setPos(normalize(pos));
+      // Wait for the re-centred frame to paint before sliding again.
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          setSnap(false);
+          setPos((p) => normalize(p) + dir);
+        })
+      );
+    } else {
+      setSnap(false);
+      setPos(next);
     }
-    const target = realIndex === count - 1 ? 0 : realIndex + 1;
-    setAnnounce(slideLabel(target));
-    setPos((p) => Math.min(count + 1, p + 1));
   };
+  const goPrev = () => step(-1, (realIndex - 1 + count) % count);
+  const goNext = () => step(1, (realIndex + 1) % count);
 
   const onTrackTransitionEnd = (e: React.TransitionEvent) => {
     if (e.target !== e.currentTarget || e.propertyName !== "transform") return;
-    if (pos === 0) {
+    if (pos < count || pos >= 2 * count) {
+      // Same slide, re-centred in the middle copy — visually invisible.
       setSnap(true);
-      setPos(count);
-    } else if (pos === count + 1) {
-      setSnap(true);
-      setPos(1);
+      setPos(normalize(pos));
     }
   };
 
@@ -156,7 +164,7 @@ export function ShowcaseCarousel() {
             const CellIcon = s.icon;
             const cellWeekly = s.categories.reduce((sum, c) => sum + c.sales, 0);
             const active = i === pos;
-            const realI = ((i - 1) % count + count) % count;
+            const realI = (((i - count) % count) + count) % count;
             return (
               <div
                 key={`${s.slug}-${i}`}
