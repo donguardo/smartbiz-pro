@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { SHOWCASE_SCENARIOS } from "@/lib/showcase-scenarios";
 import { useT } from "@/lib/i18n";
@@ -25,6 +25,7 @@ const focusRing =
 
 export function ShowcaseCarousel() {
   const { t, lang } = useT();
+  const navigate = useNavigate();
   const reduced = usePrefersReducedMotion();
   const count = SHOWCASE_SCENARIOS.length;
   // Track renders the deck three times so navigation can keep sliding past the
@@ -44,6 +45,9 @@ export function ShowcaseCarousel() {
   const [focusPaused, setFocusPaused] = useState(false);
   const [announce, setAnnounce] = useState("");
   const touchStartX = useRef<number | null>(null);
+  // Timestamp of the last swipe gesture; a click right after a swipe is
+  // the tail of that swipe, not a tap, so it must not open the slide.
+  const swipeEndedAt = useRef(0);
   // Reduced-motion users get no autoplay; the rest pause for hover, touch or focus.
   const paused = userPaused || hoverPaused || touchPaused || focusPaused;
   const realIndex = (((pos - count) % count) + count) % count;
@@ -125,8 +129,23 @@ export function ShowcaseCarousel() {
     if (start == null) return;
     const delta = (e.changedTouches[0]?.clientX ?? start) - start;
     if (Math.abs(delta) < 40) return;
+    swipeEndedAt.current = Date.now();
     if (delta < 0) goNext();
     else goPrev();
+  };
+
+  // Tapping or clicking anywhere on a slide opens it; tapping a peeking
+  // neighbour first slides it to the centre. A click right after a swipe
+  // gesture is ignored so the swipe doesn't also open the slide.
+  const onCellClick = (active: boolean, slug: string) => {
+    if (Date.now() - swipeEndedAt.current < 500) return;
+    if (active) {
+      navigate({ to: "/showcase/$business", params: { business: slug } });
+    } else {
+      goTo(
+        SHOWCASE_SCENARIOS.findIndex((s) => s.slug === slug)
+      );
+    }
   };
 
   const scenario = SHOWCASE_SCENARIOS[realIndex]!;
@@ -170,9 +189,7 @@ export function ShowcaseCarousel() {
                 key={`${s.slug}-${i}`}
                 className="showcase-cell"
                 aria-hidden={!active}
-                onClick={() => {
-                  if (!active) goTo(realI);
-                }}
+                onClick={() => onCellClick(active, s.slug)}
               >
                 <div
                   data-business-theme={s.theme}
@@ -181,9 +198,9 @@ export function ShowcaseCarousel() {
                   aria-label={active ? slideLabel(realI) : undefined}
                   className={`showcase-theme showcase-cell-inner overflow-hidden rounded-2xl border border-border bg-card shadow-xl transition-[opacity,transform,filter] duration-700 ${
                     active
-                      ? "scale-100 opacity-100"
-                      : "pointer-events-none scale-[0.94] opacity-50 blur-[1px]"
-                  } ${!active ? "cursor-pointer" : ""}`}
+                      ? "scale-100 cursor-pointer opacity-100"
+                      : "pointer-events-none scale-[0.94] cursor-pointer opacity-50 blur-[1px]"
+                  }`}
                 >
                 <div className="flex items-center gap-3 border-b border-border bg-muted/60 px-5 py-3">
                   <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
@@ -211,6 +228,7 @@ export function ShowcaseCarousel() {
                     to="/showcase/$business"
                     params={{ business: s.slug }}
                     tabIndex={active ? 0 : -1}
+                    onClick={(e) => e.stopPropagation()}
                     className={`mt-4 inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 ${focusRing}`}
                   >
                     {t("showcase.open")} <ArrowRight className="h-4 w-4" aria-hidden />
