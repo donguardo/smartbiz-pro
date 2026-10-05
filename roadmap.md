@@ -15,3 +15,4 @@
 - [x] Legible text contrast in light mode
 
 - [x] First-visit opening intro video with skip and remembered completion
+- [ ] Show installed status and make installation guidance reusable from navigation
