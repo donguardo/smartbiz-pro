@@ -4,7 +4,7 @@
  * runs every call through real signed-in clients (RLS applies), then deletes
  * the users and their shops.
  *
- * Run: bun test tests/products.integration.test.ts
+ * Run: bun test --timeout 30000 tests/products.integration.test.ts
  * Needs SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY and SUPABASE_SERVICE_ROLE_KEY.
  */
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
@@ -143,7 +143,7 @@ describe.skipIf(!enabled)("products A to Z", () => {
 
     await owner.db.from("shops").update({ allow_cashier_products: false }).eq("id", owner.id);
     expect((await cashier.db.from("products").insert({ name: "Blocked again", price: 1 })).error).not.toBeNull();
-  });
+  }, 30000);
 
   test("another shop cannot see or touch these products", async () => {
     const { other } = users;
