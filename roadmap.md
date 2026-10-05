@@ -51,3 +51,4 @@
 - [x] Add saved business color themes in Settings (MVP, café brown, coffeehouse green, fiesta red)
 - [x] Add BIZBOT minimize and restore controls without leaving the page
 - [x] Remember BIZBOT's dragged position across refreshes and app reopenings
+- [x] Add five interactive business dashboard showcases with matching themes and EN/TL wording
