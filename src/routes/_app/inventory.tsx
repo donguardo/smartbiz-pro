@@ -5,6 +5,7 @@ import { Archive, ArrowUpDown, Download, ImagePlus, Pencil, Plus, Trash2, Upload
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { UNITS, computeInsights, fetchAllProducts, fetchItems, fetchProductSettings, fetchShopContext, isDecimalUnit, qk, type Product, type Unit } from "@/lib/store";
+import { LowStockSettings } from "@/components/StockAlerts";
 import { StockAdjustDialog, StockHistoryPanel } from "@/components/StockAdjust";
 import { SAMPLE_CSV, parseProductCsv, type CsvRow } from "@/lib/product-csv";
 import { peso } from "@/lib/format";
@@ -144,6 +145,7 @@ function Inventory() {
         <span><span className="font-medium">Let cashiers add products</span><span className="block text-xs text-muted-foreground">Cashiers can add and edit, but never delete.</span></span>
         <input type="checkbox" role="switch" className="h-5 w-5 accent-primary" checked={!!settings?.allow_cashier_products} onChange={toggleCashiers} />
       </label>}
+      {owner && shop && <LowStockSettings shopId={shop.shop_id} products={all} />}
 
       <div className="flex flex-wrap gap-2">
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name or barcode" className="min-w-0 flex-1 rounded-lg border border-input bg-card px-3 py-2.5 text-sm md:max-w-sm" />
@@ -235,7 +237,7 @@ function Inventory() {
         </div>
       )}
 
-      {owner && <StockHistoryPanel />}
+      {owner && <StockHistoryPanel products={all} />}
       {adjusting && <StockAdjustDialog product={adjusting} onClose={() => setAdjusting(null)} />}
       {csv && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 sm:items-center sm:p-4" onClick={() => setCsv(null)}>

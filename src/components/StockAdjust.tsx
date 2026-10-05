@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { History, X } from "lucide-react";
+import { Download, History, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { isDecimalUnit, qk, type Product } from "@/lib/store";
@@ -66,34 +66,70 @@ export function StockAdjustDialog({ product, onClose }: { product: Product; onCl
   );
 }
 
-export function StockHistoryPanel() {
+const toCsvCell = (v: unknown) => { const t = String(v ?? ""); return /[",\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t; };
+const manila = (iso: string) => new Date(iso).toLocaleString("en-PH", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false });
+
+export function StockHistoryPanel({ products }: { products: Product[] }) {
+  const [productId, setProductId] = useState("");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [exporting, setExporting] = useState(false);
+  const query = (limit: number) => {
+    let q = supabase.from("stock_movements").select("*").order("created_at", { ascending: false }).limit(limit);
+    if (productId) q = q.eq("product_id", productId);
+    if (from) q = q.gte("created_at", `${from}T00:00:00+08:00`);
+    if (to) q = q.lte("created_at", `${to}T23:59:59.999+08:00`);
+    return q;
+  };
   const { data: rows = [], isLoading } = useQuery({
-    queryKey: stockMovementsKey,
-    queryFn: async () => {
-      const { data, error } = await supabase.from("stock_movements").select("*").order("created_at", { ascending: false }).limit(50);
-      if (error) throw error;
-      return data;
-    },
+    queryKey: [...stockMovementsKey, productId, from, to],
+    queryFn: async () => { const { data, error } = await query(50); if (error) throw error; return data; },
   });
+  const exportCsv = async () => {
+    if (from && to && from > to) { toast.error("The start date must be before the end date"); return; }
+    setExporting(true);
+    const { data, error } = await query(10000);
+    setExporting(false);
+    if (error) { toast.error(error.message); return; }
+    if (!data.length) { toast.info("No stock movements match these filters"); return; }
+    const header = ["Date (Manila)", "Product", "Type", "Change", "Stock before", "Stock after", "Reason", "By"];
+    const lines = data.map((r) => [manila(r.created_at), r.product_name, r.kind, Number(r.qty_change), Number(r.stock_before), Number(r.stock_after), r.reason, r.actor_name].map(toCsvCell).join(","));
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob(["\uFEFF" + [header.join(","), ...lines].join("\r\n")], { type: "text/csv;charset=utf-8" }));
+    const name = productId ? products.find((p) => p.id === productId)?.name.replace(/[^\w-]+/g, "-") ?? "product" : "all";
+    a.download = `stock-history-${name}-${from || "start"}-to-${to || "today"}.csv`;
+    a.click(); URL.revokeObjectURL(a.href);
+    toast.success(`Exported ${data.length} rows`);
+  };
   const label = { restock: "Restock", loss: "Loss", correction: "Correction" } as Record<string, string>;
+  const field = "rounded-lg border border-input bg-background px-3 py-2 text-sm";
   return (
     <section className="rounded-2xl border border-border bg-card p-5">
-      <h2 className="flex items-center gap-2 font-bold"><History className="h-4 w-4" /> Stock history</h2>
-      <p className="mt-1 text-xs text-muted-foreground">Every restock, loss and correction, with who did it and why.</p>
-      {isLoading ? <p className="mt-3 text-sm text-muted-foreground">Loading…</p> : rows.length === 0 ? <p className="mt-3 text-sm text-muted-foreground">No stock adjustments yet.</p> : (
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div><h2 className="flex items-center gap-2 font-bold"><History className="h-4 w-4" /> Stock history</h2>
+          <p className="mt-1 text-xs text-muted-foreground">Every restock, loss and correction, with who did it and why.</p></div>
+        <button onClick={exportCsv} disabled={exporting} className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium disabled:opacity-50"><Download className="h-4 w-4" />{exporting ? "Exporting…" : "Export CSV"}</button>
+      </div>
+      <div className="mt-3 grid gap-2 sm:grid-cols-3">
+        <label className="text-xs text-muted-foreground">Product<select value={productId} onChange={(e) => setProductId(e.target.value)} className={`mt-1 w-full ${field}`}><option value="">All products</option>{products.filter((p) => p.track_stock).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
+        <label className="text-xs text-muted-foreground">From<input type="date" value={from} max={to || undefined} onChange={(e) => setFrom(e.target.value)} className={`mt-1 w-full ${field}`} /></label>
+        <label className="text-xs text-muted-foreground">To<input type="date" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} className={`mt-1 w-full ${field}`} /></label>
+      </div>
+      {isLoading ? <p className="mt-3 text-sm text-muted-foreground">Loading…</p> : rows.length === 0 ? <p className="mt-3 text-sm text-muted-foreground">No stock adjustments match.</p> : (
         <ul className="mt-3 max-h-96 divide-y divide-border overflow-y-auto">
           {rows.map((r) => {
             const change = Number(r.qty_change);
             return (
               <li key={r.id} className="flex flex-wrap items-baseline justify-between gap-2 py-2.5 text-sm">
                 <span className="min-w-0"><b>{r.product_name}</b> · {label[r.kind]} — {r.reason}
-                  <span className="block text-xs text-muted-foreground">{r.actor_name} · {new Date(r.created_at).toLocaleString("en-PH", { timeZone: "Asia/Manila", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span></span>
+                  <span className="block text-xs text-muted-foreground">{r.actor_name} · {manila(r.created_at)}</span></span>
                 <span className="font-mono text-xs"><span className={change >= 0 ? "text-success" : "text-destructive"}>{change >= 0 ? "▲ +" : "▼ "}{change}</span> · {Number(r.stock_before)} → {Number(r.stock_after)}</span>
               </li>
             );
           })}
         </ul>
       )}
+      {rows.length === 50 && <p className="mt-2 text-xs text-muted-foreground">Showing the latest 50 — export to get every matching row.</p>}
     </section>
   );
 }

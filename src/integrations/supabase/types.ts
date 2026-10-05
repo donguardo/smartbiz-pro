@@ -818,6 +818,7 @@ export type Database = {
           id: string
           language: string
           logo_url: string | null
+          low_stock_alerts: boolean
           mobile: string | null
           name: string
           owner_name: string | null
@@ -831,6 +832,7 @@ export type Database = {
           id?: string
           language?: string
           logo_url?: string | null
+          low_stock_alerts?: boolean
           mobile?: string | null
           name?: string
           owner_name?: string | null
@@ -844,12 +846,64 @@ export type Database = {
           id?: string
           language?: string
           logo_url?: string | null
+          low_stock_alerts?: boolean
           mobile?: string | null
           name?: string
           owner_name?: string | null
           updated_at?: string
         }
         Relationships: []
+      }
+      stock_alerts: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          product_name: string
+          read_at: string | null
+          shop_id: string
+          stock_at: number
+          threshold: number
+          unit: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          product_name: string
+          read_at?: string | null
+          shop_id: string
+          stock_at: number
+          threshold: number
+          unit: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          product_name?: string
+          read_at?: string | null
+          shop_id?: string
+          stock_at?: number
+          threshold?: number
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_alerts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       stock_movements: {
         Row: {

@@ -148,6 +148,13 @@
       "when": 1791226528464,
       "tag": "0020_patch2_signup_cost",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1791226767812,
+      "tag": "0021_low_stock_alerts",
+      "breakpoints": true
     }
   ]
 }
