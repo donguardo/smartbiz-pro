@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Banknote, CreditCard, Minus, Plus, Printer, QrCode, ScanLine, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchProducts, fetchProfile, qk, type Product } from "@/lib/store";
+import { fetchCustomers, fetchProducts, fetchProfile, qk, type Product } from "@/lib/store";
 import { peso } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/pos")({
@@ -27,6 +27,7 @@ function POS() {
   const qc = useQueryClient();
   const { data: products = [] } = useQuery({ queryKey: qk.products, queryFn: fetchProducts });
   const { data: profile } = useQuery({ queryKey: qk.profile, queryFn: fetchProfile });
+  const { data: customers = [] } = useQuery({ queryKey: qk.customers, queryFn: fetchCustomers });
   const [cart, setCart] = useState<Line[]>([]);
   const [scan, setScan] = useState("");
   const [cat, setCat] = useState("All");
@@ -35,6 +36,8 @@ function POS() {
   const [tendered, setTendered] = useState("");
   const [busy, setBusy] = useState(false);
   const [receipt, setReceipt] = useState<Receipt | null>(null);
+  const [customerId, setCustomerId] = useState("");
+  const [newCustomer, setNewCustomer] = useState({ name: "", mobile: "", consent: false });
   const scanRef = useRef<HTMLInputElement>(null);
 
   const cats = ["All", ...new Set(products.map((p) => p.category))];
@@ -64,17 +67,18 @@ function POS() {
   const checkout = async () => {
     setBusy(true);
     try {
-      const receipt_no = `R-${Date.now().toString(36).toUpperCase()}`;
-      const cost_total = cart.reduce((s, l) => s + Number(l.p.cost) * l.qty, 0);
-      const { data: sale, error } = await supabase.from("sales")
-        .insert({ receipt_no, total, cost_total, payment_method: method, amount_tendered: method === "cash" ? Number(tendered) : total })
-        .select().single();
+      let selectedCustomer = customerId || null;
+      if (newCustomer.name.trim()) {
+        const { data, error } = await supabase.rpc("create_shop_customer", { _name: newCustomer.name, _mobile: newCustomer.mobile, _consented: newCustomer.consent });
+        if (error) throw error;
+        selectedCustomer = data;
+      }
+      const { data, error } = await supabase.rpc("record_sale", { _payment_method: method, _amount_tendered: method === "cash" ? Number(tendered) : total, _customer_id: selectedCustomer, _items: cart.map((l) => ({ product_id: l.p.id, qty: l.qty })) });
       if (error) throw error;
-      const { error: e2 } = await supabase.from("sale_items").insert(cart.map((l) => ({ sale_id: sale.id, product_id: l.p.id, name: l.p.name, category: l.p.category, qty: l.qty, price: l.p.price, cost: l.p.cost })));
-      if (e2) throw e2;
-      await Promise.all(cart.map((l) => supabase.rpc("decrement_stock", { _product_id: l.p.id, _qty: l.qty })));
-      setReceipt({ no: receipt_no, lines: cart, total, method, tendered: method === "cash" ? Number(tendered) : total, at: new Date() });
-      setCart([]); setTendered(""); setPaying(false);
+      const sale = data[0];
+      if (!sale) throw new Error("Payment could not be recorded");
+      setReceipt({ no: sale.receipt_no, lines: cart, total, method, tendered: method === "cash" ? Number(tendered) : total, at: new Date() });
+      setCart([]); setTendered(""); setCustomerId(""); setNewCustomer({ name: "", mobile: "", consent: false }); setPaying(false);
       qc.invalidateQueries();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Payment failed");
@@ -146,6 +150,21 @@ function POS() {
           <div className="w-full max-w-md rounded-t-3xl bg-card p-6 sm:rounded-3xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between"><h3 className="text-xl font-bold">Record payment</h3><button aria-label="Close" onClick={() => setPaying(false)}><X className="h-5 w-5" /></button></div>
             <p className="mt-1 font-display text-4xl font-bold">{peso(total)}</p>
+            <div className="mt-4 space-y-2">
+              <label className="text-sm font-medium" htmlFor="customer">Customer (optional)</label>
+              <select id="customer" value={customerId} onChange={(e) => setCustomerId(e.target.value)} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm">
+                <option value="">No customer</option>
+                {customers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}{customer.mobile ? ` · ${customer.mobile}` : ""}</option>)}
+              </select>
+              <details className="rounded-lg border border-border p-3">
+                <summary className="cursor-pointer text-sm font-medium">Add new customer</summary>
+                <div className="mt-3 space-y-2">
+                  <input value={newCustomer.name} onChange={(e) => setNewCustomer((c) => ({ ...c, name: e.target.value }))} maxLength={60} placeholder="Customer name" className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+                  <input value={newCustomer.mobile} onChange={(e) => setNewCustomer((c) => ({ ...c, mobile: e.target.value }))} placeholder="+63 9XX XXX XXXX" className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm" />
+                  <label className="flex gap-2 text-xs text-muted-foreground"><input type="checkbox" checked={newCustomer.consent} onChange={(e) => setNewCustomer((c) => ({ ...c, consent: e.target.checked }))} /> Optional. Used only for this store's receipts and promos.</label>
+                </div>
+              </details>
+            </div>
             <div className="mt-5 grid grid-cols-3 gap-2">
               {([["cash", "Cash", Banknote], ["ewallet", "GCash", QrCode], ["card", "Card", CreditCard]] as const).map(([m, l, I]) => (
                 <button key={m} onClick={() => setMethod(m)} className={`flex flex-col items-center gap-2 rounded-xl border p-3 text-sm ${method === m ? "border-primary bg-accent text-accent-foreground" : "border-border"}`}>
