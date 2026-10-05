@@ -6,11 +6,11 @@ import { useT } from "@/lib/i18n";
 export type BusinessTheme = "brand" | "cafe" | "coffeehouse" | "fiesta";
 
 const THEME_STORAGE_KEY = "business-theme";
-const BUSINESS_THEMES: { id: BusinessTheme; labelKey: string; swatches: string[] }[] = [
-  { id: "brand", labelKey: "theme.brand", swatches: ["#7C3AED", "#FF00FF", "#F7F7FA"] },
-  { id: "cafe", labelKey: "theme.cafe", swatches: ["#6F4E37", "#C08A5B", "#F5EDE5"] },
-  { id: "coffeehouse", labelKey: "theme.coffeehouse", swatches: ["#00754A", "#D4A84B", "#EAF4EE"] },
-  { id: "fiesta", labelKey: "theme.fiesta", swatches: ["#C41230", "#F4B41A", "#FFF0F0"] },
+const BUSINESS_THEMES: { id: BusinessTheme; labelKey: string }[] = [
+  { id: "brand", labelKey: "theme.brand" },
+  { id: "cafe", labelKey: "theme.cafe" },
+  { id: "coffeehouse", labelKey: "theme.coffeehouse" },
+  { id: "fiesta", labelKey: "theme.fiesta" },
 ];
 
 function isBusinessTheme(value: string | null): value is BusinessTheme {
@@ -74,8 +74,8 @@ export function BusinessThemePicker() {
             className={`h-auto min-h-16 justify-start px-4 py-3 ${active ? "border-primary bg-primary/10 ring-2 ring-primary" : ""}`}
           >
             <span className="flex shrink-0 -space-x-1" aria-hidden>
-              {theme.swatches.map((color) => (
-                <span key={color} className="h-7 w-7 rounded-full border-2 border-card" style={{ backgroundColor: color }} />
+              {[1, 2, 3].map((swatch) => (
+                <span key={swatch} className={`theme-swatch theme-swatch-${theme.id}-${swatch}`} />
               ))}
             </span>
             <span className="min-w-0 text-left font-semibold text-foreground">{t(theme.labelKey)}</span>

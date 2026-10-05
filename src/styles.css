@@ -330,6 +330,26 @@
   --sidebar-ring: #FF667D;
 }
 
+@utility theme-swatch {
+  height: 1.75rem;
+  width: 1.75rem;
+  border-radius: 9999px;
+  border: 2px solid var(--card);
+}
+
+.theme-swatch-brand-1 { background-color: #7C3AED; }
+.theme-swatch-brand-2 { background-color: #FF00FF; }
+.theme-swatch-brand-3 { background-color: #F7F7FA; }
+.theme-swatch-cafe-1 { background-color: #6F4E37; }
+.theme-swatch-cafe-2 { background-color: #C08A5B; }
+.theme-swatch-cafe-3 { background-color: #F5EDE5; }
+.theme-swatch-coffeehouse-1 { background-color: #00754A; }
+.theme-swatch-coffeehouse-2 { background-color: #D4A84B; }
+.theme-swatch-coffeehouse-3 { background-color: #EAF4EE; }
+.theme-swatch-fiesta-1 { background-color: #C41230; }
+.theme-swatch-fiesta-2 { background-color: #F4B41A; }
+.theme-swatch-fiesta-3 { background-color: #FFF0F0; }
+
 @layer base {
   * {
     border-color: var(--color-border);
