@@ -127,6 +127,11 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function BizBotOutsideAuth() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  return pathname.startsWith("/auth") ? null : <FloatingBizBot />;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
@@ -135,7 +140,7 @@ function RootComponent() {
       <I18nProvider>
         <FirstVisitIntro />
         <Outlet />
-        <FloatingBizBot />
+        <BizBotOutsideAuth />
         <InstallPrompt />
       </I18nProvider>
       <Toaster richColors position="top-center" />

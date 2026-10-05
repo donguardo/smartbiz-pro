@@ -9,7 +9,7 @@ export function StoreIdentity({ name, logoSrc }: { name: string; logoSrc: string
       {logoSrc ? <img src={logoSrc} alt={t("profile.logo")} className="h-9 w-9 shrink-0 rounded-md object-contain" /> : <Store className="h-9 w-9 shrink-0 text-primary" aria-hidden />}
       <span className="min-w-0">
         <span className="block break-words text-sm font-semibold leading-tight">{name}</span>
-        <span className="block text-[10px] text-muted-foreground">MVP BizManager.ai</span>
+        <span className="block text-[10px] text-muted-foreground">MVP BizManager</span>
       </span>
     </Link>
   );
