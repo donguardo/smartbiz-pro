@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { SHOWCASE_SCENARIOS } from "@/lib/showcase-scenarios";
@@ -11,7 +11,26 @@ export function ShowcaseCarousel() {
   const { t, lang } = useT();
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const touchStartX = useRef<number | null>(null);
   const count = SHOWCASE_SCENARIOS.length;
+
+  const goPrev = () => setIndex((i) => (i - 1 + count) % count);
+  const goNext = () => setIndex((i) => (i + 1) % count);
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0]?.clientX ?? null;
+    setPaused(true);
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const start = touchStartX.current;
+    touchStartX.current = null;
+    setPaused(false);
+    if (start == null) return;
+    const delta = (e.changedTouches[0]?.clientX ?? start) - start;
+    if (Math.abs(delta) < 40) return;
+    if (delta < 0) goNext();
+    else goPrev();
+  };
 
   useEffect(() => {
     if (paused) return;
@@ -28,6 +47,8 @@ export function ShowcaseCarousel() {
       className="relative"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
       aria-roledescription="carousel"
       aria-label={t("nav.showcase")}
     >
