@@ -88,18 +88,28 @@ export function ShowcaseDashboard({ scenario }: { scenario: BusinessScenario }) 
           </div>
           <div className="mt-4 space-y-4">
             {cats.map((category, index) => (
-              <div key={category.name.en} className="space-y-1.5">
-                <p className="flex items-center gap-2 text-sm font-semibold"><i className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: COLORS[index] }} />{text(category.name)}</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <label className="text-xs text-muted-foreground">{t("showcase.sales")}
-                    <input type="number" min={0} step={500} value={category.sales} onChange={(event) => update(index, "sales", Math.max(0, Number(event.target.value)))} className="mt-1 w-full rounded-md border border-input bg-background px-2 py-2 font-mono text-sm text-foreground" />
+              <div key={category.id} className="space-y-1.5 rounded-md border border-border p-2">
+                <div className="flex items-center gap-2">
+                  <i className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                  <input aria-label={t("showcase.product")} placeholder={t("showcase.product")} maxLength={60} value={category.name} onChange={(event) => update(index, { name: event.target.value })} className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm font-semibold text-foreground" />
+                  <Button variant="ghost" size="icon" aria-label={t("showcase.remove")} disabled={cats.length <= 1} onClick={() => removeItem(index)}><Trash2 className="h-4 w-4" /></Button>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <label className="text-xs text-muted-foreground">{t("showcase.price")}
+                    <input type="number" min={0} value={category.price} onChange={(event) => update(index, { price: num(event.target.value) })} className={inputCls} />
+                  </label>
+                  <label className="text-xs text-muted-foreground">{t("showcase.units")}
+                    <input type="number" min={0} value={category.units} onChange={(event) => update(index, { units: num(event.target.value) })} className={inputCls} />
                   </label>
                   <label className="text-xs text-muted-foreground">{t("showcase.margin")}
-                    <input type="number" min={0} max={100} value={category.margin} onChange={(event) => update(index, "margin", Math.min(100, Math.max(0, Number(event.target.value))))} className="mt-1 w-full rounded-md border border-input bg-background px-2 py-2 font-mono text-sm text-foreground" />
+                    <input type="number" min={0} max={100} value={category.margin} onChange={(event) => update(index, { margin: num(event.target.value, 100) })} className={inputCls} />
                   </label>
                 </div>
+                <p className="text-right text-xs text-muted-foreground">{t("showcase.sales")}: <b className="text-foreground">{peso(category.sales)}</b></p>
               </div>
             ))}
+            <Button variant="outline" size="sm" className="w-full" disabled={cats.length >= MAX_ITEMS} onClick={addItem}><Plus className="h-4 w-4" />{t("showcase.addProduct")}</Button>
+            <p className="text-xs text-muted-foreground">{t("showcase.savedNote")}</p>
             <label className="block text-xs text-muted-foreground">{t("showcase.growth")}: <b className="text-foreground">{growth}%</b>
               <input type="range" min={-30} max={50} value={growth} onChange={(event) => setGrowth(Number(event.target.value))} className="mt-2 w-full accent-[var(--primary)]" />
             </label>
