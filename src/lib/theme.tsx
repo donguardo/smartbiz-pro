@@ -19,7 +19,7 @@ function isBusinessTheme(value: string | null): value is BusinessTheme {
 
 function applyBusinessTheme(theme: BusinessTheme) {
   if (theme === "brand") document.documentElement.removeAttribute("data-business-theme");
-  else document.documentElement.dataset.businessTheme = theme;
+  else document.documentElement.dataset["businessTheme"] = theme;
 }
 
 export const themeInitScript = `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'){document.documentElement.classList.add('dark')}var b=localStorage.getItem('${THEME_STORAGE_KEY}');if(b==='cafe'||b==='coffeehouse'||b==='fiesta'){document.documentElement.setAttribute('data-business-theme',b)}}catch(e){}})()`;
