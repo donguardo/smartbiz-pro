@@ -844,6 +844,7 @@ export type Database = {
           invite_id: string
         }[]
       }
+      current_shop_id: { Args: never; Returns: string }
       decrement_stock: {
         Args: { _product_id: string; _qty: number }
         Returns: undefined
