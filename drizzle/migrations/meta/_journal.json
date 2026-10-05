@@ -141,6 +141,13 @@
       "when": 1791225314884,
       "tag": "0019_stock_movements_cascade",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1791226528464,
+      "tag": "0020_patch2_signup_cost",
+      "breakpoints": true
     }
   ]
 }

@@ -313,7 +313,7 @@ export type Database = {
         Row: {
           archived_at: string | null
           category: string
-          cost: number
+          cost: number | null
           created_at: string
           id: string
           name: string
@@ -331,7 +331,7 @@ export type Database = {
         Insert: {
           archived_at?: string | null
           category?: string
-          cost?: number
+          cost?: number | null
           created_at?: string
           id?: string
           name: string
@@ -349,7 +349,7 @@ export type Database = {
         Update: {
           archived_at?: string | null
           category?: string
-          cost?: number
+          cost?: number | null
           created_at?: string
           id?: string
           name?: string
@@ -813,31 +813,40 @@ export type Database = {
         Row: {
           allow_cashier_products: boolean
           business_categories: string[]
+          business_type: string | null
           created_at: string
           id: string
           language: string
           logo_url: string | null
+          mobile: string | null
           name: string
+          owner_name: string | null
           updated_at: string
         }
         Insert: {
           allow_cashier_products?: boolean
           business_categories?: string[]
+          business_type?: string | null
           created_at?: string
           id?: string
           language?: string
           logo_url?: string | null
+          mobile?: string | null
           name?: string
+          owner_name?: string | null
           updated_at?: string
         }
         Update: {
           allow_cashier_products?: boolean
           business_categories?: string[]
+          business_type?: string | null
           created_at?: string
           id?: string
           language?: string
           logo_url?: string | null
+          mobile?: string | null
           name?: string
+          owner_name?: string | null
           updated_at?: string
         }
         Relationships: []
