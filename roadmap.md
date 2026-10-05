@@ -61,4 +61,4 @@
 - [x] Add touch-swipe navigation to the hero showcase carousel
 - [x] Add a visible pause and play control to the hero carousel
 - [x] Add a visible progress indicator to the hero carousel
-- [ ] Redesign the hero carousel as a peeking slide-track: next/previous business cards visible on the left/right edges while sliding
+- [x] Redesign the hero carousel as a peeking slide-track: next/previous business cards visible on the left/right edges while sliding
