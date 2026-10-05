@@ -11,16 +11,40 @@ const AUTOPLAY_MS = 5000;
 
 export function ShowcaseCarousel() {
   const { t, lang } = useT();
-  const [index, setIndex] = useState(0);
+  const count = SHOWCASE_SCENARIOS.length;
+  // Track renders [last, ...all, first] so a neighbour always peeks on both edges.
+  const extended = [
+    SHOWCASE_SCENARIOS[count - 1]!,
+    ...SHOWCASE_SCENARIOS,
+    SHOWCASE_SCENARIOS[0]!,
+  ];
+  // pos is the position in `extended`; real slides live at 1..count.
+  const [pos, setPos] = useState(1);
+  const [snap, setSnap] = useState(false); // true = jump without transition
   const [userPaused, setUserPaused] = useState(false);
   const [hoverPaused, setHoverPaused] = useState(false);
   const [touchPaused, setTouchPaused] = useState(false);
   const touchStartX = useRef<number | null>(null);
-  const count = SHOWCASE_SCENARIOS.length;
   const paused = userPaused || hoverPaused || touchPaused;
+  const realIndex = ((pos - 1) % count + count) % count;
 
-  const goPrev = () => setIndex((i) => (i - 1 + count) % count);
-  const goNext = () => setIndex((i) => (i + 1) % count);
+  const goTo = (real: number) => {
+    setSnap(false);
+    setPos(real + 1);
+  };
+  const goPrev = () => setPos((p) => Math.max(0, p - 1));
+  const goNext = () => setPos((p) => Math.min(count + 1, p + 1));
+
+  const onTrackTransitionEnd = (e: React.TransitionEvent) => {
+    if (e.target !== e.currentTarget || e.propertyName !== "transform") return;
+    if (pos === 0) {
+      setSnap(true);
+      setPos(count);
+    } else if (pos === count + 1) {
+      setSnap(true);
+      setPos(1);
+    }
+  };
 
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0]?.clientX ?? null;
@@ -37,9 +61,9 @@ export function ShowcaseCarousel() {
     else goPrev();
   };
 
-  const scenario = SHOWCASE_SCENARIOS[index]!;
-  // Center the active cell: each cell spans --slide-basis + --slide-gap of the track width.
-  const trackTransform = `translateX(calc(50% - (var(--slide-basis) + var(--slide-gap)) * ${index} - var(--slide-basis) / 2))`;
+  const scenario = SHOWCASE_SCENARIOS[realIndex]!;
+  // Centre the active card: cells stride --slide-stride, cards are stride minus gap.
+  const trackTransform = `translateX(calc(50% - var(--slide-stride) * ${pos} - (var(--slide-stride) - var(--slide-gap)) / 2))`;
 
   return (
     <div
@@ -56,26 +80,30 @@ export function ShowcaseCarousel() {
       aria-label={t("nav.showcase")}
     >
       <div className="-m-10 overflow-hidden rounded-[2rem] p-10">
-        <div className="showcase-track" style={{ transform: trackTransform }}>
-          {SHOWCASE_SCENARIOS.map((s, i) => {
+        <div
+          className="showcase-track"
+          style={{ transform: trackTransform, transition: snap ? "none" : undefined }}
+          onTransitionEnd={onTrackTransitionEnd}
+        >
+          {extended.map((s, i) => {
             const CellIcon = s.icon;
             const cellWeekly = s.categories.reduce((sum, c) => sum + c.sales, 0);
-            const active = i === index;
+            const active = i === pos;
             return (
               <div
-                key={s.slug}
+                key={`${s.slug}-${i}`}
                 className="showcase-cell"
                 aria-hidden={!active}
                 onClick={() => {
-                  if (!active) setIndex(i);
+                  if (!active) goTo(((i - 1) % count + count) % count);
                 }}
               >
                 <div
                   data-business-theme={s.theme}
-                  className={`showcase-theme showcase-cell-inner h-full overflow-hidden rounded-2xl border border-border bg-card shadow-xl transition-[opacity,transform,filter] duration-700 ${
+                  className={`showcase-theme showcase-cell-inner overflow-hidden rounded-2xl border border-border bg-card shadow-xl transition-[opacity,transform,filter] duration-700 ${
                     active
                       ? "scale-100 opacity-100"
-                      : "pointer-events-none scale-[0.93] opacity-50 blur-[1px]"
+                      : "pointer-events-none scale-[0.94] opacity-50 blur-[1px]"
                   } ${!active ? "cursor-pointer" : ""}`}
                 >
                 <div className="flex items-center gap-3 border-b border-border bg-muted/60 px-5 py-3">
@@ -122,9 +150,9 @@ export function ShowcaseCarousel() {
         className="showcase-theme mt-1 h-1 w-full overflow-hidden rounded-full bg-muted"
       >
         <div
-          key={index}
+          key={realIndex}
           onAnimationEnd={(e) => {
-            if (e.animationName === "showcase-progress") setIndex((i) => (i + 1) % count);
+            if (e.animationName === "showcase-progress") goNext();
           }}
           style={{ "--carousel-duration": `${AUTOPLAY_MS}ms` } as React.CSSProperties}
           className={`showcase-progress h-full rounded-full bg-primary ${paused ? "showcase-progress-paused" : ""}`}
@@ -145,9 +173,10 @@ export function ShowcaseCarousel() {
             <button
               key={s.slug}
               type="button"
-              onClick={() => setIndex(i)}
+              onClick={() => goTo(i)}
               aria-label={s.name[lang]}
-              className={`h-2 rounded-full transition-all ${i === index ? "w-6 bg-primary" : "w-2 bg-muted-foreground/40 hover:bg-muted-foreground"}`}
+              aria-current={i === realIndex}
+              className={`h-2 rounded-full transition-all ${i === realIndex ? "w-6 bg-primary" : "w-2 bg-muted-foreground/40 hover:bg-muted-foreground"}`}
             />
           ))}
         </div>

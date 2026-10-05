@@ -473,10 +473,12 @@
 .bizbot-motion-5 { animation: bizbot-peek 3s ease-in-out infinite; }
 .bizbot-motion-6 { animation: bizbot-closeup 3.2s ease-in-out infinite; }
 
-/* Peek carousel: center slide focused, neighbors visible on left/right edges */
+/* Peek carousel: center slide focused, neighbours visible on left/right edges.
+   Cells are the stride unit (percentage of track); cards fill the cell minus a
+   fixed gap, so the centring transform stays exact at every index. */
 .showcase-track {
-  --slide-basis: 86%;
-  --slide-gap: 2%;
+  --slide-stride: 82%;
+  --slide-gap: 10px;
   display: flex;
   align-items: stretch;
   transition: transform 750ms cubic-bezier(0.22, 1.2, 0.32, 1);
@@ -485,19 +487,21 @@
 
 @media (max-width: 640px) {
   .showcase-track {
-    --slide-basis: 80%;
+    --slide-stride: 76%;
+    --slide-gap: 8px;
   }
 }
 
 .showcase-cell {
-  flex: 0 0 auto;
-  width: calc(var(--slide-basis) + var(--slide-gap));
+  flex: 0 0 var(--slide-stride);
+  min-width: 0;
   display: flex;
 }
 
 .showcase-cell-inner {
-  width: var(--slide-basis);
+  width: calc(100% - var(--slide-gap));
 }
+
 
 
 @keyframes showcase-progress {
