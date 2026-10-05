@@ -43,6 +43,13 @@
       "when": 1791178992530,
       "tag": "0005_add_role_safe_cashier_summary",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791180823112,
+      "tag": "0006_account_deletion",
+      "breakpoints": true
     }
   ]
 }
