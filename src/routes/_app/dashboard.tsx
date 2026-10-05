@@ -15,9 +15,9 @@ const tipStyle = { background: "var(--popover)", border: "1px solid var(--border
 
 function Dashboard() {
   const { lang } = useT(); const qc = useQueryClient(); const [forecastDays, setForecastDays] = useState<7 | 30>(7); const [seeding, setSeeding] = useState(false);
-  const products = useQuery({ queryKey: qk.products, queryFn: fetchProducts }); const sales = useQuery({ queryKey: qk.sales, queryFn: fetchSales }); const items = useQuery({ queryKey: qk.items, queryFn: fetchItems });
-  const { data: goals = [] } = useQuery({ queryKey: qk.goals, queryFn: fetchGoals }); const { data: forecasts = [] } = useQuery({ queryKey: qk.forecasts, queryFn: fetchForecasts }); const { data: dailyTip } = useQuery({ queryKey: qk.tip, queryFn: fetchDailyTip }); const { data: shop } = useQuery({ queryKey: qk.shop, queryFn: fetchShopContext });
-  const owner = shop?.member_role === "owner";
+  const { data: shop } = useQuery({ queryKey: qk.shop, queryFn: fetchShopContext }); const owner = shop?.member_role === "owner";
+  const products = useQuery({ queryKey: qk.products, queryFn: fetchProducts }); const sales = useQuery({ queryKey: qk.sales, queryFn: fetchSales, enabled: owner }); const items = useQuery({ queryKey: qk.items, queryFn: fetchItems, enabled: owner });
+  const { data: goals = [] } = useQuery({ queryKey: qk.goals, queryFn: fetchGoals, enabled: owner }); const { data: forecasts = [] } = useQuery({ queryKey: qk.forecasts, queryFn: fetchForecasts, enabled: owner }); const { data: dailyTip } = useQuery({ queryKey: qk.tip, queryFn: fetchDailyTip });
   const { data: cashierToday } = useQuery({ queryKey: qk.cashierToday, queryFn: fetchCashierToday, enabled: shop?.member_role === "cashier" });
   const d = useMemo(() => {
     const S = (sales.data ?? []).filter((s) => s.status === "completed"), I = items.data ?? []; const now = Date.now(); const from = now - 7 * 86400000; const prevFrom = from - 7 * 86400000;
