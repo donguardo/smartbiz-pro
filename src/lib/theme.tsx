@@ -1,3 +1,4 @@
+import type React from "react";
 import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -135,8 +136,10 @@ function CustomThemeBuilder({ active, onApply }: { active: boolean; onApply: () 
   const [slot, setSlot] = useState<keyof CustomColors>("primary");
   useEffect(() => setColors(loadCustom()), []);
 
-  const update = (next: CustomColors) => {
-    setColors(next);
+  const [saved, setSaved] = useState(true);
+  const update = (next: CustomColors) => { setColors(next); setSaved(false); };
+  const save = (next: CustomColors) => {
+    setSaved(true);
     localStorage.setItem(CUSTOM_KEY, JSON.stringify(next));
     localStorage.setItem(THEME_STORAGE_KEY, "custom");
     clearCustomVars();
@@ -186,7 +189,43 @@ function CustomThemeBuilder({ active, onApply }: { active: boolean; onApply: () 
           {t("theme.custom.any")}
           <input type="color" value={colors[slot]} onChange={(e) => update({ ...colors, [slot]: e.target.value.toUpperCase() })} className="h-9 w-12 cursor-pointer rounded border border-input bg-background" />
         </label>
-        <Button type="button" size="sm" onClick={() => update(colors)}>{t("theme.custom.apply")}</Button>
+        <Button type="button" size="sm" onClick={() => save(colors)}>{t("theme.custom.apply")}</Button>
+        {!saved && <span className="text-xs text-muted-foreground">{t("theme.custom.unsaved")}</span>}
+      </div>
+      <ThemePreview colors={colors} />
+      <div className="hidden">
+      </div>
+    </div>
+  );
+}
+
+function ThemePreview({ colors }: { colors: CustomColors }) {
+  const { t } = useT();
+  const bars = [45, 70, 55, 90, 65, 80, 100];
+  return (
+    <div className="mt-5" aria-label={t("theme.custom.preview")}>
+      <p className="mb-2 text-sm font-semibold text-foreground">{t("theme.custom.preview")}</p>
+      <div style={customVars(colors) as React.CSSProperties} className="overflow-hidden rounded-lg border border-border bg-background">
+        <div className="flex items-center justify-between bg-primary px-3 py-2 text-primary-foreground">
+          <span className="text-sm font-bold">MVP BizManager</span>
+          <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-accent-foreground">{t("theme.custom.accent")}</span>
+        </div>
+        <div className="grid gap-3 p-3 sm:grid-cols-2">
+          <div className="rounded-md border border-border bg-card p-3">
+            <p className="text-xs text-muted-foreground">{t("theme.custom.sampleSales")}</p>
+            <p className="text-2xl font-bold text-primary">₱12,480</p>
+            <div className="mt-2 flex h-16 items-end gap-1" aria-hidden>
+              {bars.map((h, i) => (
+                <span key={i} className="flex-1 rounded-t" style={{ height: `${h}%`, background: `var(--chart-${(i % 5) + 1})` }} />
+              ))}
+            </div>
+          </div>
+          <div className="flex flex-col gap-2 rounded-md border border-border bg-card p-3">
+            <button type="button" tabIndex={-1} className="rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground">{t("theme.custom.sampleButton")}</button>
+            <button type="button" tabIndex={-1} className="rounded-md bg-accent px-3 py-2 text-sm font-semibold text-accent-foreground">{t("theme.custom.accent")}</button>
+            <span className="h-2 w-full overflow-hidden rounded-full bg-muted"><span className="block h-full w-2/3 rounded-full" style={{ background: "var(--chart-3)" }} /></span>
+          </div>
+        </div>
       </div>
     </div>
   );
