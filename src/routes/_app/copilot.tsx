@@ -8,9 +8,9 @@ import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/copilot")({
   head: () => ({ meta: [
-    { title: "AI Manager — MVP BizManager.ai" },
+    { title: "AI Manager — MVP BizManager" },
     { name: "description", content: "Proactive inventory insights for your store." },
-    { property: "og:title", content: "AI Manager — MVP BizManager.ai" },
+    { property: "og:title", content: "AI Manager — MVP BizManager" },
     { property: "og:description", content: "Proactive inventory insights for your store." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
