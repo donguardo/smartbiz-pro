@@ -902,6 +902,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_theme_prefs: {
+        Row: {
+          business_theme: string
+          custom_colors: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_theme?: string
+          custom_colors?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          business_theme?: string
+          custom_colors?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       weekly_opportunities: {
         Row: {
           best_days: Json

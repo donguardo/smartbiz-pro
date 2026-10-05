@@ -3,6 +3,31 @@ import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
+import { supabase } from "@/integrations/supabase/client";
+
+const HEX = /^#[0-9a-fA-F]{6}$/;
+const THEME_SYNC_EVENT = "business-theme-synced";
+
+/** Save the current theme choice to the signed-in account (no-op when signed out). */
+async function saveThemeToAccount(theme: BusinessTheme, custom: CustomColors | null) {
+  const { data } = await supabase.auth.getUser();
+  if (!data.user) return;
+  await supabase.from("user_theme_prefs").upsert({ user_id: data.user.id, business_theme: theme, custom_colors: custom, updated_at: new Date().toISOString() });
+}
+
+/** Load the account's saved theme and apply it on this device. */
+export async function syncThemeFromAccount() {
+  const { data: u } = await supabase.auth.getUser();
+  if (!u.user) return;
+  const { data } = await supabase.from("user_theme_prefs").select("business_theme, custom_colors").eq("user_id", u.user.id).maybeSingle();
+  if (!data) return;
+  const c = data.custom_colors as CustomColors | null;
+  if (c && HEX.test(c.primary) && HEX.test(c.accent) && HEX.test(c.highlight)) localStorage.setItem(CUSTOM_KEY, JSON.stringify(c));
+  const theme = isBusinessTheme(data.business_theme) ? data.business_theme : "brand";
+  localStorage.setItem(THEME_STORAGE_KEY, theme);
+  applyBusinessTheme(theme);
+  window.dispatchEvent(new Event(THEME_SYNC_EVENT));
+}
 
 export type BusinessTheme = "brand" | "cafe" | "coffeehouse" | "fiesta" | "custom";
 const CUSTOM_KEY = "business-theme-custom";
@@ -90,14 +115,17 @@ export function BusinessThemePicker() {
   const [selected, setSelected] = useState<BusinessTheme>("brand");
 
   useEffect(() => {
-    const saved = localStorage.getItem(THEME_STORAGE_KEY);
-    setSelected(isBusinessTheme(saved) ? saved : "brand");
+    const read = () => { const saved = localStorage.getItem(THEME_STORAGE_KEY); setSelected(isBusinessTheme(saved) ? saved : "brand"); };
+    read();
+    window.addEventListener(THEME_SYNC_EVENT, read);
+    return () => window.removeEventListener(THEME_SYNC_EVENT, read);
   }, []);
 
   const chooseTheme = (theme: BusinessTheme) => {
     applyBusinessTheme(theme);
     localStorage.setItem(THEME_STORAGE_KEY, theme);
     setSelected(theme);
+    void saveThemeToAccount(theme, localStorage.getItem(CUSTOM_KEY) ? loadCustom() : null);
   };
 
   return (
@@ -134,7 +162,12 @@ function CustomThemeBuilder({ active, onApply }: { active: boolean; onApply: () 
   const { t } = useT();
   const [colors, setColors] = useState<CustomColors>(DEFAULT_CUSTOM);
   const [slot, setSlot] = useState<keyof CustomColors>("primary");
-  useEffect(() => setColors(loadCustom()), []);
+  useEffect(() => {
+    const read = () => setColors(loadCustom());
+    read();
+    window.addEventListener(THEME_SYNC_EVENT, read);
+    return () => window.removeEventListener(THEME_SYNC_EVENT, read);
+  }, []);
 
   const [saved, setSaved] = useState(true);
   const update = (next: CustomColors) => { setColors(next); setSaved(false); };
@@ -145,6 +178,7 @@ function CustomThemeBuilder({ active, onApply }: { active: boolean; onApply: () 
     clearCustomVars();
     applyCustom(next);
     onApply();
+    void saveThemeToAccount("custom", next);
   };
   const slots: { id: keyof CustomColors; label: string }[] = [
     { id: "primary", label: t("theme.custom.primary") },
