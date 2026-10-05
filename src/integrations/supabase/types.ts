@@ -32,6 +32,53 @@ export type Database = {
         }
         Relationships: []
       }
+      activity_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_name: string
+          actor_role: string | null
+          created_at: string
+          entity: string
+          entity_id: string | null
+          id: string
+          shop_id: string
+          summary: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_name?: string
+          actor_role?: string | null
+          created_at?: string
+          entity: string
+          entity_id?: string | null
+          id?: string
+          shop_id: string
+          summary: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_name?: string
+          actor_role?: string | null
+          created_at?: string
+          entity?: string
+          entity_id?: string | null
+          id?: string
+          shop_id?: string
+          summary?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_log_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_messages: {
         Row: {
           created_at: string
@@ -298,6 +345,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      refresh_runs: {
+        Row: {
+          error: string | null
+          finished_at: string | null
+          id: string
+          job: string
+          shops_processed: number
+          started_at: string
+          status: string
+        }
+        Insert: {
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          job?: string
+          shops_processed?: number
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          job?: string
+          shops_processed?: number
+          started_at?: string
+          status?: string
+        }
+        Relationships: []
       }
       sale_items: {
         Row: {
