@@ -85,6 +85,13 @@
       "when": 1791212065444,
       "tag": "0011_user_theme_prefs",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791212088600,
+      "tag": "0012_theme_prefs_cleanup_on_profile_delete",
+      "breakpoints": true
     }
   ]
 }
