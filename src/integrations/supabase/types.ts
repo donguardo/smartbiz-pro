@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_deletions: {
+        Row: {
+          deleted_on: string
+          id: string
+          user_hash: string
+        }
+        Insert: {
+          deleted_on?: string
+          id?: string
+          user_hash: string
+        }
+        Update: {
+          deleted_on?: string
+          id?: string
+          user_hash?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           created_at: string
@@ -849,6 +867,12 @@ export type Database = {
         Args: { _product_id: string; _qty: number }
         Returns: undefined
       }
+      delete_account_data: {
+        Args: { _user_hash: string; _user_id: string }
+        Returns: {
+          file_path: string
+        }[]
+      }
       ensure_my_shop: {
         Args: { _business_name?: string }
         Returns: {
@@ -863,6 +887,13 @@ export type Database = {
           forecast_date: string
           high: number
           low: number
+        }[]
+      }
+      get_account_deletion_scope: {
+        Args: never
+        Returns: {
+          member_role: Database["public"]["Enums"]["shop_role"]
+          sole_owner: boolean
         }[]
       }
       get_cashier_today_summary: {

@@ -33,4 +33,5 @@
 - [x] G5: Add overstock analysis, daily localized AI tips and feedback
 - [x] Sync all new English/Tagalog wording to backend translations
 - [x] Verify the owner workspace across desktop and 360px mobile
+- [x] Delete my account (Settings → Account) + public /delete-account page
 - [ ] Verify cashier permissions and second-shop isolation (requires suitable additional test accounts)

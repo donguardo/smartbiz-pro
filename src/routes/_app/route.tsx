@@ -24,10 +24,10 @@ const NAV = [
 ] as const;
 
 const OWNER_NAV = [
-  { to: "/customers", label: "Customers", icon: Users },
-  { to: "/business", label: "Business", icon: BriefcaseBusiness },
-  { to: "/settings", label: "Settings", icon: Settings },
+  { to: "/customers", label: "app.nav.customers", icon: Users },
+  { to: "/business", label: "app.nav.business", icon: BriefcaseBusiness },
 ] as const;
+const SETTINGS_NAV = { to: "/settings", label: "app.nav.settings", icon: Settings } as const;
 
 function AppLayout() {
   const { session, loading } = useSession();
@@ -39,7 +39,7 @@ function AppLayout() {
   }, [loading, session, navigate]);
   const { data: profile } = useQuery({ queryKey: qk.profile, queryFn: fetchProfile, enabled: !!session });
   const { data: shop } = useQuery({ queryKey: qk.shop, queryFn: fetchShopContext, enabled: !!session });
-  const visibleNav = shop?.member_role === "owner" ? [...NAV, ...OWNER_NAV] : NAV;
+  const visibleNav = shop?.member_role === "owner" ? [...NAV, ...OWNER_NAV, SETTINGS_NAV] : [...NAV, SETTINGS_NAV];
 
   if (loading || !session) {
     return <div className="flex min-h-screen items-center justify-center text-muted-foreground">{t("app.loading")}</div>;
@@ -85,6 +85,7 @@ function AppLayout() {
           <Button variant="ghost" size="icon" onClick={openInstallPrompt} aria-label={t("install.open")} title={t("install.open")} className="hidden min-[420px]:inline-flex">
             <Download className="h-4 w-4" />
           </Button>
+          <Link to="/settings" aria-label={t("app.nav.settings")} className="flex h-9 w-9 items-center justify-center rounded-lg border border-border"><Settings className="h-4 w-4" /></Link>
           <LanguageToggle />
           <ThemeToggle />
           <button aria-label="Sign out" onClick={() => supabase.auth.signOut()} className="flex h-9 w-9 items-center justify-center rounded-lg border border-border"><LogOut className="h-4 w-4" /></button>
