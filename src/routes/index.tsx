@@ -202,7 +202,7 @@ function Landing() {
 
       <footer className="border-t border-border px-4 py-8 text-center text-sm text-muted-foreground">
         <p>© {new Date().getFullYear()} MVP BizManager · MAS KITA, MAS TUBO! · by Orangeware USA</p>
-        <nav className="mt-3 flex justify-center gap-5"><Link to="/privacy" className="hover:text-foreground">Privacy Notice</Link><Link to="/terms" className="hover:text-foreground">Terms of Service</Link></nav>
+        <nav className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-2"><Link to="/privacy" className="hover:text-foreground">Privacy Notice</Link><Link to="/terms" className="hover:text-foreground">Terms of Service</Link><Link to="/delete-account" className="hover:text-foreground">{t("account.pageLink")}</Link></nav>
       </footer>
     </div>
   );

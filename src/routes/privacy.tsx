@@ -18,6 +18,7 @@ const sections = [
   { title: "How information is used", body: "Placeholder: Explain how information supports account access, POS and inventory features, AI assistance, service security, support, and improvement." },
   { title: "Sharing and retention", body: "Placeholder: Identify service providers, legal disclosures, retention periods, and safeguards applied to personal information." },
   { title: "Your rights", body: "Under Republic Act No. 10173, the Data Privacy Act of 2012, data subjects may have rights to be informed, access, object, correct, erase or block, obtain data portability, and seek damages, subject to applicable law." },
+  { title: "Deleting your account", body: "You can delete your account and data at any time from Settings → Account → \"Delete my account\", or by following the steps on our Delete your account page (/delete-account)." },
   { title: "Contact and complaints", body: "Placeholder: Add the organization’s privacy contact details and instructions for raising a concern or contacting the National Privacy Commission." },
 ];
 

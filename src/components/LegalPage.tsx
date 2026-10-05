@@ -30,6 +30,7 @@ export function LegalPage({ title, updated, intro, sections }: { title: string; 
           <Link to="/" className="font-semibold text-primary">Back to home</Link>
           <Link to="/privacy" className="hover:text-foreground">Privacy Notice</Link>
           <Link to="/terms" className="hover:text-foreground">Terms of Service</Link>
+          <Link to="/delete-account" className="hover:text-foreground">Delete your account</Link>
         </div>
       </main>
     </div>
