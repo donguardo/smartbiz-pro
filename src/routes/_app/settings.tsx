@@ -16,7 +16,7 @@ function SettingsPage() {
   const [values, setValues] = useState<Record<string, string>>({});
   const save = async (period: "daily" | "weekly" | "monthly") => {
     const amount = Number(values[period] ?? goals.find((g) => g.period === period)?.target_amount ?? 0);
-    if (!shop || amount <= 0) return toast.error("Enter a target above ₱0");
+    if (!shop || amount <= 0) { toast.error("Enter a target above ₱0"); return; }
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) return;
     const { error } = await supabase.from("sales_goals").upsert({ shop_id: shop.shop_id, period, target_amount: amount, created_by: user.user.id }, { onConflict: "shop_id,period" });
@@ -30,6 +30,6 @@ function Staff() {
   const { data: members = [] } = useQuery({ queryKey: ["shop-members"], queryFn: async () => { const { data, error } = await supabase.from("shop_members").select("*").order("created_at"); if (error) throw error; return data; } });
   const { data: invites = [] } = useQuery({ queryKey: ["shop-invites"], queryFn: async () => { const { data, error } = await supabase.from("shop_invites").select("*").is("used_at", null).order("created_at", { ascending: false }); if (error) throw error; return data; } });
   const [email, setEmail] = useState("");
-  const invite = async () => { const { data, error } = await supabase.rpc("create_shop_invite", { _email: email }); if (error) return toast.error(error.message); const row = data[0]; if (!row) return; const link = `${window.location.origin}/invite?code=${row.code}`; await navigator.clipboard.writeText(link); setEmail(""); toast.success("Invite link copied"); qc.invalidateQueries({ queryKey: ["shop-invites"] }); };
+  const invite = async () => { const { data, error } = await supabase.rpc("create_shop_invite", { _email: email }); if (error) { toast.error(error.message); return; } const row = data[0]; if (!row) return; const link = `${window.location.origin}/invite?code=${row.code}`; await navigator.clipboard.writeText(link); setEmail(""); toast.success("Invite link copied"); qc.invalidateQueries({ queryKey: ["shop-invites"] }); };
   return <section className="rounded-lg border border-border bg-card p-5"><h2 className="text-lg font-bold">Staff</h2><p className="mt-1 text-sm text-muted-foreground">Invite a cashier, then share the copied link by Messenger or Viber.</p><div className="mt-4 flex gap-2"><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="cashier@email.com" className="min-w-0 flex-1 rounded-md border border-input bg-background px-3 py-2"/><Button onClick={invite}>Copy invite link</Button></div><ul className="mt-4 divide-y divide-border">{members.map((m) => <li key={m.id} className="flex items-center justify-between py-3 text-sm"><span>{m.user_id.slice(0, 8)}… <b className="ml-2 capitalize">{m.role}</b></span>{m.role === "cashier" && <Button variant="outline" size="sm" onClick={async () => { await supabase.rpc("remove_shop_cashier", { _member_id: m.id }); qc.invalidateQueries({ queryKey: ["shop-members"] }); }}>Remove</Button>}</li>)}</ul>{invites.length > 0 && <p className="mt-3 text-xs text-muted-foreground">{invites.length} active invite{invites.length === 1 ? "" : "s"}; each expires after 48 hours.</p>}</section>;
 }
