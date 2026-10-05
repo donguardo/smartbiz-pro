@@ -769,23 +769,29 @@ export type Database = {
       }
       shops: {
         Row: {
+          business_categories: string[]
           created_at: string
           id: string
           language: string
+          logo_url: string | null
           name: string
           updated_at: string
         }
         Insert: {
+          business_categories?: string[]
           created_at?: string
           id?: string
           language?: string
+          logo_url?: string | null
           name?: string
           updated_at?: string
         }
         Update: {
+          business_categories?: string[]
           created_at?: string
           id?: string
           language?: string
+          logo_url?: string | null
           name?: string
           updated_at?: string
         }
