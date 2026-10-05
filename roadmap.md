@@ -56,3 +56,4 @@
 - [x] Add touch-swipe navigation to the hero showcase carousel
 - [x] Add visible pause and play control to the hero showcase carousel
 - [x] Make each business slide change a pronounced elastic bounce-in transition
+- [x] Add a countdown progress bar to the hero showcase carousel
