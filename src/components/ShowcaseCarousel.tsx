@@ -35,11 +35,30 @@ export function ShowcaseCarousel() {
     else goPrev();
   };
 
+  const timerRef = useRef({ elapsed: 0, start: 0 });
+
+  useEffect(() => {
+    timerRef.current = { elapsed: 0, start: 0 };
+  }, [index]);
+
   useEffect(() => {
     if (paused) return;
-    const id = window.setInterval(() => setIndex((i) => (i + 1) % count), AUTOPLAY_MS);
-    return () => window.clearInterval(id);
-  }, [paused, count]);
+    const timer = timerRef.current;
+    const duration = Math.max(0, AUTOPLAY_MS - timer.elapsed);
+    timer.start = performance.now();
+    let fired = false;
+    const id = window.setTimeout(() => {
+      fired = true;
+      setIndex((i) => (i + 1) % count);
+    }, duration);
+    return () => {
+      window.clearTimeout(id);
+      if (!fired && timer.start) {
+        timer.elapsed += performance.now() - timer.start;
+        timer.start = 0;
+      }
+    };
+  }, [paused, count, index]);
 
   const scenario = SHOWCASE_SCENARIOS[index]!;
   const Icon = scenario.icon;
@@ -96,6 +115,18 @@ export function ShowcaseCarousel() {
           </Link>
         </div>
         </div>
+      </div>
+
+      <div
+        data-business-theme={scenario.theme}
+        aria-hidden
+        className="mt-1 h-1 w-full overflow-hidden rounded-full bg-muted"
+      >
+        <div
+          key={index}
+          style={{ "--carousel-duration": `${AUTOPLAY_MS}ms` } as React.CSSProperties}
+          className={`showcase-progress h-full rounded-full bg-primary ${paused ? "showcase-progress-paused" : ""}`}
+        />
       </div>
 
       <div className="mt-3 flex items-center justify-center gap-3">
