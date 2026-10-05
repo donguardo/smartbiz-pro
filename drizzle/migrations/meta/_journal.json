@@ -57,6 +57,13 @@
       "when": 1791183738740,
       "tag": "0007_owner_only_sample_store_loader",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791183841389,
+      "tag": "0008_restrict_record_sale_execution",
+      "breakpoints": true
     }
   ]
 }
