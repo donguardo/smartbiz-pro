@@ -32,6 +32,7 @@ import { useT } from "@/lib/i18n";
 import { fetchDailyTip, fetchForecasts, fetchGoals, fetchProducts, fetchShopContext } from "@/lib/store";
 
 const CHAT_KEY = "bizbot-conversation-v1";
+const BOT_POSITION_KEY = "bizbot-position-v1";
 const MAX_CONTEXT_PRODUCTS = 80;
 const BOT_SIZE = 68;
 const BOT_MARGIN = 16;
@@ -68,6 +69,32 @@ const loadMessages = (): UIMessage[] => {
     return Array.isArray(parsed) ? (parsed as UIMessage[]) : [];
   } catch {
     return [];
+  }
+};
+
+const clampBotPosition = (position: BotPosition): BotPosition => ({
+  x: Math.min(Math.max(BOT_MARGIN, position.x), Math.max(BOT_MARGIN, window.innerWidth - BOT_SIZE - BOT_MARGIN)),
+  y: Math.min(Math.max(BOT_MARGIN, position.y), Math.max(BOT_MARGIN, window.innerHeight - BOT_SIZE - BOT_MARGIN)),
+});
+
+const loadBotPosition = (): BotPosition | null => {
+  try {
+    const raw = localStorage.getItem(BOT_POSITION_KEY);
+    if (!raw) return null;
+    const parsed: unknown = JSON.parse(raw);
+    if (
+      typeof parsed !== "object" ||
+      parsed === null ||
+      !("x" in parsed) ||
+      !("y" in parsed) ||
+      typeof parsed.x !== "number" ||
+      typeof parsed.y !== "number" ||
+      !Number.isFinite(parsed.x) ||
+      !Number.isFinite(parsed.y)
+    ) return null;
+    return clampBotPosition({ x: parsed.x, y: parsed.y });
+  } catch {
+    return null;
   }
 };
 
@@ -125,6 +152,7 @@ export function FloatingBizBot() {
 
   useEffect(() => {
     setMessages(loadMessages());
+    setBotPosition(loadBotPosition());
     setHydrated(true);
   }, [setMessages]);
 
@@ -181,10 +209,9 @@ export function FloatingBizBot() {
     const keepBotOnScreen = () => {
       setBotPosition((position) => {
         if (!position) return null;
-        return {
-          x: Math.min(Math.max(BOT_MARGIN, position.x), window.innerWidth - BOT_SIZE - BOT_MARGIN),
-          y: Math.min(Math.max(BOT_MARGIN, position.y), window.innerHeight - BOT_SIZE - BOT_MARGIN),
-        };
+        const nextPosition = clampBotPosition(position);
+        localStorage.setItem(BOT_POSITION_KEY, JSON.stringify(nextPosition));
+        return nextPosition;
       });
     };
     window.addEventListener("resize", keepBotOnScreen);
@@ -258,10 +285,12 @@ export function FloatingBizBot() {
     const drag = dragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
     drag.moved = drag.moved || Math.abs(event.movementX) + Math.abs(event.movementY) > 2;
-    setBotPosition({
-      x: Math.min(Math.max(BOT_MARGIN, event.clientX - drag.offsetX), window.innerWidth - BOT_SIZE - BOT_MARGIN),
-      y: Math.min(Math.max(BOT_MARGIN, event.clientY - drag.offsetY), window.innerHeight - BOT_SIZE - BOT_MARGIN),
+    const nextPosition = clampBotPosition({
+      x: event.clientX - drag.offsetX,
+      y: event.clientY - drag.offsetY,
     });
+    setBotPosition(nextPosition);
+    localStorage.setItem(BOT_POSITION_KEY, JSON.stringify(nextPosition));
   };
 
   const stopDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
