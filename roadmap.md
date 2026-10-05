@@ -35,3 +35,13 @@
 - [x] Verify the owner workspace across desktop and 360px mobile
 - [x] Delete my account (Settings → Account) + public /delete-account page
 - [ ] Verify cashier permissions and second-shop isolation (requires suitable additional test accounts)
+
+## October 5 fixes and checks
+- [ ] Replace BIZBOT launcher with a fixed 56px bottom-right button and reserve page space
+- [ ] Confirm light-mode default and restrict purple to logo and primary actions
+- [ ] Apply semantic green/red/amber indicators across demo and signed-in dashboards
+- [ ] Keep each donut legend with its donut chart
+- [ ] Complete requested Taglish dashboard labels and summaries
+- [ ] Harden sales writes to server-only functions and move sample sales seeding server-side
+- [ ] Inspect scheduled database jobs and report external domain/email/test-account blockers
+- [ ] Verify 360–480px and desktop flows, then publish
