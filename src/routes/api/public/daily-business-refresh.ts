@@ -6,11 +6,16 @@ export const Route = createFileRoute("/api/public/daily-business-refresh")({
     const rejected = await authenticateCronRequest(request);
     if (rejected) return rejected;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: run } = await supabaseAdmin.from("refresh_runs").insert({ job: "daily-business-refresh" }).select("id").single();
+    const finish = async (status: "success" | "error", error: string | null, shopsProcessed = 0) => {
+      if (run) await supabaseAdmin.from("refresh_runs").update({ status, error, shops_processed: shopsProcessed, finished_at: new Date().toISOString() }).eq("id", run.id);
+    };
+    try {
     const { error: forecastError } = await supabaseAdmin.rpc("refresh_all_forecasts");
-    if (forecastError) return new Response("Forecast refresh failed", { status: 500 });
+    if (forecastError) { await finish("error", "Forecast refresh failed"); return new Response("Forecast refresh failed", { status: 500 }); }
     const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila" }).format(new Date());
     const { data: shops, error: shopsError } = await supabaseAdmin.from("shops").select("id,language");
-    if (shopsError) return new Response("Shop refresh failed", { status: 500 });
+    if (shopsError) { await finish("error", "Could not load shops"); return new Response("Shop refresh failed", { status: 500 }); }
     for (const shop of shops) {
       const [{ data: products }, { data: items }, { data: goals }, { data: forecasts }, { data: customers }, { data: expenses }] = await Promise.all([
         supabaseAdmin.from("products").select("id,name,stock,reorder_level,cost").eq("shop_id", shop.id),
@@ -34,6 +39,11 @@ export const Route = createFileRoute("/api/public/daily-business-refresh")({
       } catch { tip = fallback; }
       await supabaseAdmin.from("daily_tips").upsert({ shop_id: shop.id, tip_date: today, tip_text: tip, language: shop.language }, { onConflict: "shop_id,tip_date", ignoreDuplicates: true });
     }
+    await finish("success", null, shops.length);
     return Response.json({ ok: true, shops: shops.length });
+    } catch (e) {
+      await finish("error", (e instanceof Error ? e.message : "Unknown error").slice(0, 300));
+      return new Response("Refresh failed", { status: 500 });
+    }
   } } },
 });
