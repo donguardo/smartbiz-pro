@@ -4,7 +4,7 @@ import type { Database } from "@/integrations/supabase/types";
 export type Unit = "pc" | "pack" | "kg" | "g" | "L" | "service";
 export const UNITS: Unit[] = ["pc", "pack", "kg", "g", "L", "service"];
 export const isDecimalUnit = (u: string) => u === "kg" || u === "g" || u === "L";
-export type Product = Omit<Database["public"]["Tables"]["products"]["Row"], "stock" | "stock_qty"> & { stock: number; cost: number };
+export type Product = Omit<Database["public"]["Tables"]["products"]["Row"], "stock" | "stock_qty"> & { stock: number; cost: number | null };
 export type Sale = Database["public"]["Tables"]["sales"]["Row"];
 export type SaleItem = Database["public"]["Tables"]["sale_items"]["Row"];
 export type ShopContext = Database["public"]["Functions"]["get_my_shop_context"]["Returns"][number];
@@ -16,7 +16,7 @@ export const qk = { products: ["products"], sales: ["sales"], items: ["sale_item
 export async function fetchAllProducts() {
   const { data, error } = await supabase.rpc("get_shop_products_v2");
   if (error) throw error;
-  return data.map((p) => ({ ...p, stock: Number(p.stock ?? 0), price: Number(p.price), cost: Number(p.cost ?? 0), user_id: "" })) as Product[];
+  return data.map((p) => ({ ...p, stock: Number(p.stock ?? 0), price: Number(p.price), cost: p.cost == null ? null : Number(p.cost), user_id: "" })) as Product[];
 }
 /** Active (non-archived) products A→Z. */
 export async function fetchProducts() {
@@ -50,7 +50,18 @@ export async function fetchProfile() {
   return created;
 }
 
-export async function fetchShopContext() { const { data, error } = await supabase.rpc("get_my_shop_context"); if (error) throw error; return data[0] ?? null; }
+export async function fetchShopContext() {
+  const { data, error } = await supabase.rpc("get_my_shop_context");
+  if (error) throw error;
+  if (data[0]) return data[0];
+  // Signed in with no membership at all: the server creates a brand-new shop owned by this user (never joins an existing one).
+  const { error: e2 } = await supabase.rpc("ensure_my_shop", {});
+  if (e2) throw e2;
+  const { data: again, error: e3 } = await supabase.rpc("get_my_shop_context");
+  if (e3) throw e3;
+  if (!again[0]) throw new Error("Your shop could not be loaded");
+  return again[0];
+}
 export async function fetchCustomers() { const { data, error } = await supabase.rpc("get_masked_customers"); if (error) throw error; return data; }
 export async function fetchGoals() { const { data, error } = await supabase.from("sales_goals").select("*").order("period"); if (error) throw error; return data; }
 export async function fetchForecasts() { const { data, error } = await supabase.from("sales_forecasts").select("*").gte("forecast_date", new Date().toISOString().slice(0, 10)).order("forecast_date"); if (error) throw error; return data; }
@@ -81,7 +92,10 @@ export function computeInsights(products: Product[], items: SaleItem[]): Insight
     if (!p.track_stock || p.archived_at) continue;
     const daily = (sold14.get(p.id) ?? 0) / 14;
     const daysLeft = daily > 0 ? p.stock / daily : Infinity;
-    if (p.stock <= p.reorder_level || daysLeft < 5) {
+    const last = lastSold.get(p.id);
+    const ageDays = (now - new Date(p.created_at).getTime()) / 86400000;
+    const brandNewEmpty = ageDays < 1 && p.stock === 0 && !last;
+    if (!brandNewEmpty && (p.stock <= p.reorder_level || daysLeft < 5)) {
       const qty = Math.max(p.reorder_level * 2 - p.stock, Math.ceil(daily * 14) - p.stock, 1);
       out.push({
         kind: "reorder", product: p,
@@ -89,18 +103,17 @@ export function computeInsights(products: Product[], items: SaleItem[]): Insight
         detail: `${p.stock} left${Number.isFinite(daysLeft) ? ` · ~${Math.max(0, Math.floor(daysLeft))} days of stock` : ""}. Suggest ordering ${qty} units.`,
       });
     }
-    const last = lastSold.get(p.id);
-    const ageDays = (now - new Date(p.created_at).getTime()) / 86400000;
-    if (p.stock > 0 && (!last ? ageDays >= 0 && (sold14.get(p.id) ?? 0) === 0 : now - last > 21 * 86400000)) {
+    if (p.stock > 0 && (!last ? ageDays > 14 : now - last > 21 * 86400000)) {
       out.push({
         kind: "dead", product: p,
         title: `${p.name} isn't selling`,
         detail: `No sales in the last ${last ? Math.floor((now - last) / 86400000) : 14}+ days · ₱${(Number(p.cost) * p.stock).toFixed(0)} tied up in stock. Consider a promo or bundle.`,
       });
     }
-    const daily30 = (sold30.get(p.id) ?? 0) / 30;
+    const sold30d = sold30.get(p.id) ?? 0;
+    const daily30 = sold30d / 30;
     const supply = daily30 > 0 ? p.stock / daily30 : Infinity;
-    if (daily30 > 0 && supply > 60) out.push({ kind: "overstock", product: p, title: `Too much ${p.name}`, detail: `${Math.round(supply)} days of supply · ₱${(Number(p.cost) * p.stock).toFixed(0)} tied up. Try a promo or order less next time.` });
+    if (ageDays > 30 && sold30d > 0 && p.stock > 3 * sold30d) out.push({ kind: "overstock", product: p, title: `Too much ${p.name}`, detail: `${Math.round(supply)} days of supply · ₱${(Number(p.cost) * p.stock).toFixed(0)} tied up. Try a promo or order less next time.` });
   }
   return out.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "reorder" ? -1 : 1));
 }

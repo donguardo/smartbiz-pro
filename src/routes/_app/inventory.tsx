@@ -53,9 +53,11 @@ function Inventory() {
   const products = all.filter((p) => !p.archived_at);
   const insights = useMemo(() => computeInsights(products, items), [products, items]);
   const flag = (id: string) => insights.filter((i) => i.product?.id === id).map((i) => i.kind);
-  const value = products.reduce((s, p) => s + (p.track_stock ? p.cost * p.stock : 0), 0);
-  const categories = [...new Set(all.map((p) => p.category))].sort((a, b) => a.localeCompare(b));
-  const refresh = () => qc.invalidateQueries({ queryKey: qk.products });
+  const value = products.reduce((s, p) => s + (p.track_stock && p.cost != null ? p.cost * p.stock : 0), 0);
+  const noCost = products.filter((p) => p.cost == null).length;
+  const [extraCats, setExtraCats] = useState<string[]>([]);
+  const categories = [...new Set([...all.map((p) => p.category), ...extraCats])].sort((a, b) => a.localeCompare(b));
+  const refresh = () => qc.refetchQueries({ queryKey: qk.products });
 
   const toggleCashiers = async () => {
     if (!shop) return;
@@ -79,13 +81,13 @@ function Inventory() {
         if (error) throw error;
         photo_path = path;
       }
-      const row = { name: form.name.trim(), sku: form.sku.trim(), category, price: Number(form.price), unit: form.unit, track_stock: form.track, stock_qty: stock, reorder_level: Math.round(Number(form.reorder_level || 0)), photo_path, ...(owner ? { cost: Number(form.cost || 0) } : {}) };
+      const row = { name: form.name.trim(), sku: form.sku.trim(), category, price: Number(form.price), unit: form.unit, track_stock: form.track, stock_qty: stock, reorder_level: Math.round(Number(form.reorder_level || 0)), photo_path, ...(owner ? { cost: form.cost.trim() === "" ? null : Number(form.cost) } : {}) };
       const { error } = form.id
         ? await supabase.rpc("update_product", { _id: form.id, _data: row })
-        : await supabase.from("products").insert({ ...row, cost: owner ? Number(form.cost || 0) : 0 });
+        : await supabase.from("products").insert({ ...row, cost: owner ? (form.cost.trim() === "" ? null : Number(form.cost)) : null });
       if (error) throw new Error(error.message.includes("products_shop_sku_unique") ? "That SKU/barcode is already used in your shop" : error.message);
       toast.success(form.id ? "Product updated" : "Product added");
-      setForm(null); refresh();
+      await refresh(); setExtraCats((c) => (c.includes(category) ? c : [...c, category])); setForm(null);
     } catch (err) { toast.error(err instanceof Error ? err.message : "Could not save"); } finally { setBusy(false); }
   };
   const del = async (p: Product) => {
@@ -106,7 +108,7 @@ function Inventory() {
     const rows = csv?.flatMap((r) => (r.data ? [r.data] : [])) ?? [];
     if (!rows.length) return;
     setBusy(true);
-    const { error } = await supabase.from("products").insert(rows.map((r) => ({ ...r, cost: owner ? r.cost : 0 })));
+    const { error } = await supabase.from("products").insert(rows.map((r) => ({ ...r, cost: owner ? r.cost : null })));
     setBusy(false);
     if (error) { toast.error(error.message); return; }
     toast.success(`${rows.length} products imported`); setCsv(null); refresh();
@@ -129,7 +131,7 @@ function Inventory() {
     <div className="space-y-5 p-4 md:p-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">{products.length} products{owner && ` · ${peso(value)} at cost`}</p>
+          <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">{products.length} products{owner && ` · ${peso(value)} at cost`}{owner && noCost > 0 && ` · ${noCost} product${noCost === 1 ? " has" : "s have"} no cost`}</p>
           <h1 className="text-3xl font-bold">Products</h1>
         </div>
         {canEdit && <div className="flex flex-wrap gap-2">
@@ -160,7 +162,7 @@ function Inventory() {
           <tbody className="divide-y divide-border">
             {shown.map((p) => {
               const f = flag(p.id);
-              const m = p.price ? ((p.price - p.cost) / p.price) * 100 : 0;
+              const m = p.price && p.cost != null ? ((p.price - p.cost) / p.price) * 100 : null;
               return (
                 <tr key={p.id} className={p.archived_at ? "opacity-60" : ""}>
                   <td className="p-3"><div className="flex items-center gap-3">
@@ -169,7 +171,7 @@ function Inventory() {
                   </div></td>
                   <td className="p-3 text-muted-foreground">{p.category}</td>
                   <td className="p-3 text-right font-mono">{peso(p.price)}</td>
-                  {owner && <td className="p-3 text-right font-mono">{m.toFixed(0)}%</td>}
+                  {owner && <td className="p-3 text-right font-mono">{m == null ? "—" : `${m.toFixed(0)}%`}</td>}
                   <td className="p-3 text-right font-mono">{p.track_stock ? `${p.stock} ${p.unit}` : "—"}</td>
                   <td className="p-3"><div className="flex flex-wrap gap-1">
                     {p.archived_at && <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium">Archived</span>}
@@ -181,7 +183,7 @@ function Inventory() {
                   </div></td>
                   <td className="whitespace-nowrap p-3 text-right">
                     {p.archived_at ? owner && <button onClick={() => restore(p)} className="text-xs text-primary underline">Restore</button> : <>
-                      {canEdit && <button aria-label={`Edit ${p.name}`} onClick={() => setForm({ id: p.id, name: p.name, sku: p.sku, category: p.category, newCategory: "", price: String(p.price), cost: owner ? String(p.cost) : "", unit: p.unit as Unit, track: p.track_stock, stock: String(p.stock), reorder_level: String(p.reorder_level), photo_path: p.photo_path })} className="p-1.5 text-muted-foreground hover:text-foreground"><Pencil className="h-4 w-4" /></button>}
+                      {canEdit && <button aria-label={`Edit ${p.name}`} onClick={() => setForm({ id: p.id, name: p.name, sku: p.sku, category: p.category, newCategory: "", price: String(p.price), cost: owner && p.cost != null ? String(p.cost) : "", unit: p.unit as Unit, track: p.track_stock, stock: String(p.stock), reorder_level: String(p.reorder_level), photo_path: p.photo_path })} className="p-1.5 text-muted-foreground hover:text-foreground"><Pencil className="h-4 w-4" /></button>}
                       {owner && p.track_stock && <button aria-label={`Adjust stock for ${p.name}`} title="Restock, loss or correction" onClick={() => setAdjusting(p)} className="p-1.5 text-muted-foreground hover:text-foreground"><ArrowUpDown className="h-4 w-4" /></button>}
                       {owner && <button aria-label={`Delete ${p.name}`} onClick={() => del(p)} className="p-1.5 text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>}
                     </>}

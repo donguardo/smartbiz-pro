@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -33,13 +33,49 @@ function AuthPage() {
   const [business, setBusiness] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ kind: "success" | "error"; text: string } | null>(null);
+  const [ownerName, setOwnerName] = useState("");
+  const [mobile, setMobile] = useState("");
+  const [businessType, setBusinessType] = useState("");
+  const [done, setDone] = useState(false);
+  const [expired, setExpired] = useState(false);
+  const submitting = useRef(false);
+  const confirmed = useRef(false);
+
+  // Read and immediately scrub auth tokens/errors from the address bar.
+  useEffect(() => {
+    const hash = new URLSearchParams(window.location.hash.slice(1));
+    const query = new URLSearchParams(window.location.search);
+    const err = hash.get("error_code") || query.get("error_code") || hash.get("error") || query.get("error");
+    if (err) { setExpired(true); setMode("signin"); }
+    if (query.get("confirmed") === "1" || hash.get("type") === "signup") confirmed.current = true;
+    // Let the auth client read a fresh access token first; scrub everything else right away.
+    if (err || !hash.get("access_token")) window.history.replaceState(null, "", window.location.pathname);
+  }, []);
 
   useEffect(() => {
-    if (session) navigate({ to: "/dashboard" });
+    document.title = mode === "signup" ? "Create account — MVP BizManager" : mode === "forgot" ? "Reset password — MVP BizManager" : "Sign in — MVP BizManager";
+  }, [mode]);
+
+  useEffect(() => {
+    if (!session) return;
+    if (window.location.hash || window.location.search) window.history.replaceState(null, "", window.location.pathname);
+    if (confirmed.current) toast.success("Email confirmed — welcome to MVP BizManager");
+    navigate({ to: "/dashboard", replace: true });
   }, [session, navigate]);
+
+  const resend = async () => {
+    if (!email) { setMessage({ kind: "error", text: "Enter your email above, then tap resend." }); return; }
+    setBusy(true);
+    const { error } = await supabase.auth.resend({ type: "signup", email, options: { emailRedirectTo: `${window.location.origin}/auth?confirmed=1` } });
+    setBusy(false);
+    setMessage(error ? { kind: "error", text: error.message } : { kind: "success", text: "A new confirmation link is on its way. Check your email." });
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting.current || done) return;
+    if (mode === "signup" && mobile && !/^09\d{9}$/.test(mobile)) { setMessage({ kind: "error", text: "Use the mobile format 09XXXXXXXXX." }); return; }
+    submitting.current = true;
     setMessage(null);
     setBusy(true);
     try {
@@ -49,9 +85,11 @@ function AuthPage() {
       } else if (mode === "signup") {
         const { data, error } = await supabase.auth.signUp({
           email, password,
-          options: { emailRedirectTo: window.location.origin, data: { business_name: business || "My Store" } },
+          options: { emailRedirectTo: `${window.location.origin}/auth?confirmed=1`, data: { business_name: business || "My Store", owner_name: ownerName.trim(), mobile, business_type: businessType } },
         });
         if (error) throw error;
+        setDone(true);
+        setBusiness(""); setOwnerName(""); setMobile(""); setBusinessType(""); setPassword("");
         if (!data.session) setMessage({ kind: "success", text: "Check your email to confirm your account, then sign in." });
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -62,6 +100,7 @@ function AuthPage() {
       else setMessage({ kind: "error", text: err instanceof Error ? err.message : "Something went wrong" });
     } finally {
       setBusy(false);
+      submitting.current = false;
     }
   };
 
@@ -85,23 +124,32 @@ function AuthPage() {
           </Button>}
           {mode !== "forgot" && <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground"><div className="h-px flex-1 bg-border" />or<div className="h-px flex-1 bg-border" /></div>}
           <form onSubmit={submit} className="space-y-3">
-            {mode === "signup" && (
+            {expired && <div role="alert" className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive"><p className="font-semibold">Link expired — send a new one</p><p className="mt-1">Enter your email below, then tap resend.</p><Button type="button" variant="outline" size="sm" className="mt-2" disabled={busy} onClick={resend}>Resend confirmation email</Button></div>}
+            <fieldset disabled={done && mode === "signup"} className="space-y-3 disabled:opacity-60">
+            {mode === "signup" && (<>
               <Input placeholder="Business name" value={business} onChange={(e) => setBusiness(e.target.value)} />
-            )}
+              <Input placeholder="Owner name" autoComplete="name" maxLength={80} value={ownerName} onChange={(e) => setOwnerName(e.target.value)} />
+              <Input type="tel" inputMode="numeric" placeholder="Mobile (09XXXXXXXXX)" pattern="09[0-9]{9}" maxLength={11} value={mobile} onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))} />
+              <select aria-label="Business type" value={businessType} onChange={(e) => setBusinessType(e.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+                <option value="">Business type</option>
+                {["Sari-sari", "Food", "Retail", "Services", "Laundry", "Hardware", "Bakery", "Other"].map((b) => <option key={b}>{b}</option>)}
+              </select>
+            </>)}
             <Input type="email" required placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
             {mode !== "forgot" && <>
               <Input type="password" required minLength={6} placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={mode === "signup" ? "new-password" : "current-password"} />
               {mode === "signin" && <button type="button" onClick={() => { setMode("forgot"); setMessage(null); }} className="block text-sm font-semibold text-primary hover:underline">Forgot password?</button>}
             </>}
             {message && <p role="status" className={message.kind === "success" ? "rounded-lg bg-success/10 p-3 text-sm text-success" : "rounded-lg bg-destructive/10 p-3 text-sm text-destructive"}>{message.text}</p>}
-            <Button type="submit" disabled={busy} className="w-full">
+            </fieldset>
+            <Button type="submit" disabled={busy || (done && mode === "signup")} className="w-full">
               {busy ? "Please wait…" : mode === "signup" ? "Create account" : mode === "forgot" ? "Send reset link" : "Sign in"}
             </Button>
           </form>
           {mode === "signup" && <p className="mt-3 text-center text-xs text-muted-foreground">By creating an account, you agree to the <Link to="/terms" className="text-primary hover:underline">Terms of Service</Link> and acknowledge the <Link to="/privacy" className="text-primary hover:underline">Privacy Notice</Link>.</p>}
           <p className="mt-5 text-center text-sm text-muted-foreground">
             {mode === "signup" ? "Already have an account?" : mode === "forgot" ? "Remembered your password?" : "New here?"}{" "}
-            <button onClick={() => { setMode(mode === "signup" ? "signin" : mode === "forgot" ? "signin" : "signup"); setMessage(null); }} className="font-semibold text-primary">
+            <button onClick={() => { setMode(mode === "signup" ? "signin" : mode === "forgot" ? "signin" : "signup"); setMessage(null); setDone(false); }} className="font-semibold text-primary">
               {mode === "signup" ? "Sign in" : mode === "forgot" ? "Back to sign in" : "Create one"}
             </button>
           </p>

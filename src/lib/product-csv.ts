@@ -9,7 +9,7 @@ export const SAMPLE_CSV = [
   "Rice,Grains,52,45,kg,yes,50,10,RICE-KG",
 ].join("\n");
 
-export type CsvProduct = { name: string; category: string; price: number; cost: number; unit: Unit; track_stock: boolean; stock_qty: number; reorder_level: number; sku: string };
+export type CsvProduct = { name: string; category: string; price: number; cost: number | null; unit: Unit; track_stock: boolean; stock_qty: number; reorder_level: number; sku: string };
 export type CsvRow = { line: number; data?: CsvProduct | undefined; errors: string[] };
 
 function splitLine(line: string) {
@@ -35,7 +35,7 @@ export function parseProductCsv(text: string, existingSkus: Set<string>): CsvRow
     const errors: string[] = [];
     const name = get("name"); if (!name) errors.push("Name is required");
     const price = Number(get("price")); if (get("price") === "" || !Number.isFinite(price) || price < 0) errors.push("Price must be a number ≥ 0");
-    const cost = get("cost") === "" ? 0 : Number(get("cost")); if (!Number.isFinite(cost) || cost < 0) errors.push("Cost must be a number ≥ 0");
+    const cost = get("cost") === "" ? null : Number(get("cost")); if (cost != null && (!Number.isFinite(cost) || cost < 0)) errors.push("Cost must be a number ≥ 0");
     const unit = (get("unit") || "pc") as Unit; if (!UNITS.includes(unit)) errors.push(`Unit must be one of ${UNITS.join(", ")}`);
     const ts = get("track_stock").toLowerCase();
     const track = unit === "service" ? false : !["no", "false", "0", "n"].includes(ts);

@@ -20,6 +20,11 @@ export function FirstVisitIntro() {
       setShow(false);
       return;
     }
+    // Email confirmation links can land on the homepage: hand them to the sign-in page, no promo video.
+    if (/access_token|error_code|type=signup/.test(window.location.hash)) {
+      window.location.replace(`/auth?confirmed=1${window.location.hash}`);
+      return;
+    }
     if (localStorage.getItem(INTRO_SEEN_KEY)) return;
     setShow(true);
   }, [pathname]);

@@ -41,7 +41,7 @@ function AppLayout() {
   const userId = session?.user.id;
   useEffect(() => { if (userId) void syncThemeFromAccount(); }, [userId]);
   const { data: profile } = useQuery({ queryKey: qk.profile, queryFn: fetchProfile, enabled: !!session });
-  const { data: shop } = useQuery({ queryKey: qk.shop, queryFn: fetchShopContext, enabled: !!session });
+  const { data: shop } = useQuery({ queryKey: qk.shop, queryFn: fetchShopContext, enabled: !!session, retry: 1 });
   const { data: business } = useShopProfile(shop?.shop_id);
   const businessName = business?.name ?? shop?.shop_name ?? profile?.business_name ?? "…";
   const visibleNav = shop?.member_role === "owner" ? [...NAV, ...OWNER_NAV, SETTINGS_NAV] : [...NAV, SETTINGS_NAV];
@@ -66,7 +66,7 @@ function AppLayout() {
           })}
         </nav>
         <div className="mt-auto space-y-3">
-          <div className="rounded-lg border border-sidebar-border px-3 py-2 text-xs"><span className="font-semibold">{shop?.member_role === "owner" ? "Owner" : "Cashier"}</span><span className="block truncate text-muted-foreground">{session.user.email}</span></div>
+          <div className="rounded-lg border border-sidebar-border px-3 py-2 text-xs"><span className="font-semibold">{shop?.member_role === "owner" ? "Owner" : shop?.member_role === "cashier" ? "Cashier" : "…"}</span><span className="block truncate text-muted-foreground">{session.user.email}</span></div>
           <Button variant="outline" className="w-full" onClick={openInstallPrompt}>
             <Download className="h-4 w-4" />{t("install.open")}
           </Button>
