@@ -41,8 +41,8 @@ export function BusinessProfile({ shopId }: { shopId: string }) {
   };
 
   const uploadLogo = async (file: File) => {
-    if (!file.type.startsWith("image/")) return toast.error(t("profile.logoType"));
-    if (file.size > 2 * 1024 * 1024) return toast.error(t("profile.logoSize"));
+    if (!file.type.startsWith("image/")) { toast.error(t("profile.logoType")); return; }
+    if (file.size > 2 * 1024 * 1024) { toast.error(t("profile.logoSize")); return; }
     setBusy(true);
     const ext = (file.name.split(".").pop() || "png").toLowerCase().replace(/[^a-z0-9]/g, "");
     const path = `${shopId}/logo-${Date.now()}.${ext}`;
@@ -71,11 +71,11 @@ export function BusinessProfile({ shopId }: { shopId: string }) {
 
   const save = async () => {
     const n = name.trim();
-    if (n.length < 1 || n.length > 80) return toast.error(t("profile.nameRequired"));
+    if (n.length < 1 || n.length > 80) { toast.error(t("profile.nameRequired")); return; }
     setBusy(true);
     const { error } = await supabase.from("shops").update({ name: n, business_categories: cats }).eq("id", shopId);
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success(t("profile.saved"));
     qc.invalidateQueries({ queryKey: ["shop-profile", shopId] });
     qc.invalidateQueries({ queryKey: qk.shop });
