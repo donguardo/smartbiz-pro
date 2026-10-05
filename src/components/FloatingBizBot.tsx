@@ -36,6 +36,7 @@ const POSITION_KEY = "bizbot-position-v1";
 const MAX_CONTEXT_PRODUCTS = 80;
 const BOT_SIZE_DESKTOP = 224;
 const BOT_SIZE_MOBILE = Math.round(BOT_SIZE_DESKTOP * 2 / 3);
+const BOT_SIZE_PUBLIC_MOBILE = 88;
 
 type BotPosition = { x: number; y: number };
 type SpeechRecognitionEventLike = Event & {
@@ -79,6 +80,11 @@ const clampPosition = (position: BotPosition, size: number): BotPosition => ({
 
 const isDesktopViewport = () =>
   typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches;
+
+const mobileSizeForPath = () => {
+  if (typeof window === "undefined") return BOT_SIZE_MOBILE;
+  return ["/", "/auth", "/reset-password", "/privacy", "/terms"].includes(window.location.pathname) ? BOT_SIZE_PUBLIC_MOBILE : BOT_SIZE_MOBILE;
+};
 
 export function FloatingBizBot() {
   const { lang, t } = useT();
@@ -135,7 +141,7 @@ export function FloatingBizBot() {
 
   useEffect(() => {
     const savedPosition = localStorage.getItem(POSITION_KEY);
-    const size = isDesktopViewport() ? BOT_SIZE_DESKTOP : BOT_SIZE_MOBILE;
+    const size = isDesktopViewport() ? BOT_SIZE_DESKTOP : mobileSizeForPath();
     let initial = { x: window.innerWidth - size - 24, y: window.innerHeight - size - 40 };
     if (savedPosition) {
       try {
@@ -152,7 +158,7 @@ export function FloatingBizBot() {
   useEffect(() => {
     const mediaQuery = window.matchMedia("(min-width: 768px)");
     const apply = () => {
-      const size = mediaQuery.matches ? BOT_SIZE_DESKTOP : BOT_SIZE_MOBILE;
+      const size = mediaQuery.matches ? BOT_SIZE_DESKTOP : mobileSizeForPath();
       setBotSize(size);
       setPosition((current) => clampPosition(current, size));
     };

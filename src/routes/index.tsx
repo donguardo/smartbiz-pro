@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowRight, Bot, Check, CreditCard, Download, PackageSearch, QrCode, ScanLine, Smartphone, UserPlus, Store, Receipt } from "lucide-react";
+import { ArrowRight, Bot, Check, CreditCard, Download, Menu, PackageSearch, QrCode, ScanLine, Smartphone, UserPlus, Store, Receipt } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/lib/theme";
 import { LanguageToggle, useT } from "@/lib/i18n";
@@ -9,13 +9,14 @@ import { PRICE_PER_USER } from "@/lib/format";
 import { AnimatedBackdrop } from "@/components/AnimatedBackdrop";
 import { Button } from "@/components/ui/button";
 import { openInstallPrompt } from "@/lib/install";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "MVP BizManager.ai | ₱499/user" },
+      { title: "MVP BizManager | ₱499/user" },
       { name: "description", content: "Run your store with a fast POS register, live dashboards and an AI copilot that flags reorders and dead stock. ₱499 per user per month." },
-      { property: "og:title", content: "MVP BizManager.ai" },
+      { property: "og:title", content: "MVP BizManager" },
       { property: "og:description", content: "POS checkout, inventory insights and an AI business copilot. Try the live demo, no login." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -36,16 +37,16 @@ function Landing() {
   const [step, setStep] = useState(0);
   const S = STEPS[step]!;
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-x-hidden">
       <header className="sticky top-0 z-30 border-b border-border bg-primary/30 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+        <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-3 py-2 sm:px-4 sm:py-3">
           <Logo />
           <nav className="hidden gap-6 text-sm text-muted-foreground md:flex">
             <a href="#demo" className="hover:text-foreground">{t("nav.demo")}</a>
             <a href="#setup" className="hover:text-foreground">{t("nav.setup")}</a>
             <a href="#pricing" className="hover:text-foreground">{t("nav.pricing")}</a>
           </nav>
-          <div className="flex items-center gap-2">
+          <div className="hidden items-center gap-2 sm:flex">
             <Button variant="ghost" size="sm" onClick={openInstallPrompt} aria-label={t("install.open")} title={t("install.open")}>
               <Download className="h-4 w-4" /><span className="hidden lg:inline">{t("install.open")}</span>
             </Button>
@@ -53,24 +54,35 @@ function Landing() {
             <ThemeToggle />
             <Link to="/auth" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90">{t("cta.getStarted")}</Link>
           </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className="sm:hidden" variant="outline" size="icon" aria-label="Open menu"><Menu className="h-4 w-4" /></Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 p-2">
+              <div className="flex items-center justify-between gap-2 p-1"><LanguageToggle /><ThemeToggle /></div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={openInstallPrompt}><Download className="h-4 w-4" />{t("install.open")}</DropdownMenuItem>
+              <DropdownMenuItem asChild><Link to="/auth" className="font-semibold">{t("cta.getStarted")}</Link></DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
       <section className="grid-paper relative overflow-hidden">
         <AnimatedBackdrop />
-        <div className="relative mx-auto grid max-w-6xl gap-10 px-4 py-16 md:grid-cols-[1.2fr_1fr] md:py-24">
+        <div className="relative mx-auto grid max-w-6xl gap-10 px-4 py-12 md:grid-cols-[1.2fr_1fr] md:py-24">
           <div className="relative z-10">
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 font-mono text-xs text-muted-foreground">
               <span className="h-1.5 w-1.5 rounded-full bg-success" /> {t("hero.badge")}
             </span>
-            <p className="mt-6 font-display text-5xl font-bold uppercase leading-none md:text-7xl"><span className="text-foreground dark:text-white">MAS KITA,</span><br /><span className="text-primary">MAS TUBO!</span></p>
+            <p className="mt-6 font-display text-4xl font-bold uppercase leading-none sm:text-5xl md:text-7xl"><span className="text-foreground dark:text-white">MAS KITA,</span><br /><span className="text-primary">MAS TUBO!</span></p>
             <h1 className="mt-5 max-w-xl text-2xl font-semibold leading-tight md:text-4xl">
               {t("hero.title1")}<br />{t("hero.title2")} <span className="text-primary">{t("hero.title3")}</span> {t("hero.title4")}
             </h1>
             <p className="mt-5 max-w-xl text-lg text-muted-foreground">
               {t("hero.sub")}
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-8 flex flex-col items-stretch gap-3 min-[420px]:flex-row min-[420px]:items-center">
               <Link to="/auth" className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 font-semibold text-primary-foreground hover:opacity-90">
                 {t("hero.start")} ₱{PRICE_PER_USER}/user <ArrowRight className="h-4 w-4" />
               </Link>
@@ -89,7 +101,7 @@ function Landing() {
               ))}
               <div className="my-4 border-t border-dashed border-border" />
               <div className="flex justify-between font-semibold"><span>TOTAL</span><span>₱303.00</span></div>
-              <div className="flex justify-between text-muted-foreground"><span>GCash QR</span><span>PAID</span></div>
+              <div className="flex justify-between text-muted-foreground"><span>Paid:</span><span>GCash</span></div>
               <div className="mt-6 rounded-xl bg-ink p-4 font-sans text-ink-foreground">
                 <p className="flex items-center gap-2 text-xs uppercase tracking-widest opacity-70"><Bot className="h-3.5 w-3.5" /> AI Manager</p>
                 <p className="mt-2 text-sm">{t("hero.aiTip")}</p>
@@ -190,7 +202,10 @@ function Landing() {
         </div>
       </section>
 
-      <footer className="border-t border-border py-8 text-center text-sm text-muted-foreground">© {new Date().getFullYear()} BizManager.ai · MAS KITA, MAS TUBO! · by Orangeware USA</footer>
+      <footer className="border-t border-border px-4 py-8 text-center text-sm text-muted-foreground">
+        <p>© {new Date().getFullYear()} MVP BizManager · MAS KITA, MAS TUBO! · by Orangeware USA</p>
+        <nav className="mt-3 flex justify-center gap-5"><Link to="/privacy" className="hover:text-foreground">Privacy Notice</Link><Link to="/terms" className="hover:text-foreground">Terms of Service</Link></nav>
+      </footer>
     </div>
   );
 }
