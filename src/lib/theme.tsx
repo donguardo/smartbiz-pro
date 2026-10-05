@@ -193,8 +193,6 @@ function CustomThemeBuilder({ active, onApply }: { active: boolean; onApply: () 
         {!saved && <span className="text-xs text-muted-foreground">{t("theme.custom.unsaved")}</span>}
       </div>
       <ThemePreview colors={colors} />
-      <div className="hidden">
-      </div>
     </div>
   );
 }
