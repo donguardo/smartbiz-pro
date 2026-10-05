@@ -48,8 +48,12 @@ export function ShowcaseCarousel() {
   return (
     <div
       className="relative"
-      onMouseEnter={() => setHoverPaused(true)}
-      onMouseLeave={() => setHoverPaused(false)}
+      onPointerEnter={(e) => {
+        if (e.pointerType === "mouse") setHoverPaused(true);
+      }}
+      onPointerLeave={(e) => {
+        if (e.pointerType === "mouse") setHoverPaused(false);
+      }}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
       aria-roledescription="carousel"
