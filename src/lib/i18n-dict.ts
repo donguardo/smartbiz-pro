@@ -174,6 +174,9 @@ export const DICT: Record<string, { en: string; tl: string }> = {
   "showcase.yoursBody": { en: "Start your MVP BizManager account and replace the sample with your real sales.", tl: "Gumawa ng MVP BizManager account at palitan ang sample ng totoong benta mo." },
   "carousel.pause": { en: "Pause slideshow", tl: "I-hinto ang slideshow" },
   "carousel.play": { en: "Play slideshow", tl: "Ipatuloy ang slideshow" },
+  "carousel.previous": { en: "Previous business", tl: "Nakaraang negosyo" },
+  "carousel.nextBusiness": { en: "Next business", tl: "Susunod na negosyo" },
+  "carousel.slideOf": { en: "Slide {n} of {total}: {name}", tl: "Slide {n} ng {total}: {name}" },
 };
 
 export function fallback(lang: Lang): Record<string, string> {

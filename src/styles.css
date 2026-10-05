@@ -521,11 +521,6 @@
   animation-play-state: paused;
 }
 
-@keyframes showcase-tick {
-  from { opacity: 1; }
-  to { opacity: 1; }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .bizbot-motion-0,
   .bizbot-motion-1,
@@ -535,8 +530,10 @@
   .bizbot-motion-5,
   .bizbot-motion-6,
   .showcase-track { transition: none; }
+  .showcase-cell-inner { transition-duration: 0ms; }
+  /* Autoplay is off under reduced motion: show a full, static bar. */
   .showcase-progress {
-    animation-name: showcase-tick;
+    animation: none;
     transform: scaleX(1);
   }
 }
