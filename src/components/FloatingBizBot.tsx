@@ -37,6 +37,7 @@ const MAX_CONTEXT_PRODUCTS = 80;
 const BOT_SIZE_DESKTOP = 224;
 const BOT_SIZE_MOBILE = Math.round(BOT_SIZE_DESKTOP * 2 / 3);
 const BOT_SIZE_PUBLIC_MOBILE = 72;
+const BOT_SIZE_APP = 56;
 
 type BotPosition = { x: number; y: number };
 type SpeechRecognitionEventLike = Event & {
@@ -83,7 +84,13 @@ const isDesktopViewport = () =>
 
 const mobileSizeForPath = () => {
   if (typeof window === "undefined") return BOT_SIZE_MOBILE;
-  return ["/", "/auth", "/reset-password", "/privacy", "/terms"].includes(window.location.pathname) ? BOT_SIZE_PUBLIC_MOBILE : BOT_SIZE_MOBILE;
+  return ["/", "/auth", "/reset-password", "/privacy", "/terms"].includes(window.location.pathname) ? BOT_SIZE_PUBLIC_MOBILE : BOT_SIZE_APP;
+};
+
+const sizeForViewport = () => {
+  if (typeof window === "undefined") return BOT_SIZE_DESKTOP;
+  const publicPath = ["/", "/auth", "/reset-password", "/privacy", "/terms"].includes(window.location.pathname);
+  return publicPath ? (isDesktopViewport() ? BOT_SIZE_DESKTOP : BOT_SIZE_PUBLIC_MOBILE) : BOT_SIZE_APP;
 };
 
 export function FloatingBizBot() {
@@ -141,7 +148,7 @@ export function FloatingBizBot() {
 
   useEffect(() => {
     const savedPosition = localStorage.getItem(POSITION_KEY);
-    const size = isDesktopViewport() ? BOT_SIZE_DESKTOP : mobileSizeForPath();
+    const size = sizeForViewport();
     let initial = { x: window.innerWidth - size - 24, y: window.innerHeight - size - 40 };
     if (savedPosition) {
       try {
@@ -158,7 +165,7 @@ export function FloatingBizBot() {
   useEffect(() => {
     const mediaQuery = window.matchMedia("(min-width: 768px)");
     const apply = () => {
-      const size = mediaQuery.matches ? BOT_SIZE_DESKTOP : mobileSizeForPath();
+      const size = sizeForViewport();
       setBotSize(size);
       setPosition((current) => clampPosition(current, size));
     };
@@ -405,7 +412,7 @@ export function FloatingBizBot() {
             style={{ width: botSize, height: botSize }}
             className={cn("relative object-contain drop-shadow-[0_0_20px_var(--scene-magenta)]", `bizbot-motion-${motion}`)}
           />
-          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-primary/60 bg-popover/95 px-2 py-0.5 font-mono text-[10px] font-bold text-foreground shadow backdrop-blur-md">
+          <span className={cn("absolute -bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-primary/60 bg-popover/95 px-2 py-0.5 font-mono text-[10px] font-bold text-foreground shadow backdrop-blur-md", botSize === BOT_SIZE_APP && "sr-only")}>
             {listening ? t("bot.listening") : "BIZBOT"}
           </span>
         </button>

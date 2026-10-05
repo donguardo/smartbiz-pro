@@ -15,6 +15,27 @@
       "when": 1790577808257,
       "tag": "0001_translations_and_language_pref",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791178408981,
+      "tag": "0002_core_benefits_shop_security",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791178476469,
+      "tag": "0003_secure_shop_document_storage",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791178549161,
+      "tag": "0004_use_selected_shop_context",
+      "breakpoints": true
     }
   ]
 }
