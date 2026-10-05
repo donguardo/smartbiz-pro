@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Banknote, CreditCard, Minus, Plus, Printer, QrCode, ScanLine, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchCustomers, fetchProducts, fetchShopContext, qk, type Product } from "@/lib/store";
+import { fetchCustomers, fetchProducts, fetchShopContext, isDecimalUnit, qk, type Product } from "@/lib/store";
 import { peso } from "@/lib/format";
 import { useShopProfile } from "@/lib/shop-profile";
 import { useT } from "@/lib/i18n";
@@ -47,14 +47,15 @@ function POS() {
   const [newCustomer, setNewCustomer] = useState({ name: "", mobile: "", consent: false });
   const scanRef = useRef<HTMLInputElement>(null);
 
-  const cats = ["All", ...new Set(products.map((p) => p.category))];
+  const cats = ["All", ...[...new Set(products.map((p) => p.category))].sort((a, b) => a.localeCompare(b))];
+  const lineTotal = (l: Line) => Math.round(Number(l.p.price) * l.qty * 100) / 100;
   const shown = products.filter((p) => (cat === "All" || p.category === cat) && (!scan || p.name.toLowerCase().includes(scan.toLowerCase()) || p.sku.includes(scan)));
-  const total = useMemo(() => cart.reduce((s, l) => s + Number(l.p.price) * l.qty, 0), [cart]);
-  const count = cart.reduce((s, l) => s + l.qty, 0);
+  const total = useMemo(() => cart.reduce((s, l) => s + lineTotal(l), 0), [cart]);
+  const count = cart.length;
 
   const add = (p: Product) => setCart((c) => {
     const f = c.find((l) => l.p.id === p.id);
-    if (f && f.qty >= p.stock) toast.warning(`Only ${p.stock} ${p.name} in stock`);
+    if (p.track_stock && (f ? f.qty + 1 : 1) > p.stock) toast.warning(`Only ${p.stock} ${p.name} in stock`);
     return f ? c.map((l) => (l.p.id === p.id ? { ...l, qty: l.qty + 1 } : l)) : [...c, { p, qty: 1 }];
   });
   const setQty = (id: string, qty: number) => setCart((c) => (qty <= 0 ? c.filter((l) => l.p.id !== id) : c.map((l) => (l.p.id === id ? { ...l, qty } : l))));
@@ -115,8 +116,8 @@ function POS() {
               <span className="text-xs text-muted-foreground">{p.category}</span>
               <span className="mt-1 line-clamp-2 font-medium leading-tight">{p.name}</span>
               <span className="mt-auto flex items-end justify-between pt-3">
-                <span className="font-display text-lg font-semibold">{peso(Number(p.price))}</span>
-                <span className={`font-mono text-[11px] ${p.stock <= p.reorder_level ? "text-destructive" : "text-muted-foreground"}`}>{p.stock} left</span>
+                <span className="font-display text-lg font-semibold">{peso(Number(p.price))}{isDecimalUnit(p.unit) && <span className="text-xs font-normal text-muted-foreground">/{p.unit}</span>}</span>
+                <span className={`font-mono text-[11px] ${p.track_stock && p.stock <= p.reorder_level ? "text-destructive" : "text-muted-foreground"}`}>{p.track_stock ? `${p.stock} ${p.unit} left` : p.unit === "service" ? "service" : `per ${p.unit}`}</span>
               </span>
             </button>
           ))}
@@ -134,14 +135,14 @@ function POS() {
             <li key={l.p.id} className="flex items-center gap-3 p-3">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{l.p.name}</p>
-                <p className="font-mono text-xs text-muted-foreground">{peso(Number(l.p.price))}</p>
+                <p className="font-mono text-xs text-muted-foreground">{peso(Number(l.p.price))} / {l.p.unit}</p>
               </div>
               <div className="flex items-center gap-1">
-                <button aria-label="Less" onClick={() => setQty(l.p.id, l.qty - 1)} className="flex h-7 w-7 items-center justify-center rounded-md border border-border">{l.qty === 1 ? <Trash2 className="h-3.5 w-3.5" /> : <Minus className="h-3.5 w-3.5" />}</button>
-                <span className="w-7 text-center font-mono text-sm">{l.qty}</span>
+                <button aria-label="Less" onClick={() => setQty(l.p.id, Math.round((l.qty - 1) * 1000) / 1000)} className="flex h-7 w-7 items-center justify-center rounded-md border border-border">{l.qty <= 1 ? <Trash2 className="h-3.5 w-3.5" /> : <Minus className="h-3.5 w-3.5" />}</button>
+                {isDecimalUnit(l.p.unit) ? <input aria-label={`${l.p.name} quantity in ${l.p.unit}`} type="number" inputMode="decimal" min="0.001" step="0.001" defaultValue={l.qty} onBlur={(e) => { const v = Math.round(Number(e.target.value) * 1000) / 1000; setQty(l.p.id, Number.isFinite(v) ? v : 0); }} className="w-16 rounded-md border border-input bg-background px-1 py-0.5 text-center font-mono text-sm" /> : <span className="w-7 text-center font-mono text-sm">{l.qty}</span>}
                 <button aria-label="More" onClick={() => setQty(l.p.id, l.qty + 1)} className="flex h-7 w-7 items-center justify-center rounded-md border border-border"><Plus className="h-3.5 w-3.5" /></button>
               </div>
-              <span className="w-20 text-right font-mono text-sm">{peso(Number(l.p.price) * l.qty)}</span>
+              <span className="w-20 text-right font-mono text-sm">{peso(lineTotal(l))}</span>
             </li>
           ))}
         </ul>
@@ -215,7 +216,7 @@ function POS() {
               <p className="text-center text-xs text-muted-foreground">Receipt {receipt.no}</p>
               <div className="my-3 border-t border-dashed border-border" />
               {receipt.lines.map((l) => (
-                <div key={l.p.id} className="flex justify-between py-0.5"><span className="truncate pr-2">{l.p.name} ×{l.qty}</span><span>{(Number(l.p.price) * l.qty).toFixed(2)}</span></div>
+                <div key={l.p.id} className="flex justify-between py-0.5"><span className="truncate pr-2">{l.p.name} ×{l.qty}{isDecimalUnit(l.p.unit) ? ` ${l.p.unit}` : ""}</span><span>{lineTotal(l).toFixed(2)}</span></div>
               ))}
               <div className="my-3 border-t border-dashed border-border" />
               <div className="flex justify-between font-bold"><span>TOTAL</span><span>{peso(receipt.total)}</span></div>
