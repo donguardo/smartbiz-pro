@@ -78,6 +78,7 @@ export function computeInsights(products: Product[], items: SaleItem[]): Insight
   }
   const out: Insight[] = [];
   for (const p of products) {
+    if (!p.track_stock || p.archived_at) continue;
     const daily = (sold14.get(p.id) ?? 0) / 14;
     const daysLeft = daily > 0 ? p.stock / daily : Infinity;
     if (p.stock <= p.reorder_level || daysLeft < 5) {
