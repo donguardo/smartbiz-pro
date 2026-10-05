@@ -36,8 +36,8 @@ function Landing() {
   const [step, setStep] = useState(0);
   const S = STEPS[step]!;
   return (
-    <div className="min-h-screen overflow-x-hidden">
-      <header className="sticky top-0 z-30 border-b border-border bg-primary/30 backdrop-blur-md">
+    <div className="min-h-screen overflow-x-hidden pb-24">
+      <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur-md">
         <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-3 py-2 sm:px-4 sm:py-3">
           <Logo />
           <nav className="hidden gap-6 text-sm text-muted-foreground md:flex">
@@ -185,7 +185,7 @@ function Landing() {
       </section>
 
       <section id="pricing" className="mx-auto max-w-6xl px-4 pb-20">
-        <div className="grid items-center gap-8 overflow-hidden rounded-3xl border border-primary/50 bg-primary/40 p-8 text-foreground backdrop-blur-md dark:text-ink-foreground md:grid-cols-2 md:p-12">
+        <div className="grid items-center gap-8 overflow-hidden rounded-lg border border-border bg-card p-8 text-foreground md:grid-cols-2 md:p-12">
           <div>
             <p className="font-mono text-xs uppercase tracking-widest opacity-70">{t("price.kicker")}</p>
             <p className="mt-3 font-display text-6xl font-bold">₱{PRICE_PER_USER}<span className="text-xl font-medium opacity-70">{t("price.per")}</span></p>

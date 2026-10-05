@@ -1,9 +1,7 @@
 import { useChat } from "@ai-sdk/react";
-import { useRouterState } from "@tanstack/react-router";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { Mic, MicOff, RotateCcw, Volume2, VolumeX, X } from "lucide-react";
 import {
-  type PointerEvent as ReactPointerEvent,
   useCallback,
   useEffect,
   useMemo,
@@ -30,17 +28,11 @@ import { Shimmer } from "@/components/ai-elements/shimmer";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/lib/i18n";
-import { cn } from "@/lib/utils";
 import { fetchDailyTip, fetchForecasts, fetchGoals, fetchProducts, fetchShopContext } from "@/lib/store";
 
 const CHAT_KEY = "bizbot-conversation-v1";
-const POSITION_KEY = "bizbot-position-v1";
 const MAX_CONTEXT_PRODUCTS = 80;
-const BOT_SIZE_DESKTOP = 224;
-const BOT_SIZE_PUBLIC_MOBILE = 72;
-const BOT_SIZE_APP = 56;
-
-type BotPosition = { x: number; y: number };
+const BOT_SIZE = 56;
 type SpeechRecognitionEventLike = Event & {
   results: { [index: number]: { [index: number]: { transcript: string } } };
 };
@@ -75,36 +67,16 @@ const loadMessages = (): UIMessage[] => {
   }
 };
 
-const clampPosition = (position: BotPosition, size: number): BotPosition => ({
-  x: Math.max(8, Math.min(window.innerWidth - size - 8, position.x)),
-  y: Math.max(72, Math.min(window.innerHeight - size - 24, position.y)),
-});
-
-const isDesktopViewport = () =>
-  typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches;
-
-const sizeForViewport = (pathname: string) => {
-  if (typeof window === "undefined") return BOT_SIZE_DESKTOP;
-  const publicPath = ["/", "/auth", "/reset-password", "/privacy", "/terms"].includes(pathname);
-  return publicPath ? (isDesktopViewport() ? BOT_SIZE_DESKTOP : BOT_SIZE_PUBLIC_MOBILE) : BOT_SIZE_APP;
-};
-
 export function FloatingBizBot() {
   const { lang, t } = useT();
-  const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [open, setOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [listening, setListening] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [storeContext, setStoreContext] = useState("");
-  const [motion, setMotion] = useState(0);
-  const [position, setPosition] = useState<BotPosition>({ x: 24, y: 120 });
-  const [botSize, setBotSize] = useState(BOT_SIZE_APP);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const voiceReplyRef = useRef(false);
-  const dragRef = useRef<{ dx: number; dy: number; moved: boolean } | null>(null);
-  const suppressClickRef = useRef(false);
 
   const transport = useMemo(
     () =>
@@ -144,32 +116,9 @@ export function FloatingBizBot() {
   const busy = status === "submitted" || status === "streaming";
 
   useEffect(() => {
-    const savedPosition = localStorage.getItem(POSITION_KEY);
-    const size = sizeForViewport(pathname);
-    let initial = { x: window.innerWidth - size - 24, y: window.innerHeight - size - 40 };
-    if (savedPosition) {
-      try {
-        initial = JSON.parse(savedPosition) as BotPosition;
-      } catch {
-        localStorage.removeItem(POSITION_KEY);
-      }
-    }
-    setPosition(clampPosition(initial, size));
     setMessages(loadMessages());
     setHydrated(true);
-  }, [pathname, setMessages]);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(min-width: 768px)");
-    const apply = () => {
-      const size = sizeForViewport(pathname);
-      setBotSize(size);
-      setPosition((current) => clampPosition(current, size));
-    };
-    apply();
-    mediaQuery.addEventListener("change", apply);
-    return () => mediaQuery.removeEventListener("change", apply);
-  }, [pathname]);
+  }, [setMessages]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -211,40 +160,11 @@ export function FloatingBizBot() {
 
   useEffect(() => {
     const onOpen = () => setOpen(true);
-    const onResize = () => setPosition((current) => clampPosition(current, botSize));
     window.addEventListener("open-bizbot", onOpen);
-    window.addEventListener("resize", onResize);
     return () => {
       window.removeEventListener("open-bizbot", onOpen);
-      window.removeEventListener("resize", onResize);
     };
-  }, [botSize]);
-
-  useEffect(() => {
-    const interval = window.setInterval(() => setMotion(Math.floor(Math.random() * 7)), 3800 + Math.random() * 2200);
-    return () => window.clearInterval(interval);
   }, []);
-
-  useEffect(() => {
-    const onMove = (event: PointerEvent) => {
-      const drag = dragRef.current;
-      if (!drag) return;
-      drag.moved = true;
-      setPosition(clampPosition({ x: event.clientX - drag.dx, y: event.clientY - drag.dy }, botSize));
-    };
-    const onUp = () => {
-      if (!dragRef.current) return;
-      suppressClickRef.current = dragRef.current.moved;
-      localStorage.setItem(POSITION_KEY, JSON.stringify(position));
-      dragRef.current = null;
-    };
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-    return () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-    };
-  }, [position, botSize]);
 
   useEffect(() => () => {
     recognitionRef.current?.stop();
@@ -298,25 +218,12 @@ export function FloatingBizBot() {
     textareaRef.current?.focus();
   };
 
-  const onBotPointerDown = (event: ReactPointerEvent<HTMLButtonElement>) => {
-    event.currentTarget.setPointerCapture(event.pointerId);
-    dragRef.current = { dx: event.clientX - position.x, dy: event.clientY - position.y, moved: false };
-  };
-
-  const onBotClick = () => {
-    if (suppressClickRef.current) {
-      suppressClickRef.current = false;
-      return;
-    }
-    setOpen((current) => !current);
-  };
-
   return (
     <>
       {open && (
         <section
           aria-label={t("bot.title")}
-          className="fixed bottom-24 right-3 z-[70] flex h-[min(620px,calc(100dvh-8rem))] w-[min(390px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-lg border border-primary/60 bg-popover/95 shadow-2xl backdrop-blur-xl md:bottom-5 md:right-5"
+          className="fixed bottom-24 right-3 z-[70] flex h-[min(620px,calc(100dvh-8rem))] w-[min(390px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-lg border border-primary/60 bg-popover/95 shadow-2xl backdrop-blur-xl md:bottom-20 md:right-4"
         >
           <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-primary/30 px-3">
             <img src={bizBotImage} alt="" className="h-10 w-10 object-contain" />
@@ -400,23 +307,19 @@ export function FloatingBizBot() {
         <button
           type="button"
           aria-label={t("bot.open")}
-          title={t("bot.dragHint")}
-          onPointerDown={onBotPointerDown}
-          onClick={onBotClick}
-          className="fixed z-[80] touch-none select-none rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          style={{ left: position.x, top: position.y }}
+          title={t("bot.open")}
+          onClick={() => setOpen(true)}
+          className="fixed bottom-4 right-4 z-[80] flex h-14 w-14 select-none items-center justify-center overflow-hidden rounded-full border border-primary/60 bg-card shadow-xl outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <span className="absolute inset-2 rounded-full bg-primary/25 blur-xl" aria-hidden />
           <img
             src={bizBotImage}
             alt=""
             draggable={false}
-            style={{ width: botSize, height: botSize }}
-            className={cn("relative object-contain drop-shadow-[0_0_20px_var(--scene-magenta)]", `bizbot-motion-${motion}`)}
+            style={{ width: BOT_SIZE, height: BOT_SIZE }}
+            className="relative object-contain drop-shadow-[0_0_12px_var(--scene-magenta)]"
           />
-          <span className={cn("absolute -bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-primary/60 bg-popover/95 px-2 py-0.5 font-mono text-[10px] font-bold text-foreground shadow backdrop-blur-md", botSize === BOT_SIZE_APP && "sr-only")}>
-            {listening ? t("bot.listening") : "BIZBOT"}
-          </span>
+          <span className="sr-only">{listening ? t("bot.listening") : "BIZBOT"}</span>
         </button>
       )}
     </>

@@ -7,13 +7,13 @@ type LegalSection = { title: string; body: string };
 export function LegalPage({ title, updated, intro, sections }: { title: string; updated: string; intro: string; sections: LegalSection[] }) {
   return (
     <div className="min-h-screen overflow-x-hidden bg-background">
-      <header className="border-b border-border bg-primary/30 backdrop-blur-md">
+      <header className="border-b border-border bg-card/95 backdrop-blur-md">
         <div className="mx-auto grid max-w-4xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3">
           <Logo />
           <ThemeToggle />
         </div>
       </header>
-      <main className="mx-auto max-w-4xl px-4 py-10 sm:py-16">
+      <main className="mx-auto max-w-4xl px-4 pb-28 pt-10 sm:pb-28 sm:pt-16">
         <p className="font-mono text-xs uppercase text-primary">Legal</p>
         <h1 className="mt-2 text-3xl font-bold sm:text-5xl">{title}</h1>
         <p className="mt-3 text-sm text-muted-foreground">Last updated: {updated}</p>

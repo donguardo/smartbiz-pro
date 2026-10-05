@@ -79,7 +79,7 @@ function AppLayout() {
         </div>
       </aside>
 
-      <header className="sticky top-0 z-20 flex items-center justify-between gap-1 border-b border-border bg-primary/30 px-3 py-3 backdrop-blur-md md:hidden">
+      <header className="sticky top-0 z-20 flex items-center justify-between gap-1 border-b border-border bg-card/95 px-3 py-3 backdrop-blur-md md:hidden">
         <Logo to="/dashboard" compact />
         <div className="flex shrink-0 gap-1.5">
           <Button variant="ghost" size="icon" onClick={openInstallPrompt} aria-label={t("install.open")} title={t("install.open")} className="hidden min-[420px]:inline-flex">
@@ -92,7 +92,7 @@ function AppLayout() {
         </div>
       </header>
 
-      <main className="min-w-0 pb-24 md:pb-0">
+      <main className="min-w-0 pb-32 md:pb-24">
         <Outlet />
       </main>
 

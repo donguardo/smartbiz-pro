@@ -51,7 +51,7 @@ export function DemoDashboard() {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
-      <div className="rounded-2xl border border-primary/50 bg-primary/40 p-5 backdrop-blur-md">
+      <div className="rounded-lg border border-border bg-card p-5">
         <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Try it — edit the numbers</p>
         <div className="mt-4 space-y-4">
           {cats.map((c, i) => (
@@ -90,7 +90,7 @@ export function DemoDashboard() {
       </div>
 
        <div className="space-y-4 rounded-lg border border-border bg-card p-4">
-        <p className="text-lg font-bold">{lang === "tl" ? `Boss, ${peso(totals.revenue * (1 + growth / 100))} ang benta mo ngayong linggo, ${growth >= 0 ? "tumaas" : "bumaba"} ng ${Math.abs(growth)}%. Pinakamabenta ang ${best}.` : `Boss, you sold ${peso(totals.revenue * (1 + growth / 100))} this week, ${growth >= 0 ? "up" : "down"} ${Math.abs(growth)}%. ${best} sold the most.`}</p>
+        <p className="text-lg font-bold">{lang === "tl" ? <>Boss, {peso(totals.revenue * (1 + growth / 100))} ang benta mo ngayong linggo, <span className={growth >= 0 ? "text-success" : "text-destructive"}>{growth >= 0 ? "▲ tumaas" : "▼ bumaba"} ng {Math.abs(growth)}%</span>. Pinakamabenta ang {best}.</> : <>Boss, you sold {peso(totals.revenue * (1 + growth / 100))} this week, <span className={growth >= 0 ? "text-success" : "text-destructive"}>{growth >= 0 ? "▲ up" : "▼ down"} {Math.abs(growth)}%</span>. {best} sold the most.</>}</p>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {metrics.map((m) => (
             <div key={m.label} className="rounded-2xl border border-border bg-card p-4">
@@ -122,7 +122,6 @@ export function DemoDashboard() {
                 </AreaChart>
               </ResponsiveContainer>
             </div>
-            <ul className="space-y-1 text-xs">{cats.map((c, i) => <li key={c.name} className="flex justify-between"><span><i className="mr-2 inline-block h-2 w-2 rounded-full" style={{ background: COLORS[i] }}/>{c.name}</span><b>{Math.round(c.sales / totals.revenue * 100)}%</b></li>)}</ul>
           </div>
           <div className="rounded-2xl border border-border bg-card p-4">
             <p className="text-sm font-medium">Sales mix by category</p>
@@ -136,6 +135,7 @@ export function DemoDashboard() {
                 </PieChart>
               </ResponsiveContainer>
             </div>
+             <ul className="space-y-1 text-xs">{cats.map((c, i) => <li key={c.name} className="flex justify-between"><span><i className="mr-2 inline-block h-2 w-2 rounded-full" style={{ background: COLORS[i] }}/>{c.name}</span><b>{Math.round(c.sales / totals.revenue * 100)}%</b></li>)}</ul>
           </div>
         </div>
       </div>

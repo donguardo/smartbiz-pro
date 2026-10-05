@@ -88,9 +88,9 @@ function Inventory() {
                   <td className="p-3 text-right font-mono">{p.stock}</td>
                   <td className="p-3">
                     <div className="flex flex-wrap gap-1">
-                      {f.includes("reorder") && <span className="rounded-full bg-warning/20 px-2 py-0.5 text-xs font-medium text-foreground">Reorder</span>}
+                      {f.includes("reorder") && <span className="rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-medium text-destructive">▼ Low stock</span>}
                       {f.includes("dead") && <span className="rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-medium text-destructive">Dead stock</span>}
-                       {f.includes("overstock") && <span className="rounded-full bg-warning/20 px-2 py-0.5 text-xs font-medium">Too much stock</span>}
+                       {f.includes("overstock") && <span className="rounded-full bg-warning/20 px-2 py-0.5 text-xs font-medium">⚠ Too much stock</span>}
                       {f.length === 0 && <span className="rounded-full bg-success/15 px-2 py-0.5 text-xs font-medium text-success">Healthy</span>}
                     </div>
                   </td>
