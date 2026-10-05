@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { fetchDailyTip, fetchForecasts, fetchGoals, fetchProducts, fetchShopContext } from "@/lib/store";
 
 const CHAT_KEY = "bizbot-conversation-v1";
 const POSITION_KEY = "bizbot-position-v1";
@@ -188,17 +189,22 @@ export function FloatingBizBot() {
         setStoreContext("");
         return;
       }
-      const [productsResult, salesResult, itemsResult] = await Promise.all([
-        supabase.from("products").select("id,name,category,price,cost,stock,reorder_level").order("name").limit(MAX_CONTEXT_PRODUCTS),
-        supabase.from("sales").select("total,cost_total,payment_method,created_at").order("created_at", { ascending: false }).limit(200),
-        supabase.from("sale_items").select("product_id,name,category,qty,price,cost,created_at").order("created_at", { ascending: false }).limit(500),
+      const shop = await fetchShopContext();
+      const [products, goals, forecasts, dailyTip] = await Promise.all([fetchProducts(), fetchGoals(), fetchForecasts(), fetchDailyTip()]);
+      const [{ data: customers }, { data: sales }] = await Promise.all([
+        supabase.rpc("get_masked_customers"),
+        shop?.member_role === "owner" ? supabase.from("sales").select("total,cost_total,payment_method,created_at").order("created_at", { ascending: false }).limit(200) : Promise.resolve({ data: [] }),
       ]);
       if (!active) return;
       const context = {
         generatedAt: new Date().toISOString(),
-        products: productsResult.data ?? [],
-        recentSales: salesResult.data ?? [],
-        recentSaleItems: itemsResult.data ?? [],
+        role: shop?.member_role,
+        products: products.slice(0, MAX_CONTEXT_PRODUCTS).map((product) => ({ name: product.name, category: product.category, price: product.price, stock: product.stock, reorderLevel: product.reorder_level, ...(shop?.member_role === "owner" ? { cost: product.cost } : {}) })),
+        recentSales: sales ?? [],
+        goals,
+        forecasts,
+        dailyTip: dailyTip?.tip_text ?? null,
+        customerCount: customers?.length ?? 0,
       };
       setStoreContext(JSON.stringify(context));
     });
