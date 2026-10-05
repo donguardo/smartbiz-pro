@@ -94,6 +94,18 @@ export function ShowcaseCarousel() {
     }
   };
 
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    // Arrow keys move between samples as soon as focus enters the carousel,
+    // so keyboard users never tab through every control to browse.
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      goPrev();
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      goNext();
+    }
+  };
+
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0]?.clientX ?? null;
     setTouchPaused(true);
@@ -127,6 +139,7 @@ export function ShowcaseCarousel() {
       }}
       onFocusCapture={() => setFocusPaused(true)}
       onBlurCapture={() => setFocusPaused(false)}
+      onKeyDown={onKeyDown}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
