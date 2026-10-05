@@ -49,3 +49,4 @@
 - [x] Fix pie chart label contrast so text stays readable over every slice colour
 - [x] Enlarge BIZBOT by 20% and restore levitating, screen-bounded dragging
 - [x] Add saved business color themes in Settings (MVP, café brown, coffeehouse green, fiesta red)
+- [x] Add BIZBOT minimize and restore controls without leaving the page

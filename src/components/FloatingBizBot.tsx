@@ -1,6 +1,6 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { Mic, MicOff, RotateCcw, Volume2, VolumeX, X } from "lucide-react";
+import { ChevronUp, Mic, MicOff, Minus, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -74,6 +74,7 @@ const loadMessages = (): UIMessage[] => {
 export function FloatingBizBot() {
   const { lang, t } = useT();
   const [open, setOpen] = useState(false);
+  const [minimized, setMinimized] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [listening, setListening] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
@@ -166,7 +167,10 @@ export function FloatingBizBot() {
   }, [open]);
 
   useEffect(() => {
-    const onOpen = () => setOpen(true);
+    const onOpen = () => {
+      setOpen(true);
+      setMinimized(false);
+    };
     window.addEventListener("open-bizbot", onOpen);
     return () => {
       window.removeEventListener("open-bizbot", onOpen);
@@ -274,11 +278,17 @@ export function FloatingBizBot() {
       return;
     }
     setOpen(true);
+    setMinimized(false);
+  };
+
+  const minimizeBot = () => {
+    setMinimized(true);
+    recognitionRef.current?.stop();
   };
 
   return (
     <>
-      {open && (
+      {open && !minimized && (
         <section
           aria-label={t("bot.title")}
           className="fixed bottom-24 right-3 z-[70] flex h-[min(620px,calc(100dvh-8rem))] w-[min(390px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-lg border border-primary/60 bg-popover/95 shadow-2xl backdrop-blur-xl md:bottom-20 md:right-4"
@@ -293,7 +303,7 @@ export function FloatingBizBot() {
               {voiceEnabled ? <Volume2 /> : <VolumeX />}
             </Button>
             <Button size="icon" variant="ghost" onClick={clearConversation} title={t("bot.clear")} aria-label={t("bot.clear")}><RotateCcw /></Button>
-            <Button size="icon" variant="ghost" onClick={() => setOpen(false)} title={t("bot.close")} aria-label={t("bot.close")}><X /></Button>
+            <Button size="icon" variant="ghost" onClick={minimizeBot} title={t("bot.minimize")} aria-label={t("bot.minimize")}><Minus /></Button>
           </header>
 
           <Conversation className="min-h-0 flex-1">
@@ -361,7 +371,23 @@ export function FloatingBizBot() {
         </section>
       )}
 
-      {!open && (
+      {open && minimized && (
+        <div className="fixed bottom-4 right-3 z-[80] flex h-12 items-center gap-2 rounded-lg border border-primary/60 bg-popover/95 px-2 shadow-xl backdrop-blur-xl md:right-4">
+          <img src={bizBotImage} alt="" className="h-9 w-9 object-contain" />
+          <span className="max-w-36 truncate text-sm font-bold">BIZBOT</span>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => setMinimized(false)}
+            title={t("bot.restore")}
+            aria-label={t("bot.restore")}
+          >
+            <ChevronUp />
+          </Button>
+        </div>
+      )}
+
+      {!open && !minimized && (
         <button
           type="button"
           aria-label={t("bot.open")}

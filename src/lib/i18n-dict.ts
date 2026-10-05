@@ -88,6 +88,8 @@ export const DICT: Record<string, { en: string; tl: string }> = {
   "bot.reasoning": { en: "How I checked", tl: "Paano ko sinuri" },
   "bot.open": { en: "Open BIZBOT", tl: "Buksan si BIZBOT" },
   "bot.close": { en: "Close BIZBOT", tl: "Isara si BIZBOT" },
+  "bot.minimize": { en: "Minimize BIZBOT", tl: "I-minimize si BIZBOT" },
+  "bot.restore": { en: "Restore BIZBOT", tl: "Ibalik si BIZBOT" },
   "bot.clear": { en: "Clear conversation", tl: "Burahin ang usapan" },
   "bot.microphone": { en: "Ask with microphone", tl: "Magtanong gamit ang mikropono" },
   "bot.stopListening": { en: "Stop listening", tl: "Itigil ang pakikinig" },
