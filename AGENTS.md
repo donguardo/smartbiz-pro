@@ -14,3 +14,4 @@
 - BIZBOT uses one browser-local AI SDK UIMessage conversation and a global floating client — matching the chosen single-device chat experience.
 - The opening video is browser-local first-visit onboarding and emits completion before the install prompt — prevents overlapping first-run experiences.
 - Installation state and reopening use the shared browser event in src/lib/install.ts — keeps public and signed-in navigation synchronized with one install window.
+- All server responses set X-Frame-Options DENY and CSP frame-ancestors none — prevents clickjacking by disallowing third-party framing.

@@ -9,9 +9,9 @@ import { peso } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/pos")({
   head: () => ({ meta: [
-    { title: "Register — MVP BizManager.ai" },
+    { title: "Register — MVP BizManager" },
     { name: "description", content: "Scan items, take payment and print receipts." },
-    { property: "og:title", content: "Register — MVP BizManager.ai" },
+    { property: "og:title", content: "Register — MVP BizManager" },
     { property: "og:description", content: "Scan items, take payment and print receipts." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
@@ -144,10 +144,10 @@ function POS() {
       {paying && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 p-0 sm:items-center sm:p-4" onClick={() => setPaying(false)}>
           <div className="w-full max-w-md rounded-t-3xl bg-card p-6 sm:rounded-3xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between"><h3 className="text-xl font-bold">Take payment</h3><button aria-label="Close" onClick={() => setPaying(false)}><X className="h-5 w-5" /></button></div>
+            <div className="flex items-center justify-between"><h3 className="text-xl font-bold">Record payment</h3><button aria-label="Close" onClick={() => setPaying(false)}><X className="h-5 w-5" /></button></div>
             <p className="mt-1 font-display text-4xl font-bold">{peso(total)}</p>
             <div className="mt-5 grid grid-cols-3 gap-2">
-              {([["cash", "Cash", Banknote], ["ewallet", "E-wallet / QR", QrCode], ["card", "Card", CreditCard]] as const).map(([m, l, I]) => (
+              {([["cash", "Cash", Banknote], ["ewallet", "GCash", QrCode], ["card", "Card", CreditCard]] as const).map(([m, l, I]) => (
                 <button key={m} onClick={() => setMethod(m)} className={`flex flex-col items-center gap-2 rounded-xl border p-3 text-sm ${method === m ? "border-primary bg-accent text-accent-foreground" : "border-border"}`}>
                   <I className="h-5 w-5" />{l}
                 </button>
@@ -168,7 +168,7 @@ function POS() {
                 <div className="grid h-36 w-36 grid-cols-8 gap-0.5 rounded-lg bg-card p-2">
                   {Array.from({ length: 64 }, (_, i) => <span key={i} className={(i * 7 + Math.floor(total)) % 3 === 0 ? "bg-foreground" : ""} />)}
                 </div>
-                <p className="mt-3 text-sm text-muted-foreground">Customer scans with GCash, Maya or any QR Ph app. Confirm once you see the payment.</p>
+                <p className="mt-3 text-sm text-muted-foreground">Customer pays with GCash. Confirm once you see the payment.</p>
               </div>
             )}
             {method === "card" && <p className="mt-5 rounded-xl bg-muted p-4 text-sm text-muted-foreground">Tap, insert or swipe the card on your terminal, then confirm once approved.</p>}
@@ -192,7 +192,7 @@ function POS() {
               ))}
               <div className="my-3 border-t border-dashed border-border" />
               <div className="flex justify-between font-bold"><span>TOTAL</span><span>{peso(receipt.total)}</span></div>
-              <div className="flex justify-between"><span>{receipt.method === "ewallet" ? "E-WALLET/QR" : receipt.method.toUpperCase()}</span><span>{peso(receipt.tendered)}</span></div>
+               <div className="flex justify-between"><span>{receipt.method === "ewallet" ? "Paid: GCash" : `Paid: ${receipt.method.charAt(0).toUpperCase()}${receipt.method.slice(1)}`}</span><span>{peso(receipt.tendered)}</span></div>
               {receipt.method === "cash" && <div className="flex justify-between"><span>CHANGE</span><span>{peso(receipt.tendered - receipt.total)}</span></div>}
               <p className="mt-4 text-center text-xs text-muted-foreground">Thank you! Come again.</p>
             </div>
