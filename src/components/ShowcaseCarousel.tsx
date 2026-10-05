@@ -164,7 +164,7 @@ export function ShowcaseCarousel() {
             const CellIcon = s.icon;
             const cellWeekly = s.categories.reduce((sum, c) => sum + c.sales, 0);
             const active = i === pos;
-            const realI = ((i - 1) % count + count) % count;
+            const realI = (((i - count) % count) + count) % count;
             return (
               <div
                 key={`${s.slug}-${i}`}
