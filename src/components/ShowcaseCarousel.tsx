@@ -25,6 +25,7 @@ const focusRing =
 
 export function ShowcaseCarousel() {
   const { t, lang } = useT();
+  const navigate = useNavigate();
   const reduced = usePrefersReducedMotion();
   const count = SHOWCASE_SCENARIOS.length;
   // Track renders the deck three times so navigation can keep sliding past the
