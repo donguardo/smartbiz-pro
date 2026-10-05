@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { SHOWCASE_SCENARIOS } from "@/lib/showcase-scenarios";
@@ -35,11 +35,6 @@ export function ShowcaseCarousel() {
     else goPrev();
   };
 
-  useEffect(() => {
-    if (paused) return;
-    const id = window.setInterval(() => setIndex((i) => (i + 1) % count), AUTOPLAY_MS);
-    return () => window.clearInterval(id);
-  }, [paused, count]);
 
   const scenario = SHOWCASE_SCENARIOS[index]!;
   const Icon = scenario.icon;
@@ -96,6 +91,21 @@ export function ShowcaseCarousel() {
           </Link>
         </div>
         </div>
+      </div>
+
+      <div
+        data-business-theme={scenario.theme}
+        aria-hidden
+        className="showcase-theme mt-1 h-1 w-full overflow-hidden rounded-full bg-muted"
+      >
+        <div
+          key={index}
+          onAnimationEnd={(e) => {
+            if (e.animationName === "showcase-progress") setIndex((i) => (i + 1) % count);
+          }}
+          style={{ "--carousel-duration": `${AUTOPLAY_MS}ms` } as React.CSSProperties}
+          className={`showcase-progress h-full rounded-full bg-primary ${paused ? "showcase-progress-paused" : ""}`}
+        />
       </div>
 
       <div className="mt-3 flex items-center justify-center gap-3">
