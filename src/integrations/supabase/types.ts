@@ -842,6 +842,66 @@ export type Database = {
         }
         Relationships: []
       }
+      stock_movements: {
+        Row: {
+          actor_name: string
+          created_at: string
+          created_by: string
+          id: string
+          kind: string
+          product_id: string
+          product_name: string
+          qty_change: number
+          reason: string
+          shop_id: string
+          stock_after: number
+          stock_before: number
+        }
+        Insert: {
+          actor_name: string
+          created_at?: string
+          created_by: string
+          id?: string
+          kind: string
+          product_id: string
+          product_name: string
+          qty_change: number
+          reason: string
+          shop_id: string
+          stock_after: number
+          stock_before: number
+        }
+        Update: {
+          actor_name?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          kind?: string
+          product_id?: string
+          product_name?: string
+          qty_change?: number
+          reason?: string
+          shop_id?: string
+          stock_after?: number
+          stock_before?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       supplier_products: {
         Row: {
           cost_price: number
@@ -1021,6 +1081,15 @@ export type Database = {
     }
     Functions: {
       accept_shop_invite: { Args: { _code: string }; Returns: string }
+      adjust_stock: {
+        Args: {
+          _kind: string
+          _product_id: string
+          _qty: number
+          _reason: string
+        }
+        Returns: number
+      }
       admin_account_deletions: {
         Args: never
         Returns: {
