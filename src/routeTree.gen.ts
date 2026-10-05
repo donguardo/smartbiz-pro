@@ -24,6 +24,7 @@ import { Route as AppInventoryRouteImport } from './routes/_app/inventory'
 import { Route as AppPosRouteImport } from './routes/_app/pos'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as ApiPublicBizbotRouteImport } from './routes/api/public/bizbot'
+import { Route as ApiPublicDailyBusinessRefreshRouteImport } from './routes/api/public/daily-business-refresh'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -99,6 +100,12 @@ const ApiPublicBizbotRoute = ApiPublicBizbotRouteImport.update({
   path: '/api/public/bizbot',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicDailyBusinessRefreshRoute =
+  ApiPublicDailyBusinessRefreshRouteImport.update({
+    id: '/api/public/daily-business-refresh',
+    path: '/api/public/daily-business-refresh',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -115,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/pos': typeof AppPosRoute
   '/settings': typeof AppSettingsRoute
   '/api/public/bizbot': typeof ApiPublicBizbotRoute
+  '/api/public/daily-business-refresh': typeof ApiPublicDailyBusinessRefreshRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -131,6 +139,7 @@ export interface FileRoutesByTo {
   '/pos': typeof AppPosRoute
   '/settings': typeof AppSettingsRoute
   '/api/public/bizbot': typeof ApiPublicBizbotRoute
+  '/api/public/daily-business-refresh': typeof ApiPublicDailyBusinessRefreshRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -149,6 +158,7 @@ export interface FileRoutesById {
   '/_app/pos': typeof AppPosRoute
   '/_app/settings': typeof AppSettingsRoute
   '/api/public/bizbot': typeof ApiPublicBizbotRoute
+  '/api/public/daily-business-refresh': typeof ApiPublicDailyBusinessRefreshRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -167,6 +177,7 @@ export interface FileRouteTypes {
     | '/pos'
     | '/settings'
     | '/api/public/bizbot'
+    | '/api/public/daily-business-refresh'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -183,6 +194,7 @@ export interface FileRouteTypes {
     | '/pos'
     | '/settings'
     | '/api/public/bizbot'
+    | '/api/public/daily-business-refresh'
   id:
     | '__root__'
     | '/'
@@ -200,6 +212,7 @@ export interface FileRouteTypes {
     | '/_app/pos'
     | '/_app/settings'
     | '/api/public/bizbot'
+    | '/api/public/daily-business-refresh'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -211,6 +224,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   TermsRoute: typeof TermsRoute
   ApiPublicBizbotRoute: typeof ApiPublicBizbotRoute
+  ApiPublicDailyBusinessRefreshRoute: typeof ApiPublicDailyBusinessRefreshRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -320,6 +334,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBizbotRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/daily-business-refresh': {
+      id: '/api/public/daily-business-refresh'
+      path: '/api/public/daily-business-refresh'
+      fullPath: '/api/public/daily-business-refresh'
+      preLoaderRoute: typeof ApiPublicDailyBusinessRefreshRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -356,6 +377,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   TermsRoute: TermsRoute,
   ApiPublicBizbotRoute: ApiPublicBizbotRoute,
+  ApiPublicDailyBusinessRefreshRoute: ApiPublicDailyBusinessRefreshRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
