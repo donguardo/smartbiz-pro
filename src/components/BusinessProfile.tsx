@@ -31,44 +31,53 @@ export function BusinessProfile({ shopId }: { shopId: string }) {
   };
 
   const uploadLogo = async (file: File) => {
-    if (!file.type.startsWith("image/")) { toast.error(t("profile.logoType")); return; }
+    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) { toast.error(t("profile.logoType")); return; }
     if (file.size > 2 * 1024 * 1024) { toast.error(t("profile.logoSize")); return; }
     setBusy(true);
-    const ext = (file.name.split(".").pop() || "png").toLowerCase().replace(/[^a-z0-9]/g, "");
-    const path = `${shopId}/logo-${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("shop-logos").upload(path, file, { contentType: file.type });
-    if (!error) {
-      const old = data?.logo_url;
-      const { error: e2 } = await supabase.from("shops").update({ logo_url: path }).eq("id", shopId);
-      if (e2) toast.error(e2.message);
-      else {
-        if (old) await supabase.storage.from("shop-logos").remove([old]);
-        toast.success(t("profile.logoSaved"));
-        qc.invalidateQueries({ queryKey: ["shop-profile", shopId] });
+    const ext = file.type === "image/jpeg" ? "jpg" : file.type === "image/webp" ? "webp" : "png";
+    const path = `${shopId}/logo-${crypto.randomUUID()}.${ext}`;
+    try {
+      const { error } = await supabase.storage.from("shop-logos").upload(path, file, { contentType: file.type });
+      if (error) throw error;
+      const { error: saveError } = await supabase.from("shops").update({ logo_url: path }).eq("id", shopId).select("id").single();
+      if (saveError) {
+        await supabase.storage.from("shop-logos").remove([path]);
+        throw saveError;
       }
-    } else toast.error(error.message);
-    setBusy(false);
+      if (data?.logo_url) await supabase.storage.from("shop-logos").remove([data.logo_url]);
+      toast.success(t("profile.logoSaved"));
+      await qc.invalidateQueries({ queryKey: ["shop-profile", shopId] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : typeof error === "object" && error && "message" in error ? String(error.message) : t("profile.logoType"));
+    } finally { setBusy(false); }
   };
 
   const removeLogo = async () => {
     if (!data?.logo_url) return;
     setBusy(true);
-    await supabase.storage.from("shop-logos").remove([data.logo_url]);
-    await supabase.from("shops").update({ logo_url: null }).eq("id", shopId);
-    qc.invalidateQueries({ queryKey: ["shop-profile", shopId] });
-    setBusy(false);
+    try {
+      const { error } = await supabase.from("shops").update({ logo_url: null }).eq("id", shopId).select("id").single();
+      if (error) throw error;
+      const { error: storageError } = await supabase.storage.from("shop-logos").remove([data.logo_url]);
+      if (storageError) toast.error(storageError.message);
+      await qc.invalidateQueries({ queryKey: ["shop-profile", shopId] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : typeof error === "object" && error && "message" in error ? String(error.message) : t("profile.nameRequired"));
+    } finally { setBusy(false); }
   };
 
   const save = async () => {
     const n = name.trim();
     if (n.length < 1 || n.length > 80) { toast.error(t("profile.nameRequired")); return; }
     setBusy(true);
-    const { error } = await supabase.from("shops").update({ name: n, business_categories: cats }).eq("id", shopId);
-    setBusy(false);
-    if (error) { toast.error(error.message); return; }
-    toast.success(t("profile.saved"));
-    qc.invalidateQueries({ queryKey: ["shop-profile", shopId] });
-    qc.invalidateQueries({ queryKey: qk.shop });
+    try {
+      const { error } = await supabase.from("shops").update({ name: n, business_categories: cats }).eq("id", shopId).select("id").single();
+      if (error) throw error;
+      toast.success(t("profile.saved"));
+      await Promise.all([qc.invalidateQueries({ queryKey: ["shop-profile", shopId] }), qc.invalidateQueries({ queryKey: qk.shop })]);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : typeof error === "object" && error && "message" in error ? String(error.message) : t("profile.nameRequired"));
+    } finally { setBusy(false); }
   };
 
   return (

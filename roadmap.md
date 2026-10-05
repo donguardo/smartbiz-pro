@@ -64,4 +64,5 @@
 - [x] Redesign the hero carousel as a peeking slide-track: next/previous business cards visible on the left/right edges while sliding
 - [x] Platform Super Admin (/admin, allowlist + MFA, view-only) — blocked: first admin email + admin.mvp.com.ai domain connection
 - [x] Business profile manager (logo, name, categories) in Settings
+- [x] Fix profile/logo saves blocked by shared activity trigger — actual business name save/reload, private logo upload/reload, and removal verified; original test shop details restored.
 - [x] Show saved business name and private store logo in app navigation, digital receipts, and receipt-only printing — signed-in name checked; logo/receipt rendering checked with isolated sample responses, without creating real sales.
