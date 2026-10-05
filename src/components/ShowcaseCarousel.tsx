@@ -1,6 +1,4 @@
-// ============= Full file contents =============
-
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { SHOWCASE_SCENARIOS } from "@/lib/showcase-scenarios";
@@ -9,8 +7,25 @@ import { peso } from "@/lib/format";
 
 const AUTOPLAY_MS = 5000;
 
+// SSR-safe: starts false, syncs after mount so hydration never mismatches.
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduced(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setReduced(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  return reduced;
+}
+
+const focusRing =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+
 export function ShowcaseCarousel() {
   const { t, lang } = useT();
+  const reduced = usePrefersReducedMotion();
   const count = SHOWCASE_SCENARIOS.length;
   // Track renders [last, ...all, first] so a neighbour always peeks on both edges.
   const extended = [
@@ -24,16 +39,49 @@ export function ShowcaseCarousel() {
   const [userPaused, setUserPaused] = useState(false);
   const [hoverPaused, setHoverPaused] = useState(false);
   const [touchPaused, setTouchPaused] = useState(false);
+  const [focusPaused, setFocusPaused] = useState(false);
+  const [announce, setAnnounce] = useState("");
   const touchStartX = useRef<number | null>(null);
-  const paused = userPaused || hoverPaused || touchPaused;
+  // Reduced-motion users get no autoplay; the rest pause for hover, touch or focus.
+  const paused = userPaused || hoverPaused || touchPaused || focusPaused;
   const realIndex = ((pos - 1) % count + count) % count;
+
+  const slideLabel = (i: number) =>
+    t("carousel.slideOf")
+      .replace("{n}", String(i + 1))
+      .replace("{total}", String(count))
+      .replace("{name}", SHOWCASE_SCENARIOS[i]!.name[lang]);
 
   const goTo = (real: number) => {
     setSnap(false);
     setPos(real + 1);
+    setAnnounce(slideLabel(real));
   };
-  const goPrev = () => setPos((p) => Math.max(0, p - 1));
-  const goNext = () => setPos((p) => Math.min(count + 1, p + 1));
+  const goPrev = () => {
+    if (reduced) {
+      // No transition runs, so onTransitionEnd never fires — wrap instantly.
+      const next = (realIndex - 1 + count) % count;
+      setSnap(true);
+      setPos(next + 1);
+      setAnnounce(slideLabel(next));
+      return;
+    }
+    const target = realIndex === 0 ? count - 1 : realIndex - 1;
+    setAnnounce(slideLabel(target));
+    setPos((p) => Math.max(0, p - 1));
+  };
+  const goNext = () => {
+    if (reduced) {
+      const next = (realIndex + 1) % count;
+      setSnap(true);
+      setPos(next + 1);
+      setAnnounce(slideLabel(next));
+      return;
+    }
+    const target = realIndex === count - 1 ? 0 : realIndex + 1;
+    setAnnounce(slideLabel(target));
+    setPos((p) => Math.min(count + 1, p + 1));
+  };
 
   const onTrackTransitionEnd = (e: React.TransitionEvent) => {
     if (e.target !== e.currentTarget || e.propertyName !== "transform") return;
@@ -68,17 +116,23 @@ export function ShowcaseCarousel() {
   return (
     <div
       className="relative"
+      role="region"
+      aria-roledescription="carousel"
+      aria-label={t("nav.showcase")}
       onPointerEnter={(e) => {
         if (e.pointerType === "mouse") setHoverPaused(true);
       }}
       onPointerLeave={(e) => {
         if (e.pointerType === "mouse") setHoverPaused(false);
       }}
+      onFocusCapture={() => setFocusPaused(true)}
+      onBlurCapture={() => setFocusPaused(false)}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
-      aria-roledescription="carousel"
-      aria-label={t("nav.showcase")}
     >
+      <p aria-live="polite" role="status" className="sr-only">
+        {announce}
+      </p>
       <div className="-m-10 overflow-hidden rounded-[2rem] p-10">
         <div
           className="showcase-track"
@@ -89,17 +143,21 @@ export function ShowcaseCarousel() {
             const CellIcon = s.icon;
             const cellWeekly = s.categories.reduce((sum, c) => sum + c.sales, 0);
             const active = i === pos;
+            const realI = ((i - 1) % count + count) % count;
             return (
               <div
                 key={`${s.slug}-${i}`}
                 className="showcase-cell"
                 aria-hidden={!active}
                 onClick={() => {
-                  if (!active) goTo(((i - 1) % count + count) % count);
+                  if (!active) goTo(realI);
                 }}
               >
                 <div
                   data-business-theme={s.theme}
+                  role={active ? "group" : undefined}
+                  aria-roledescription={active ? "slide" : undefined}
+                  aria-label={active ? slideLabel(realI) : undefined}
                   className={`showcase-theme showcase-cell-inner overflow-hidden rounded-2xl border border-border bg-card shadow-xl transition-[opacity,transform,filter] duration-700 ${
                     active
                       ? "scale-100 opacity-100"
@@ -132,9 +190,9 @@ export function ShowcaseCarousel() {
                     to="/showcase/$business"
                     params={{ business: s.slug }}
                     tabIndex={active ? 0 : -1}
-                    className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+                    className={`mt-4 inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 ${focusRing}`}
                   >
-                    {t("showcase.open")} <ArrowRight className="h-4 w-4" />
+                    {t("showcase.open")} <ArrowRight className="h-4 w-4" aria-hidden />
                   </Link>
                 </div>
                 </div>
@@ -152,52 +210,61 @@ export function ShowcaseCarousel() {
         <div
           key={realIndex}
           onAnimationEnd={(e) => {
-            if (e.animationName === "showcase-progress") goNext();
+            if (e.animationName === "showcase-progress" && !reduced) goNext();
           }}
           style={{ "--carousel-duration": `${AUTOPLAY_MS}ms` } as React.CSSProperties}
           className={`showcase-progress h-full rounded-full bg-primary ${paused ? "showcase-progress-paused" : ""}`}
         />
       </div>
 
-      <div className="mt-3 flex items-center justify-center gap-3">
+      <div className="mt-3 flex items-center justify-center gap-2">
         <button
           type="button"
           onClick={goPrev}
-          className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card hover:bg-muted"
-          aria-label={t("common.back")}
+          className={`flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card hover:bg-muted ${focusRing}`}
+          aria-label={t("carousel.previous")}
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-4 w-4" aria-hidden />
         </button>
-        <div className="flex gap-1.5">
+        <div className="flex gap-0.5">
           {SHOWCASE_SCENARIOS.map((s, i) => (
             <button
               key={s.slug}
               type="button"
               onClick={() => goTo(i)}
-              aria-label={s.name[lang]}
-              aria-current={i === realIndex}
-              className={`h-2 rounded-full transition-all ${i === realIndex ? "w-6 bg-primary" : "w-2 bg-muted-foreground/40 hover:bg-muted-foreground"}`}
-            />
+              aria-label={slideLabel(i)}
+              aria-current={i === realIndex ? "true" : undefined}
+              className={`flex h-11 w-11 items-center justify-center rounded-full ${focusRing}`}
+            >
+              <span
+                aria-hidden
+                className={`h-2 rounded-full transition-all ${i === realIndex ? "w-6 bg-primary" : "w-2 bg-muted-foreground/40 hover:bg-muted-foreground"}`}
+              />
+            </button>
           ))}
         </div>
         <button
           type="button"
           onClick={goNext}
-          className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card hover:bg-muted"
-          aria-label={t("common.next")}
+          className={`flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card hover:bg-muted ${focusRing}`}
+          aria-label={t("carousel.nextBusiness")}
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-4 w-4" aria-hidden />
         </button>
-        <span aria-hidden className="h-5 w-px bg-border" />
-        <button
-          type="button"
-          onClick={() => setUserPaused((p) => !p)}
-          aria-pressed={userPaused}
-          aria-label={userPaused ? t("carousel.play") : t("carousel.pause")}
-          className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card hover:bg-muted"
-        >
-          {userPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
-        </button>
+        {!reduced && (
+          <>
+            <span aria-hidden className="mx-1 h-5 w-px bg-border" />
+            <button
+              type="button"
+              onClick={() => setUserPaused((p) => !p)}
+              aria-pressed={userPaused}
+              aria-label={userPaused ? t("carousel.play") : t("carousel.pause")}
+              className={`flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card hover:bg-muted ${focusRing}`}
+            >
+              {userPaused ? <Play className="h-4 w-4" aria-hidden /> : <Pause className="h-4 w-4" aria-hidden />}
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
