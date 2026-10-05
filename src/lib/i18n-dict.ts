@@ -151,6 +151,8 @@ export const DICT: Record<string, { en: string; tl: string }> = {
   "showcase.title": { en: "See how MVP BizManager fits your business", tl: "Tingnan kung paano babagay ang MVP BizManager sa negosyo mo" },
   "showcase.description": { en: "Open a business folder, change its sample numbers, and see sales, profit, charts, and alerts recalculate instantly — no login needed.", tl: "Buksan ang folder ng negosyo, palitan ang sample na numero, at makitang agad magbago ang benta, tubo, charts, at alerts — walang login." },
   "showcase.open": { en: "Open sample dashboard", tl: "Buksan ang sample dashboard" },
+  "showcase.perWeek": { en: "/week", tl: "/linggo" },
+  "showcase.heroTitle": { en: "Pick a business like yours", tl: "Piliin ang negosyong katulad ng sa iyo" },
   "showcase.sample": { en: "Interactive sample", tl: "Interactive sample" },
   "showcase.goodFor": { en: "Who this fits", tl: "Para kanino ito" },
   "showcase.edit": { en: "Change the sample numbers", tl: "Palitan ang sample na numero" },

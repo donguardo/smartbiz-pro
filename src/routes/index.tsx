@@ -5,6 +5,7 @@ import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/lib/theme";
 import { LanguageToggle, useT } from "@/lib/i18n";
 import { DemoDashboard } from "@/components/DemoDashboard";
+import { ShowcaseCarousel } from "@/components/ShowcaseCarousel";
 import { PRICE_PER_USER } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { openInstallPrompt } from "@/lib/install";
