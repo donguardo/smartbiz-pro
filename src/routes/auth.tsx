@@ -48,7 +48,8 @@ function AuthPage() {
     const err = hash.get("error_code") || query.get("error_code") || hash.get("error") || query.get("error");
     if (err) { setExpired(true); setMode("signin"); }
     if (query.get("confirmed") === "1" || hash.get("type") === "signup") confirmed.current = true;
-    if (window.location.hash || window.location.search) window.history.replaceState(null, "", window.location.pathname);
+    // Let the auth client read a fresh access token first; scrub everything else right away.
+    if (err || !hash.get("access_token")) window.history.replaceState(null, "", window.location.pathname);
   }, []);
 
   useEffect(() => {
@@ -57,6 +58,7 @@ function AuthPage() {
 
   useEffect(() => {
     if (!session) return;
+    if (window.location.hash || window.location.search) window.history.replaceState(null, "", window.location.pathname);
     if (confirmed.current) toast.success("Email confirmed — welcome to MVP BizManager");
     navigate({ to: "/dashboard", replace: true });
   }, [session, navigate]);
