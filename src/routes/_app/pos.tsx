@@ -139,7 +139,7 @@ function POS() {
               </div>
               <div className="flex items-center gap-1">
                 <button aria-label="Less" onClick={() => setQty(l.p.id, Math.round((l.qty - 1) * 1000) / 1000)} className="flex h-7 w-7 items-center justify-center rounded-md border border-border">{l.qty <= 1 ? <Trash2 className="h-3.5 w-3.5" /> : <Minus className="h-3.5 w-3.5" />}</button>
-                {isDecimalUnit(l.p.unit) ? <input aria-label={`${l.p.name} quantity in ${l.p.unit}`} type="number" inputMode="decimal" min="0.001" step="0.001" defaultValue={l.qty} onBlur={(e) => { const v = Math.round(Number(e.target.value) * 1000) / 1000; setQty(l.p.id, Number.isFinite(v) ? v : 0); }} className="w-16 rounded-md border border-input bg-background px-1 py-0.5 text-center font-mono text-sm" /> : <span className="w-7 text-center font-mono text-sm">{l.qty}</span>}
+                {isDecimalUnit(l.p.unit) ? <input key={`${l.p.id}-${l.qty}`} aria-label={`${l.p.name} quantity in ${l.p.unit}`} type="number" inputMode="decimal" min="0.001" step="0.001" defaultValue={l.qty} onBlur={(e) => { const v = Math.round(Number(e.target.value) * 1000) / 1000; setQty(l.p.id, Number.isFinite(v) ? v : 0); }} className="w-16 rounded-md border border-input bg-background px-1 py-0.5 text-center font-mono text-sm" /> : <span className="w-7 text-center font-mono text-sm">{l.qty}</span>}
                 <button aria-label="More" onClick={() => setQty(l.p.id, l.qty + 1)} className="flex h-7 w-7 items-center justify-center rounded-md border border-border"><Plus className="h-3.5 w-3.5" /></button>
               </div>
               <span className="w-20 text-right font-mono text-sm">{peso(lineTotal(l))}</span>
