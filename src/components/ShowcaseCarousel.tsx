@@ -120,6 +120,16 @@ export function ShowcaseCarousel() {
         >
           <ChevronRight className="h-4 w-4" />
         </button>
+        <span aria-hidden className="h-5 w-px bg-border" />
+        <button
+          type="button"
+          onClick={() => setUserPaused((p) => !p)}
+          aria-pressed={userPaused}
+          aria-label={userPaused ? t("carousel.play") : t("carousel.pause")}
+          className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card hover:bg-muted"
+        >
+          {userPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+        </button>
       </div>
     </div>
   );

@@ -172,6 +172,8 @@ export const DICT: Record<string, { en: string; tl: string }> = {
   "showcase.salesMix": { en: "Where sales come from", tl: "Pinanggagalingan ng benta" },
   "showcase.yoursTitle": { en: "Ready to see your own business numbers?", tl: "Handa ka na bang makita ang numero ng negosyo mo?" },
   "showcase.yoursBody": { en: "Start your MVP BizManager account and replace the sample with your real sales.", tl: "Gumawa ng MVP BizManager account at palitan ang sample ng totoong benta mo." },
+  "carousel.pause": { en: "Pause slideshow", tl: "I-hinto ang slideshow" },
+  "carousel.play": { en: "Play slideshow", tl: "Ipatuloy ang slideshow" },
 };
 
 export function fallback(lang: Lang): Record<string, string> {
