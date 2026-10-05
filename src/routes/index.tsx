@@ -1,12 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowRight, Bot, Check, CreditCard, PackageSearch, QrCode, ScanLine, Smartphone, UserPlus, Store, Receipt } from "lucide-react";
+import { ArrowRight, Bot, Check, CreditCard, Download, PackageSearch, QrCode, ScanLine, Smartphone, UserPlus, Store, Receipt } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/lib/theme";
 import { LanguageToggle, useT } from "@/lib/i18n";
 import { DemoDashboard } from "@/components/DemoDashboard";
 import { PRICE_PER_USER } from "@/lib/format";
 import { AnimatedBackdrop } from "@/components/AnimatedBackdrop";
+import { Button } from "@/components/ui/button";
+import { openInstallPrompt } from "@/lib/install";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -44,6 +46,9 @@ function Landing() {
             <a href="#pricing" className="hover:text-foreground">{t("nav.pricing")}</a>
           </nav>
           <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={openInstallPrompt} aria-label={t("install.open")} title={t("install.open")}>
+              <Download className="h-4 w-4" /><span className="hidden lg:inline">{t("install.open")}</span>
+            </Button>
             <LanguageToggle />
             <ThemeToggle />
             <Link to="/auth" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90">{t("cta.getStarted")}</Link>

@@ -1,13 +1,15 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Bot, LayoutDashboard, LogOut, Package, ScanLine } from "lucide-react";
+import { Bot, Download, LayoutDashboard, LogOut, Package, ScanLine } from "lucide-react";
 import { useSession } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeToggle } from "@/lib/theme";
 import { LanguageToggle, useT } from "@/lib/i18n";
 import { Logo } from "@/components/Logo";
 import { fetchProfile, qk } from "@/lib/store";
+import { Button } from "@/components/ui/button";
+import { openInstallPrompt } from "@/lib/install";
 
 export const Route = createFileRoute("/_app")({
   ssr: false,
@@ -52,6 +54,9 @@ function AppLayout() {
           })}
         </nav>
         <div className="mt-auto space-y-3">
+          <Button variant="outline" className="w-full" onClick={openInstallPrompt}>
+            <Download className="h-4 w-4" />{t("install.open")}
+          </Button>
           <LanguageToggle className="w-full justify-center" />
           <div className="rounded-xl border border-sidebar-border p-3 text-xs text-muted-foreground">
             {t("app.plan")}: <span className="font-semibold text-foreground">₱499/user/mo</span>
@@ -68,6 +73,9 @@ function AppLayout() {
       <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-primary/30 px-4 py-3 backdrop-blur-md md:hidden">
         <Logo to="/dashboard" />
         <div className="flex gap-2">
+          <Button variant="ghost" size="icon" onClick={openInstallPrompt} aria-label={t("install.open")} title={t("install.open")}>
+            <Download className="h-4 w-4" />
+          </Button>
           <LanguageToggle />
           <ThemeToggle />
           <button aria-label="Sign out" onClick={() => supabase.auth.signOut()} className="flex h-9 w-9 items-center justify-center rounded-lg border border-border"><LogOut className="h-4 w-4" /></button>

@@ -13,3 +13,4 @@
 - UI wording lives in the backend translations table (key, lang en/tl); src/lib/i18n-dict.ts is the offline fallback and seed source — keeps copy editable without code changes.
 - BIZBOT uses one browser-local AI SDK UIMessage conversation and a global floating client — matching the chosen single-device chat experience.
 - The opening video is browser-local first-visit onboarding and emits completion before the install prompt — prevents overlapping first-run experiences.
+- Installation state and reopening use the shared browser event in src/lib/install.ts — keeps public and signed-in navigation synchronized with one install window.
