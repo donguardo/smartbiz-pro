@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Archive, Download, ImagePlus, Pencil, Plus, Trash2, Upload, X } from "lucide-react";
+import { Archive, ArrowUpDown, Download, ImagePlus, Pencil, Plus, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { UNITS, computeInsights, fetchAllProducts, fetchItems, fetchProductSettings, fetchShopContext, isDecimalUnit, qk, type Product, type Unit } from "@/lib/store";
+import { StockAdjustDialog, StockHistoryPanel } from "@/components/StockAdjust";
 import { SAMPLE_CSV, parseProductCsv, type CsvRow } from "@/lib/product-csv";
 import { peso } from "@/lib/format";
 
@@ -40,6 +41,7 @@ function Inventory() {
   const photoPaths = all.map((p) => p.photo_path).filter((p): p is string => !!p);
   const { data: photos = {} } = useQuery({ queryKey: ["product-photos", photoPaths], queryFn: () => signPhotos(photoPaths), enabled: photoPaths.length > 0, staleTime: 30 * 60000 });
   const [form, setForm] = useState<Form | null>(null);
+  const [adjusting, setAdjusting] = useState<Product | null>(null);
   const [busy, setBusy] = useState(false);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("All");
@@ -180,6 +182,7 @@ function Inventory() {
                   <td className="whitespace-nowrap p-3 text-right">
                     {p.archived_at ? owner && <button onClick={() => restore(p)} className="text-xs text-primary underline">Restore</button> : <>
                       {canEdit && <button aria-label={`Edit ${p.name}`} onClick={() => setForm({ id: p.id, name: p.name, sku: p.sku, category: p.category, newCategory: "", price: String(p.price), cost: owner ? String(p.cost) : "", unit: p.unit as Unit, track: p.track_stock, stock: String(p.stock), reorder_level: String(p.reorder_level), photo_path: p.photo_path })} className="p-1.5 text-muted-foreground hover:text-foreground"><Pencil className="h-4 w-4" /></button>}
+                      {owner && p.track_stock && <button aria-label={`Adjust stock for ${p.name}`} title="Restock, loss or correction" onClick={() => setAdjusting(p)} className="p-1.5 text-muted-foreground hover:text-foreground"><ArrowUpDown className="h-4 w-4" /></button>}
                       {owner && <button aria-label={`Delete ${p.name}`} onClick={() => del(p)} className="p-1.5 text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>}
                     </>}
                   </td>
@@ -230,6 +233,8 @@ function Inventory() {
         </div>
       )}
 
+      {owner && <StockHistoryPanel />}
+      {adjusting && <StockAdjustDialog product={adjusting} onClose={() => setAdjusting(null)} />}
       {csv && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 sm:items-center sm:p-4" onClick={() => setCsv(null)}>
           <div onClick={(e) => e.stopPropagation()} className="max-h-[92vh] w-full max-w-2xl space-y-3 overflow-y-auto rounded-t-3xl bg-card p-6 sm:rounded-3xl">
