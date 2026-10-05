@@ -57,3 +57,8 @@
 - [x] Add visible pause and play control to the hero showcase carousel
 - [x] Make each business slide change a pronounced elastic bounce-in transition
 - [x] Add a countdown progress bar to the hero showcase carousel
+- [x] Add auto-playing business showcase carousel to the hero with theme-colored slides
+- [x] Add touch-swipe navigation to the hero showcase carousel
+- [x] Add a visible pause and play control to the hero carousel
+- [x] Add a visible progress indicator to the hero carousel
+- [ ] Redesign the hero carousel as a peeking slide-track: next/previous business cards visible on the left/right edges while sliding
