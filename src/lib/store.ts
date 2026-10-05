@@ -7,7 +7,7 @@ export type SaleItem = Database["public"]["Tables"]["sale_items"]["Row"];
 export type ShopContext = Database["public"]["Functions"]["get_my_shop_context"]["Returns"][number];
 export type CustomerChoice = Database["public"]["Functions"]["get_masked_customers"]["Returns"][number];
 
-export const qk = { products: ["products"], sales: ["sales"], items: ["sale_items"], profile: ["profile"], shop: ["shop-context"], customers: ["customers-masked"], goals: ["sales-goals"], forecasts: ["sales-forecasts"], tip: ["daily-tip"] };
+export const qk = { products: ["products"], sales: ["sales"], items: ["sale_items"], profile: ["profile"], shop: ["shop-context"], customers: ["customers-masked"], goals: ["sales-goals"], forecasts: ["sales-forecasts"], tip: ["daily-tip"], cashierToday: ["cashier-today"] };
 
 export async function fetchProducts() {
   const { data, error } = await supabase.rpc("get_shop_products");
@@ -42,6 +42,7 @@ export async function fetchCustomers() { const { data, error } = await supabase.
 export async function fetchGoals() { const { data, error } = await supabase.from("sales_goals").select("*").order("period"); if (error) throw error; return data; }
 export async function fetchForecasts() { const { data, error } = await supabase.from("sales_forecasts").select("*").gte("forecast_date", new Date().toISOString().slice(0, 10)).order("forecast_date"); if (error) throw error; return data; }
 export async function fetchDailyTip() { const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila" }).format(new Date()); const { data, error } = await supabase.from("daily_tips").select("*").eq("tip_date", today).maybeSingle(); if (error) throw error; return data; }
+export async function fetchCashierToday() { const { data, error } = await supabase.rpc("get_cashier_today_summary"); if (error) throw error; return data[0] ?? { today_total: 0, sale_count: 0 }; }
 
 export const SAMPLE_PRODUCTS = [
   { name: "Coca-Cola 1.5L", sku: "4801981116072", category: "Beverages", price: 75, cost: 58, stock: 6, reorder_level: 12 },
