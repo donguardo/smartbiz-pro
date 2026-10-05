@@ -46,4 +46,4 @@
 - [x] Inspect scheduled database jobs and report external domain/email/test-account blockers
 - [x] Verify 360–480px and desktop flows, then publish
 - [ ] Replace placeholder support email with the real support address (needs the address from the user)
-- [ ] Fix pie chart label contrast so text stays readable over every slice colour
+- [x] Fix pie chart label contrast so text stays readable over every slice colour
