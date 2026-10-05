@@ -129,8 +129,23 @@ export function ShowcaseCarousel() {
     if (start == null) return;
     const delta = (e.changedTouches[0]?.clientX ?? start) - start;
     if (Math.abs(delta) < 40) return;
+    swipeEndedAt.current = Date.now();
     if (delta < 0) goNext();
     else goPrev();
+  };
+
+  // Tapping or clicking anywhere on a slide opens it; tapping a peeking
+  // neighbour first slides it to the centre. A click right after a swipe
+  // gesture is ignored so the swipe doesn't also open the slide.
+  const onCellClick = (active: boolean, slug: string) => {
+    if (Date.now() - swipeEndedAt.current < 500) return;
+    if (active) {
+      navigate({ to: "/showcase/$business", params: { business: slug } });
+    } else {
+      goTo(
+        SHOWCASE_SCENARIOS.findIndex((s) => s.slug === slug)
+      );
+    }
   };
 
   const scenario = SHOWCASE_SCENARIOS[realIndex]!;
