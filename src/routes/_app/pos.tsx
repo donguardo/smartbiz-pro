@@ -36,6 +36,7 @@ function POS() {
   const receiptRef = useRef<HTMLDivElement>(null);
   const { data: customers = [] } = useQuery({ queryKey: qk.customers, queryFn: fetchCustomers });
   const [cart, setCart] = useState<Line[]>([]);
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [scan, setScan] = useState("");
   const [cat, setCat] = useState("All");
   const [paying, setPaying] = useState(false);
@@ -53,12 +54,16 @@ function POS() {
   const total = useMemo(() => cart.reduce((s, l) => s + lineTotal(l), 0), [cart]);
   const count = cart.length;
 
-  const add = (p: Product) => setCart((c) => {
-    const f = c.find((l) => l.p.id === p.id);
-    if (p.track_stock && (f ? f.qty + 1 : 1) > p.stock) toast.warning(`Only ${p.stock} ${p.name} in stock`);
-    return f ? c.map((l) => (l.p.id === p.id ? { ...l, qty: l.qty + 1 } : l)) : [...c, { p, qty: 1 }];
-  });
-  const setQty = (id: string, qty: number) => setCart((c) => (qty <= 0 ? c.filter((l) => l.p.id !== id) : c.map((l) => (l.p.id === id ? { ...l, qty } : l))));
+  const outOfStock = (p: Product) => p.track_stock && p.stock <= 0;
+  const add = (p: Product) => {
+    const f = cart.find((l) => l.p.id === p.id);
+    const next = (f?.qty ?? 0) + (isDecimalUnit(p.unit) && p.track_stock && p.stock < 1 ? p.stock : 1);
+    if (p.track_stock && (p.stock <= 0 || next > p.stock)) { toast.error(`Not enough stock: ${p.name} (${p.stock} left)`); return; }
+    setCart((c) => (f ? c.map((l) => (l.p.id === p.id ? { ...l, qty: next } : l)) : [...c, { p, qty: next }]));
+  };
+  const shortages = cart.filter((l) => { const cur = products.find((x) => x.id === l.p.id); return !cur || (cur.track_stock && cur.stock < l.qty); })
+    .map((l) => { const cur = products.find((x) => x.id === l.p.id); return `Not enough stock: ${l.p.name} (${cur?.stock ?? 0} left)`; });
+  const setQty = (id: string, qty: number) => { const p = products.find((x) => x.id === id); if (p?.track_stock && qty > p.stock) { toast.error(`Not enough stock: ${p.name} (${p.stock} left)`); return; } setCart((c) => (qty <= 0 ? c.filter((l) => l.p.id !== id) : c.map((l) => (l.p.id === id ? { ...l, qty } : l)))); };
 
   const onScan = (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +75,7 @@ function POS() {
   };
 
   const change = method === "cash" ? Math.max(0, Number(tendered || 0) - total) : 0;
-  const canPay = cart.length > 0 && (method !== "cash" || Number(tendered || 0) >= total);
+  const canPay = cart.length > 0 && shortages.length === 0 && (method !== "cash" || Number(tendered || 0) >= total);
 
   const checkout = async () => {
     setBusy(true);
@@ -89,7 +94,7 @@ function POS() {
       setCart([]); setTendered(""); setCustomerId(""); setNewCustomer({ name: "", mobile: "", consent: false }); setPaying(false);
       qc.invalidateQueries();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Payment failed");
+      const msg = err && typeof err === "object" && "message" in err ? String((err as { message: unknown }).message) : "Payment failed"; toast.error(msg); void qc.invalidateQueries({ queryKey: qk.products });
     } finally { setBusy(false); }
   };
 
@@ -112,12 +117,12 @@ function POS() {
         {products.length === 0 && <p className="rounded-2xl border border-dashed border-border p-8 text-center text-muted-foreground">No products yet — add some in Inventory.</p>}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
           {shown.map((p) => (
-            <button key={p.id} onClick={() => add(p)} className="group flex flex-col rounded-2xl border border-border bg-card p-3 text-left transition hover:border-primary active:scale-[0.98]">
+            <button key={p.id} onClick={() => add(p)} disabled={outOfStock(p)} aria-disabled={outOfStock(p)} className="group flex flex-col rounded-2xl border border-border bg-card p-3 text-left transition hover:border-primary active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border">
               <span className="text-xs text-muted-foreground">{p.category}</span>
               <span className="mt-1 line-clamp-2 font-medium leading-tight">{p.name}</span>
-              <span className="mt-auto flex items-end justify-between pt-3">
+              <span className="mt-auto flex flex-wrap items-end justify-between gap-x-2 gap-y-0.5 pt-3">
                 <span className="font-display text-lg font-semibold">{peso(Number(p.price))}{isDecimalUnit(p.unit) && <span className="text-xs font-normal text-muted-foreground">/{p.unit}</span>}</span>
-                <span className={`whitespace-nowrap font-mono text-[11px] ${p.track_stock && p.stock <= p.reorder_level ? "text-destructive" : "text-muted-foreground"}`}>{p.track_stock ? `${p.stock} ${p.unit} left` : p.unit === "service" ? "service" : `per ${p.unit}`}</span>
+                <span className={`font-mono text-[11px] leading-tight ${p.track_stock && p.stock <= p.reorder_level ? "text-destructive" : "text-muted-foreground"}`}>{outOfStock(p) ? "Out of stock" : p.track_stock ? `${p.stock} ${p.unit} left` : p.unit === "service" ? "service" : `per ${p.unit}`}</span>
               </span>
             </button>
           ))}
@@ -139,7 +144,7 @@ function POS() {
               </div>
               <div className="flex items-center gap-1">
                 <button aria-label="Less" onClick={() => setQty(l.p.id, Math.round((l.qty - 1) * 1000) / 1000)} className="flex h-7 w-7 items-center justify-center rounded-md border border-border">{l.qty <= 1 ? <Trash2 className="h-3.5 w-3.5" /> : <Minus className="h-3.5 w-3.5" />}</button>
-                {isDecimalUnit(l.p.unit) ? <input key={`${l.p.id}-${l.qty}`} aria-label={`${l.p.name} quantity in ${l.p.unit}`} type="number" inputMode="decimal" min="0.001" step="0.001" defaultValue={l.qty} onBlur={(e) => { const v = Math.round(Number(e.target.value) * 1000) / 1000; setQty(l.p.id, Number.isFinite(v) ? v : 0); }} className="w-16 rounded-md border border-input bg-background px-1 py-0.5 text-center font-mono text-sm" /> : <span className="w-7 text-center font-mono text-sm">{l.qty}</span>}
+                {isDecimalUnit(l.p.unit) ? <input aria-label={`${l.p.name} quantity in ${l.p.unit}`} type="number" inputMode="decimal" min="0.001" step="0.001" value={drafts[l.p.id] ?? String(l.qty)} onChange={(e) => { const raw = e.target.value; setDrafts((d) => ({ ...d, [l.p.id]: raw })); const v = Math.round(Number(raw) * 1000) / 1000; if (raw !== "" && Number.isFinite(v) && v > 0) setQty(l.p.id, v); }} onBlur={() => setDrafts((d) => { const n = { ...d }; delete n[l.p.id]; return n; })} className="w-16 rounded-md border border-input bg-background px-1 py-0.5 text-center font-mono text-sm" /> : <span className="w-7 text-center font-mono text-sm">{l.qty}</span>}
                 <button aria-label="More" onClick={() => setQty(l.p.id, l.qty + 1)} className="flex h-7 w-7 items-center justify-center rounded-md border border-border"><Plus className="h-3.5 w-3.5" /></button>
               </div>
               <span className="w-20 text-right font-mono text-sm">{peso(lineTotal(l))}</span>
@@ -149,7 +154,8 @@ function POS() {
         <div className="space-y-3 border-t border-border p-4">
           <div className="flex justify-between text-sm text-muted-foreground"><span>{count} items</span><span>VAT incl.</span></div>
           <div className="flex items-baseline justify-between"><span className="font-medium">Total</span><span className="font-display text-3xl font-bold">{peso(total)}</span></div>
-          <button disabled={!cart.length} onClick={() => setPaying(true)} className="w-full rounded-xl bg-primary py-3.5 font-semibold text-primary-foreground disabled:opacity-40">Charge {peso(total)}</button>
+          {shortages.map((m) => <p key={m} role="alert" className="rounded-lg bg-destructive/10 p-2 text-sm text-destructive">{m}</p>)}
+          <button disabled={!cart.length || shortages.length > 0} onClick={() => setPaying(true)} className="w-full rounded-xl bg-primary py-3.5 font-semibold text-primary-foreground disabled:opacity-40">Charge {peso(total)}</button>
         </div>
       </aside>
 
