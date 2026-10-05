@@ -235,7 +235,7 @@ function Inventory() {
         </div>
       )}
 
-      {owner && <StockHistoryPanel />}
+      {owner && <StockHistoryPanel products={all} />}
       {adjusting && <StockAdjustDialog product={adjusting} onClose={() => setAdjusting(null)} />}
       {csv && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 sm:items-center sm:p-4" onClick={() => setCsv(null)}>
