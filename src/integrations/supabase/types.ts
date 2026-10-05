@@ -311,42 +311,57 @@ export type Database = {
       }
       products: {
         Row: {
+          archived_at: string | null
           category: string
           cost: number
           created_at: string
           id: string
           name: string
+          photo_path: string | null
           price: number
           reorder_level: number
           shop_id: string | null
           sku: string
           stock: number
+          stock_qty: number
+          track_stock: boolean
+          unit: string
           user_id: string
         }
         Insert: {
+          archived_at?: string | null
           category?: string
           cost?: number
           created_at?: string
           id?: string
           name: string
-          price?: number
-          reorder_level?: number
-          shop_id?: string | null
-          sku: string
-          stock?: number
-          user_id?: string
-        }
-        Update: {
-          category?: string
-          cost?: number
-          created_at?: string
-          id?: string
-          name?: string
+          photo_path?: string | null
           price?: number
           reorder_level?: number
           shop_id?: string | null
           sku?: string
           stock?: number
+          stock_qty?: number
+          track_stock?: boolean
+          unit?: string
+          user_id?: string
+        }
+        Update: {
+          archived_at?: string | null
+          category?: string
+          cost?: number
+          created_at?: string
+          id?: string
+          name?: string
+          photo_path?: string | null
+          price?: number
+          reorder_level?: number
+          shop_id?: string | null
+          sku?: string
+          stock?: number
+          stock_qty?: number
+          track_stock?: boolean
+          unit?: string
           user_id?: string
         }
         Relationships: [
@@ -434,6 +449,7 @@ export type Database = {
           price: number
           product_id: string | null
           qty: number
+          quantity: number | null
           sale_id: string
           shop_id: string | null
           user_id: string
@@ -447,6 +463,7 @@ export type Database = {
           price: number
           product_id?: string | null
           qty: number
+          quantity?: number | null
           sale_id: string
           shop_id?: string | null
           user_id?: string
@@ -460,6 +477,7 @@ export type Database = {
           price?: number
           product_id?: string | null
           qty?: number
+          quantity?: number | null
           sale_id?: string
           shop_id?: string | null
           user_id?: string
@@ -793,6 +811,7 @@ export type Database = {
       }
       shops: {
         Row: {
+          allow_cashier_products: boolean
           business_categories: string[]
           created_at: string
           id: string
@@ -802,6 +821,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          allow_cashier_products?: boolean
           business_categories?: string[]
           created_at?: string
           id?: string
@@ -811,6 +831,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          allow_cashier_products?: boolean
           business_categories?: string[]
           created_at?: string
           id?: string
@@ -1047,6 +1068,7 @@ export type Database = {
       }
       anonymize_customer: { Args: { _customer_id: string }; Returns: undefined }
       assert_platform_admin_mfa: { Args: never; Returns: undefined }
+      can_edit_products: { Args: { _shop_id: string }; Returns: boolean }
       cancel_shop_invite: { Args: { _invite_id: string }; Returns: undefined }
       create_shop_customer: {
         Args: { _consented: boolean; _mobile: string; _name: string }
@@ -1117,6 +1139,13 @@ export type Database = {
           shop_name: string
         }[]
       }
+      get_product_settings: {
+        Args: never
+        Returns: {
+          allow_cashier_products: boolean
+          can_edit: boolean
+        }[]
+      }
       get_shop_products: {
         Args: never
         Returns: {
@@ -1130,6 +1159,25 @@ export type Database = {
           shop_id: string
           sku: string
           stock: number
+        }[]
+      }
+      get_shop_products_v2: {
+        Args: never
+        Returns: {
+          archived_at: string
+          category: string
+          cost: number
+          created_at: string
+          id: string
+          name: string
+          photo_path: string
+          price: number
+          reorder_level: number
+          shop_id: string
+          sku: string
+          stock: number
+          track_stock: boolean
+          unit: string
         }[]
       }
       is_platform_admin: { Args: never; Returns: boolean }
@@ -1148,8 +1196,10 @@ export type Database = {
         }[]
       }
       refresh_all_forecasts: { Args: never; Returns: undefined }
+      remove_product: { Args: { _id: string }; Returns: string }
       remove_shop_cashier: { Args: { _member_id: string }; Returns: undefined }
       seed_sample_store: { Args: never; Returns: undefined }
+      update_product: { Args: { _data: Json; _id: string }; Returns: undefined }
       void_sale: { Args: { _sale_id: string }; Returns: undefined }
     }
     Enums: {
