@@ -473,27 +473,36 @@
 .bizbot-motion-5 { animation: bizbot-peek 3s ease-in-out infinite; }
 .bizbot-motion-6 { animation: bizbot-closeup 3.2s ease-in-out infinite; }
 
-@keyframes showcase-slide-in {
-  0% {
-    opacity: 0;
-    transform: translateX(100px) scale(0.9) rotate(2deg);
-    filter: blur(10px);
-  }
-  60% {
-    opacity: 1;
-    transform: translateX(-10px) scale(1.02) rotate(-0.5deg);
-    filter: blur(0);
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0) scale(1) rotate(0deg);
-    filter: blur(0);
+/* Peek carousel: center slide focused, neighbours visible on left/right edges.
+   Cells are the stride unit (percentage of track); cards fill the cell minus a
+   fixed gap, so the centring transform stays exact at every index. */
+.showcase-track {
+  --slide-stride: 82%;
+  --slide-gap: 10px;
+  display: flex;
+  align-items: stretch;
+  transition: transform 750ms cubic-bezier(0.22, 1.2, 0.32, 1);
+  will-change: transform;
+}
+
+@media (max-width: 640px) {
+  .showcase-track {
+    --slide-stride: 76%;
+    --slide-gap: 8px;
   }
 }
 
-.showcase-slide-in {
-  animation: showcase-slide-in 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+.showcase-cell {
+  flex: 0 0 var(--slide-stride);
+  min-width: 0;
+  display: flex;
 }
+
+.showcase-cell-inner {
+  width: calc(100% - var(--slide-gap));
+}
+
+
 
 @keyframes showcase-progress {
   from { transform: scaleX(0); }
@@ -525,7 +534,7 @@
   .bizbot-motion-4,
   .bizbot-motion-5,
   .bizbot-motion-6,
-  .showcase-slide-in { animation: none; }
+  .showcase-track { transition: none; }
   .showcase-progress {
     animation-name: showcase-tick;
     transform: scaleX(1);
