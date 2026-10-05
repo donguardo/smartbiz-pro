@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Bot, Download, LayoutDashboard, LogOut, Package, ScanLine, Settings, Users, BriefcaseBusiness } from "lucide-react";
 import { useSession } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { ThemeToggle } from "@/lib/theme";
+import { ThemeToggle, syncThemeFromAccount } from "@/lib/theme";
 import { LanguageToggle, useT } from "@/lib/i18n";
 import { Logo } from "@/components/Logo";
 import { fetchProfile, fetchShopContext, qk } from "@/lib/store";
@@ -37,6 +37,8 @@ function AppLayout() {
   useEffect(() => {
     if (!loading && !session) navigate({ to: "/auth" });
   }, [loading, session, navigate]);
+  const userId = session?.user.id;
+  useEffect(() => { if (userId) void syncThemeFromAccount(); }, [userId]);
   const { data: profile } = useQuery({ queryKey: qk.profile, queryFn: fetchProfile, enabled: !!session });
   const { data: shop } = useQuery({ queryKey: qk.shop, queryFn: fetchShopContext, enabled: !!session });
   const visibleNav = shop?.member_role === "owner" ? [...NAV, ...OWNER_NAV, SETTINGS_NAV] : [...NAV, SETTINGS_NAV];
