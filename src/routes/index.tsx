@@ -42,6 +42,7 @@ function Landing() {
           <Logo />
           <nav className="hidden gap-6 text-sm text-muted-foreground md:flex">
             <a href="#demo" className="hover:text-foreground">{t("nav.demo")}</a>
+             <Link to="/showcase" className="hover:text-foreground">{t("nav.showcase")}</Link>
             <a href="#setup" className="hover:text-foreground">{t("nav.setup")}</a>
             <a href="#pricing" className="hover:text-foreground">{t("nav.pricing")}</a>
           </nav>
@@ -61,6 +62,7 @@ function Landing() {
               <div className="flex items-center justify-between gap-2 p-1"><LanguageToggle /><ThemeToggle /></div>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={openInstallPrompt}><Download className="h-4 w-4" />{t("install.open")}</DropdownMenuItem>
+               <DropdownMenuItem asChild><Link to="/showcase">{t("nav.showcase")}</Link></DropdownMenuItem>
               <DropdownMenuItem asChild><Link to="/auth" className="font-semibold">{t("cta.getStarted")}</Link></DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -202,7 +204,7 @@ function Landing() {
 
       <footer className="border-t border-border px-4 py-8 text-center text-sm text-muted-foreground">
         <p>© {new Date().getFullYear()} MVP BizManager · MAS KITA, MAS TUBO! · by Orangeware USA</p>
-        <nav className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-2"><Link to="/privacy" className="hover:text-foreground">Privacy Notice</Link><Link to="/terms" className="hover:text-foreground">Terms of Service</Link><Link to="/delete-account" className="hover:text-foreground">{t("account.pageLink")}</Link></nav>
+        <nav className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-2"><Link to="/showcase" className="hover:text-foreground">{t("nav.showcase")}</Link><Link to="/privacy" className="hover:text-foreground">Privacy Notice</Link><Link to="/terms" className="hover:text-foreground">Terms of Service</Link><Link to="/delete-account" className="hover:text-foreground">{t("account.pageLink")}</Link></nav>
       </footer>
     </div>
   );

@@ -138,7 +138,7 @@
   --scene-glow: #e879f9;
 }
 
-:root[data-business-theme="cafe"] {
+:root[data-business-theme="cafe"], .showcase-theme[data-business-theme="cafe"] {
   --background: #F8F3EE;
   --foreground: #2B211C;
   --card: #FFFDFC;
@@ -170,7 +170,7 @@
   --sidebar-ring: #8B5E3C;
 }
 
-.dark[data-business-theme="cafe"] {
+.dark[data-business-theme="cafe"], .dark .showcase-theme[data-business-theme="cafe"] {
   --background: #17110E;
   --foreground: #F7EEE8;
   --card: #2A201B;
@@ -202,7 +202,7 @@
   --sidebar-ring: #D09A6B;
 }
 
-:root[data-business-theme="coffeehouse"] {
+:root[data-business-theme="coffeehouse"], .showcase-theme[data-business-theme="coffeehouse"] {
   --background: #F3F7F4;
   --foreground: #172A21;
   --card: #FFFFFF;
@@ -234,7 +234,7 @@
   --sidebar-ring: #00754A;
 }
 
-.dark[data-business-theme="coffeehouse"] {
+.dark[data-business-theme="coffeehouse"], .dark .showcase-theme[data-business-theme="coffeehouse"] {
   --background: #071710;
   --foreground: #EDF8F1;
   --card: #102A1E;
@@ -266,7 +266,7 @@
   --sidebar-ring: #42C98F;
 }
 
-:root[data-business-theme="fiesta"] {
+:root[data-business-theme="fiesta"], .showcase-theme[data-business-theme="fiesta"] {
   --background: #FFF7F7;
   --foreground: #291A1D;
   --card: #FFFFFF;
@@ -298,7 +298,7 @@
   --sidebar-ring: #C41230;
 }
 
-.dark[data-business-theme="fiesta"] {
+.dark[data-business-theme="fiesta"], .dark .showcase-theme[data-business-theme="fiesta"] {
   --background: #19090C;
   --foreground: #FFF3F4;
   --card: #2D1117;
@@ -329,6 +329,39 @@
   --sidebar-border: #F04D674D;
   --sidebar-ring: #FF667D;
 }
+
+:root[data-business-theme="laundry"], .showcase-theme[data-business-theme="laundry"] {
+  --background: #F3FAFC; --foreground: #102A35; --card: #FFFFFF; --card-foreground: #102A35;
+  --popover: #FFFFFF; --popover-foreground: #102A35; --primary: #087EAD; --primary-foreground: #FFFFFF;
+  --secondary: #D9F2F8; --secondary-foreground: #103D4D; --muted: #E8F5F8; --muted-foreground: #4A6873;
+  --accent: #CBEFF1; --accent-foreground: #143E45; --border: #BFDFE7; --input: #9FCBD6; --ring: #087EAD;
+  --chart-1: #087EAD; --chart-3: #26A7A1; --chart-4: #65B7E5; --chart-5: #7A65C7;
+  --success: #168B62; --warning: #C77A08;
+}
+.dark .showcase-theme[data-business-theme="laundry"], .dark[data-business-theme="laundry"] {
+  --background: #061A22; --foreground: #EDF9FC; --card: #0D2934; --card-foreground: #EDF9FC;
+  --popover: #0D2934; --popover-foreground: #EDF9FC; --primary: #4FC3EB; --primary-foreground: #05202A;
+  --secondary: #123B48; --secondary-foreground: #EDF9FC; --muted: #12313B; --muted-foreground: #A8CAD4;
+  --accent: #164653; --accent-foreground: #F5FDFF; --border: #4FC3EB4D; --input: #4FC3EB66; --ring: #64D3F6;
+  --chart-1: #4FC3EB; --chart-3: #56D2C8; --chart-4: #7CCBF2; --chart-5: #A99AEF;
+}
+:root[data-business-theme="beauty"], .showcase-theme[data-business-theme="beauty"] {
+  --background: #FCF5FA; --foreground: #2E1830; --card: #FFFFFF; --card-foreground: #2E1830;
+  --popover: #FFFFFF; --popover-foreground: #2E1830; --primary: #7B2869; --primary-foreground: #FFFFFF;
+  --secondary: #F0DDEC; --secondary-foreground: #4D2048; --muted: #F6EAF3; --muted-foreground: #735A70;
+  --accent: #F4D4EB; --accent-foreground: #511D46; --border: #E5C6DD; --input: #D5A6C8; --ring: #7B2869;
+  --chart-1: #7B2869; --chart-2: #FF00FF; --chart-3: #D34E9B; --chart-4: #8168B1; --chart-5: #D39B36;
+  --success: #168B62; --warning: #B76A08;
+}
+.dark .showcase-theme[data-business-theme="beauty"], .dark[data-business-theme="beauty"] {
+  --background: #180B17; --foreground: #FFF3FC; --card: #2B1429; --card-foreground: #FFF3FC;
+  --popover: #2B1429; --popover-foreground: #FFF3FC; --primary: #E078C8; --primary-foreground: #2C0824;
+  --secondary: #47203F; --secondary-foreground: #FFF3FC; --muted: #391A34; --muted-foreground: #D3AEC9;
+  --accent: #56234C; --accent-foreground: #FFF5FC; --border: #FF00FF40; --input: #FF00FF4D; --ring: #F18AD8;
+  --chart-1: #E078C8; --chart-2: #FF00FF; --chart-3: #F17ABA; --chart-4: #B29AE5; --chart-5: #E8BC5E;
+}
+
+.showcase-theme { color: var(--foreground); }
 
 @utility theme-swatch {
   height: 1.75rem;

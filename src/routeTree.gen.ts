@@ -24,6 +24,8 @@ import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppInventoryRouteImport } from './routes/_app/inventory'
 import { Route as AppPosRouteImport } from './routes/_app/pos'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
+import { Route as ShowcaseIndexRouteImport } from './routes/showcase/index'
+import { Route as ShowcaseBusinessRouteImport } from './routes/showcase/$business'
 import { Route as ApiPublicBizbotRouteImport } from './routes/api/public/bizbot'
 import { Route as ApiPublicDailyBusinessRefreshRouteImport } from './routes/api/public/daily-business-refresh'
 
@@ -101,6 +103,16 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const ShowcaseIndexRoute = ShowcaseIndexRouteImport.update({
+  id: '/showcase/',
+  path: '/showcase/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShowcaseBusinessRoute = ShowcaseBusinessRouteImport.update({
+  id: '/showcase/$business',
+  path: '/showcase/$business',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicBizbotRoute = ApiPublicBizbotRouteImport.update({
   id: '/api/public/bizbot',
   path: '/api/public/bizbot',
@@ -128,6 +140,8 @@ export interface FileRoutesByFullPath {
   '/inventory': typeof AppInventoryRoute
   '/pos': typeof AppPosRoute
   '/settings': typeof AppSettingsRoute
+  '/showcase/$business': typeof ShowcaseBusinessRoute
+  '/showcase/': typeof ShowcaseIndexRoute
   '/api/public/bizbot': typeof ApiPublicBizbotRoute
   '/api/public/daily-business-refresh': typeof ApiPublicDailyBusinessRefreshRoute
 }
@@ -146,6 +160,8 @@ export interface FileRoutesByTo {
   '/inventory': typeof AppInventoryRoute
   '/pos': typeof AppPosRoute
   '/settings': typeof AppSettingsRoute
+  '/showcase/$business': typeof ShowcaseBusinessRoute
+  '/showcase': typeof ShowcaseIndexRoute
   '/api/public/bizbot': typeof ApiPublicBizbotRoute
   '/api/public/daily-business-refresh': typeof ApiPublicDailyBusinessRefreshRoute
 }
@@ -166,6 +182,8 @@ export interface FileRoutesById {
   '/_app/inventory': typeof AppInventoryRoute
   '/_app/pos': typeof AppPosRoute
   '/_app/settings': typeof AppSettingsRoute
+  '/showcase/$business': typeof ShowcaseBusinessRoute
+  '/showcase/': typeof ShowcaseIndexRoute
   '/api/public/bizbot': typeof ApiPublicBizbotRoute
   '/api/public/daily-business-refresh': typeof ApiPublicDailyBusinessRefreshRoute
 }
@@ -186,6 +204,8 @@ export interface FileRouteTypes {
     | '/inventory'
     | '/pos'
     | '/settings'
+    | '/showcase/$business'
+    | '/showcase/'
     | '/api/public/bizbot'
     | '/api/public/daily-business-refresh'
   fileRoutesByTo: FileRoutesByTo
@@ -204,6 +224,8 @@ export interface FileRouteTypes {
     | '/inventory'
     | '/pos'
     | '/settings'
+    | '/showcase/$business'
+    | '/showcase'
     | '/api/public/bizbot'
     | '/api/public/daily-business-refresh'
   id:
@@ -223,6 +245,8 @@ export interface FileRouteTypes {
     | '/_app/inventory'
     | '/_app/pos'
     | '/_app/settings'
+    | '/showcase/$business'
+    | '/showcase/'
     | '/api/public/bizbot'
     | '/api/public/daily-business-refresh'
   fileRoutesById: FileRoutesById
@@ -236,6 +260,8 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   TermsRoute: typeof TermsRoute
+  ShowcaseBusinessRoute: typeof ShowcaseBusinessRoute
+  ShowcaseIndexRoute: typeof ShowcaseIndexRoute
   ApiPublicBizbotRoute: typeof ApiPublicBizbotRoute
   ApiPublicDailyBusinessRefreshRoute: typeof ApiPublicDailyBusinessRefreshRoute
 }
@@ -347,6 +373,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/showcase/': {
+      id: '/showcase/'
+      path: '/showcase'
+      fullPath: '/showcase/'
+      preLoaderRoute: typeof ShowcaseIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/showcase/$business': {
+      id: '/showcase/$business'
+      path: '/showcase/$business'
+      fullPath: '/showcase/$business'
+      preLoaderRoute: typeof ShowcaseBusinessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/bizbot': {
       id: '/api/public/bizbot'
       path: '/api/public/bizbot'
@@ -397,6 +437,8 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   TermsRoute: TermsRoute,
+  ShowcaseBusinessRoute: ShowcaseBusinessRoute,
+  ShowcaseIndexRoute: ShowcaseIndexRoute,
   ApiPublicBizbotRoute: ApiPublicBizbotRoute,
   ApiPublicDailyBusinessRefreshRoute: ApiPublicDailyBusinessRefreshRoute,
 }
