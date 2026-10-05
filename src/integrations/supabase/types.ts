@@ -950,6 +950,7 @@ export type Database = {
       }
       refresh_all_forecasts: { Args: never; Returns: undefined }
       remove_shop_cashier: { Args: { _member_id: string }; Returns: undefined }
+      seed_sample_store: { Args: never; Returns: undefined }
       void_sale: { Args: { _sale_id: string }; Returns: undefined }
     }
     Enums: {

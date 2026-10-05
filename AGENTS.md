@@ -16,3 +16,4 @@
 - Installation state and reopening use the shared browser event in src/lib/install.ts — keeps public and signed-in navigation synchronized with one install window.
 - All server responses set X-Frame-Options DENY and CSP frame-ancestors none — prevents clickjacking by disallowing third-party framing.
 - Account deletion runs in a requireSupabaseAuth server function that re-verifies the user and calls a service-role-only SQL function; audit keeps only date + hashed id — keeps the service key server-side and PII out of logs.
+- Sales and historical sample-store rows are written only by authenticated database functions; browser roles have no direct sales write grants — totals, costs, timestamps, shop, and cashier remain server-controlled.

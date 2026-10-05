@@ -79,20 +79,20 @@ function AppLayout() {
         </div>
       </aside>
 
-      <header className="sticky top-0 z-20 flex items-center justify-between gap-1 border-b border-border bg-primary/30 px-3 py-3 backdrop-blur-md md:hidden">
+      <header className="sticky top-0 z-20 flex items-center justify-between gap-1 border-b border-border bg-card/95 px-3 py-3 backdrop-blur-md md:hidden">
         <Logo to="/dashboard" compact />
-        <div className="flex shrink-0 gap-1.5">
+        <div className="flex shrink-0 gap-1">
           <Button variant="ghost" size="icon" onClick={openInstallPrompt} aria-label={t("install.open")} title={t("install.open")} className="hidden min-[420px]:inline-flex">
             <Download className="h-4 w-4" />
           </Button>
-          <Link to="/settings" aria-label={t("app.nav.settings")} className="flex h-9 w-9 items-center justify-center rounded-lg border border-border"><Settings className="h-4 w-4" /></Link>
+          <Link to="/settings" aria-label={t("app.nav.settings")} className="hidden h-9 w-9 items-center justify-center rounded-lg border border-border min-[390px]:flex"><Settings className="h-4 w-4" /></Link>
           <LanguageToggle />
           <ThemeToggle />
           <button aria-label="Sign out" onClick={() => supabase.auth.signOut()} className="flex h-9 w-9 items-center justify-center rounded-lg border border-border"><LogOut className="h-4 w-4" /></button>
         </div>
       </header>
 
-      <main className="min-w-0 pb-24 md:pb-0">
+      <main className="min-w-0 pb-32 md:pb-24">
         <Outlet />
       </main>
 

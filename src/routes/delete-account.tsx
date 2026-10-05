@@ -21,10 +21,10 @@ function DeleteAccountPage() {
   const { t } = useT();
   return (
     <div className="min-h-screen overflow-x-hidden bg-background">
-      <header className="border-b border-border bg-primary/30 backdrop-blur-md">
+      <header className="border-b border-border bg-card/95 backdrop-blur-md">
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-3 px-4 py-3"><Logo /><div className="flex gap-2"><LanguageToggle /><ThemeToggle /></div></div>
       </header>
-      <main className="mx-auto max-w-3xl space-y-8 px-4 py-10 sm:py-16">
+      <main className="mx-auto max-w-3xl space-y-8 px-4 pb-28 pt-10 sm:pb-28 sm:pt-16">
         <h1 className="text-3xl font-bold sm:text-5xl">{t("account.pageTitle")}</h1>
         <section><h2 className="text-xl font-semibold">{t("account.pageInApp")}</h2>
           <ol className="mt-3 list-decimal space-y-1 pl-5 text-muted-foreground"><li>{t("account.step1")}</li><li>{t("account.step2")}</li><li>{t("account.step3")}</li><li>{t("account.step4")}</li></ol></section>

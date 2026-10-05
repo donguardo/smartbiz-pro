@@ -64,6 +64,8 @@ export const DICT: Record<string, { en: string; tl: string }> = {
   "dash.profitHundred": { en: "Profit per ₱100 sold", tl: "Tubo bawat ₱100 na benta" },
   "dash.salesCount": { en: "Number of sales", tl: "Bilang ng benta" },
   "dash.averageCustomer": { en: "Average per customer", tl: "Average na bili bawat customer" },
+  "dash.summaryUp": { en: "up", tl: "tumaas" },
+  "dash.summaryDown": { en: "down", tl: "bumaba" },
   "dash.goalReached": { en: "Goal reached! 🎉", tl: "Naabot mo ang goal! 🎉" },
   "forecast.needData": { en: "We need about 2 weeks of sales to forecast. Keep ringing up sales!", tl: "Kailangan natin ng mga 2 linggong benta para makapag-forecast. Tuloy lang sa pag-record ng benta!" },
   "forecast.disclaimer": { en: "Estimate based on your past sales. Actual sales may differ.", tl: "Estimate batay sa nakaraang benta. Puwedeng mag-iba ang aktuwal na benta." },
