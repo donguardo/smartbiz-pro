@@ -1,4 +1,5 @@
 import { useChat } from "@ai-sdk/react";
+import { useRouterState } from "@tanstack/react-router";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { Mic, MicOff, RotateCcw, Volume2, VolumeX, X } from "lucide-react";
 import {
@@ -83,19 +84,15 @@ const clampPosition = (position: BotPosition, size: number): BotPosition => ({
 const isDesktopViewport = () =>
   typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches;
 
-const mobileSizeForPath = () => {
-  if (typeof window === "undefined") return BOT_SIZE_MOBILE;
-  return ["/", "/auth", "/reset-password", "/privacy", "/terms"].includes(window.location.pathname) ? BOT_SIZE_PUBLIC_MOBILE : BOT_SIZE_APP;
-};
-
-const sizeForViewport = () => {
+const sizeForViewport = (pathname: string) => {
   if (typeof window === "undefined") return BOT_SIZE_DESKTOP;
-  const publicPath = ["/", "/auth", "/reset-password", "/privacy", "/terms"].includes(window.location.pathname);
+  const publicPath = ["/", "/auth", "/reset-password", "/privacy", "/terms"].includes(pathname);
   return publicPath ? (isDesktopViewport() ? BOT_SIZE_DESKTOP : BOT_SIZE_PUBLIC_MOBILE) : BOT_SIZE_APP;
 };
 
 export function FloatingBizBot() {
   const { lang, t } = useT();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [open, setOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [listening, setListening] = useState(false);
@@ -149,7 +146,7 @@ export function FloatingBizBot() {
 
   useEffect(() => {
     const savedPosition = localStorage.getItem(POSITION_KEY);
-    const size = sizeForViewport();
+    const size = sizeForViewport(pathname);
     let initial = { x: window.innerWidth - size - 24, y: window.innerHeight - size - 40 };
     if (savedPosition) {
       try {
@@ -161,19 +158,19 @@ export function FloatingBizBot() {
     setPosition(clampPosition(initial, size));
     setMessages(loadMessages());
     setHydrated(true);
-  }, [setMessages]);
+  }, [pathname, setMessages]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(min-width: 768px)");
     const apply = () => {
-      const size = sizeForViewport();
+      const size = sizeForViewport(pathname);
       setBotSize(size);
       setPosition((current) => clampPosition(current, size));
     };
     apply();
     mediaQuery.addEventListener("change", apply);
     return () => mediaQuery.removeEventListener("change", apply);
-  }, []);
+  }, [pathname]);
 
   useEffect(() => {
     if (!hydrated) return;
