@@ -228,6 +228,7 @@ export function ShowcaseCarousel() {
                     to="/showcase/$business"
                     params={{ business: s.slug }}
                     tabIndex={active ? 0 : -1}
+                    onClick={(e) => e.stopPropagation()}
                     className={`mt-4 inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 ${focusRing}`}
                   >
                     {t("showcase.open")} <ArrowRight className="h-4 w-4" aria-hidden />
