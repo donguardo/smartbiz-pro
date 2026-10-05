@@ -512,6 +512,11 @@
   animation-play-state: paused;
 }
 
+@keyframes showcase-tick {
+  from { opacity: 1; }
+  to { opacity: 1; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .bizbot-motion-0,
   .bizbot-motion-1,
@@ -520,7 +525,9 @@
   .bizbot-motion-4,
   .bizbot-motion-5,
   .bizbot-motion-6,
-  .showcase-slide-in,
-  .showcase-progress { animation: none; }
-  .showcase-progress { transform: scaleX(1); }
+  .showcase-slide-in { animation: none; }
+  .showcase-progress {
+    animation-name: showcase-tick;
+    transform: scaleX(1);
+  }
 }
