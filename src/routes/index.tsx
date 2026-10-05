@@ -5,6 +5,7 @@ import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/lib/theme";
 import { LanguageToggle, useT } from "@/lib/i18n";
 import { DemoDashboard } from "@/components/DemoDashboard";
+import { ShowcaseCarousel } from "@/components/ShowcaseCarousel";
 import { PRICE_PER_USER } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { openInstallPrompt } from "@/lib/install";
@@ -107,6 +108,13 @@ function Landing() {
                 <p className="mt-2 text-sm">{t("hero.aiTip")}</p>
               </div>
             </div>
+          </div>
+        </div>
+
+        <div className="relative z-10 mx-auto max-w-6xl px-4 pb-12 md:pb-16">
+          <p className="mb-4 text-center font-mono text-xs uppercase tracking-widest text-primary">{t("showcase.heroTitle")}</p>
+          <div className="mx-auto max-w-xl">
+            <ShowcaseCarousel />
           </div>
         </div>
       </section>
