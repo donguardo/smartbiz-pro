@@ -1,7 +1,28 @@
 import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { useT } from "@/lib/i18n";
 
-export const themeInitScript = `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'){document.documentElement.classList.add('dark')}}catch(e){}})()`;
+export type BusinessTheme = "brand" | "cafe" | "coffeehouse" | "fiesta";
+
+const THEME_STORAGE_KEY = "business-theme";
+const BUSINESS_THEMES: { id: BusinessTheme; labelKey: string; swatches: string[] }[] = [
+  { id: "brand", labelKey: "theme.brand", swatches: ["#7C3AED", "#FF00FF", "#F7F7FA"] },
+  { id: "cafe", labelKey: "theme.cafe", swatches: ["#6F4E37", "#C08A5B", "#F5EDE5"] },
+  { id: "coffeehouse", labelKey: "theme.coffeehouse", swatches: ["#00754A", "#D4A84B", "#EAF4EE"] },
+  { id: "fiesta", labelKey: "theme.fiesta", swatches: ["#C41230", "#F4B41A", "#FFF0F0"] },
+];
+
+function isBusinessTheme(value: string | null): value is BusinessTheme {
+  return BUSINESS_THEMES.some((theme) => theme.id === value);
+}
+
+function applyBusinessTheme(theme: BusinessTheme) {
+  if (theme === "brand") document.documentElement.removeAttribute("data-business-theme");
+  else document.documentElement.dataset.businessTheme = theme;
+}
+
+export const themeInitScript = `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'){document.documentElement.classList.add('dark')}var b=localStorage.getItem('${THEME_STORAGE_KEY}');if(b==='cafe'||b==='coffeehouse'||b==='fiesta'){document.documentElement.setAttribute('data-business-theme',b)}}catch(e){}})()`;
 
 export function ThemeToggle({ className = "" }: { className?: string }) {
   const [dark, setDark] = useState(false);
@@ -20,5 +41,47 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
     >
       {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
     </button>
+  );
+}
+
+export function BusinessThemePicker() {
+  const { t } = useT();
+  const [selected, setSelected] = useState<BusinessTheme>("brand");
+
+  useEffect(() => {
+    const saved = localStorage.getItem(THEME_STORAGE_KEY);
+    setSelected(isBusinessTheme(saved) ? saved : "brand");
+  }, []);
+
+  const chooseTheme = (theme: BusinessTheme) => {
+    applyBusinessTheme(theme);
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+    setSelected(theme);
+  };
+
+  return (
+    <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label={t("theme.title")}>
+      {BUSINESS_THEMES.map((theme) => {
+        const active = selected === theme.id;
+        return (
+          <Button
+            key={theme.id}
+            type="button"
+            variant="outline"
+            role="radio"
+            aria-checked={active}
+            onClick={() => chooseTheme(theme.id)}
+            className={`h-auto min-h-16 justify-start px-4 py-3 ${active ? "border-primary bg-primary/10 ring-2 ring-primary" : ""}`}
+          >
+            <span className="flex shrink-0 -space-x-1" aria-hidden>
+              {theme.swatches.map((color) => (
+                <span key={color} className="h-7 w-7 rounded-full border-2 border-card" style={{ backgroundColor: color }} />
+              ))}
+            </span>
+            <span className="min-w-0 text-left font-semibold text-foreground">{t(theme.labelKey)}</span>
+          </Button>
+        );
+      })}
+    </div>
   );
 }
