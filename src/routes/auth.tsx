@@ -7,7 +7,6 @@ import { useSession } from "@/lib/auth";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/lib/theme";
 import { PRICE_PER_USER } from "@/lib/format";
-import { AnimatedBackdrop } from "@/components/AnimatedBackdrop";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -73,7 +72,6 @@ function AuthPage() {
 
   return (
     <div className="grid-paper relative flex min-h-screen flex-col overflow-x-hidden">
-      <AnimatedBackdrop />
       <div className="relative z-10 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 p-3 sm:p-4"><Logo /><ThemeToggle /></div>
       <div className="relative z-10 flex flex-1 items-start justify-center p-4 pb-40 sm:items-center sm:pb-8">
         <div className="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-xl backdrop-blur-xl sm:p-8">

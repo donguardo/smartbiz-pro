@@ -6,7 +6,6 @@ import { ThemeToggle } from "@/lib/theme";
 import { LanguageToggle, useT } from "@/lib/i18n";
 import { DemoDashboard } from "@/components/DemoDashboard";
 import { PRICE_PER_USER } from "@/lib/format";
-import { AnimatedBackdrop } from "@/components/AnimatedBackdrop";
 import { Button } from "@/components/ui/button";
 import { openInstallPrompt } from "@/lib/install";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -69,7 +68,6 @@ function Landing() {
       </header>
 
       <section className="grid-paper relative overflow-hidden">
-        <AnimatedBackdrop />
         <div className="relative mx-auto grid max-w-6xl gap-10 px-4 py-12 md:grid-cols-[1.2fr_1fr] md:py-24">
           <div className="relative z-10">
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 font-mono text-xs text-muted-foreground">
