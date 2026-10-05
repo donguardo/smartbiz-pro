@@ -73,7 +73,7 @@ function POS() {
         if (error) throw error;
         selectedCustomer = data;
       }
-      const { data, error } = await supabase.rpc("record_sale", { _payment_method: method, _amount_tendered: method === "cash" ? Number(tendered) : total, _customer_id: selectedCustomer, _items: cart.map((l) => ({ product_id: l.p.id, qty: l.qty })) });
+      const { data, error } = await supabase.rpc("record_sale", { _payment_method: method, _amount_tendered: method === "cash" ? Number(tendered) : total, _customer_id: selectedCustomer as string, _items: cart.map((l) => ({ product_id: l.p.id, qty: l.qty })) });
       if (error) throw error;
       const sale = data[0];
       if (!sale) throw new Error("Payment could not be recorded");

@@ -865,6 +865,13 @@ export type Database = {
           low: number
         }[]
       }
+      get_cashier_today_summary: {
+        Args: never
+        Returns: {
+          sale_count: number
+          today_total: number
+        }[]
+      }
       get_masked_customers: {
         Args: never
         Returns: {

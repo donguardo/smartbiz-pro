@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useRouterState } from "@tanstack/react-router";
 import { SkipForward } from "lucide-react";
 import introVideo from "@/assets/bizmanager-intro.mp4.asset.json";
 import introVideoWebm from "@/assets/bizmanager-intro.webm.asset.json";
@@ -10,13 +11,18 @@ export const INTRO_COMPLETE_EVENT = "bizmanager-intro-complete";
 
 export function FirstVisitIntro() {
   const { t } = useT();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   const videoRef = useRef<HTMLVideoElement>(null);
   const [show, setShow] = useState(false);
 
   useEffect(() => {
+    if (pathname !== "/") {
+      setShow(false);
+      return;
+    }
     if (localStorage.getItem(INTRO_SEEN_KEY)) return;
     setShow(true);
-  }, []);
+  }, [pathname]);
 
   useEffect(() => {
     if (!show) return;

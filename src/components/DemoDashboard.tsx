@@ -4,6 +4,7 @@ import {
 } from "recharts";
 import { peso, pesoShort } from "@/lib/format";
 import { TrendingUp, ShoppingBag, Percent, Wallet } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
 type Cat = { name: string; sales: number; margin: number };
 
@@ -12,6 +13,7 @@ const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const SHAPE = [0.78, 0.84, 0.9, 0.95, 1.12, 1.35, 1.06];
 
 export function DemoDashboard() {
+  const { lang } = useT();
   const [cats, setCats] = useState<Cat[]>([
     { name: "Beverages", sales: 42000, margin: 32 },
     { name: "Snacks", sales: 28500, margin: 38 },
@@ -40,11 +42,12 @@ export function DemoDashboard() {
     setCats((cs) => cs.map((c, j) => (j === i ? { ...c, [key]: v } : c)));
 
   const metrics = [
-    { label: "Weekly revenue", value: peso(totals.revenue * (1 + growth / 100)), icon: Wallet },
-    { label: "Gross profit", value: peso(totals.profit * (1 + growth / 100)), icon: TrendingUp },
-    { label: "Blended margin", value: `${totals.margin.toFixed(1)}%`, icon: Percent },
-    { label: "Transactions", value: totals.orders.toLocaleString(), icon: ShoppingBag },
+    { label: lang === "tl" ? "Benta ngayong linggo" : "Sales this week", value: peso(totals.revenue * (1 + growth / 100)), icon: Wallet },
+    { label: lang === "tl" ? "Tubo" : "Profit", value: peso(totals.profit * (1 + growth / 100)), icon: TrendingUp },
+    { label: lang === "tl" ? "Tubo bawat ₱100 na benta" : "Profit per ₱100 sold", value: peso(totals.margin), icon: Percent },
+    { label: lang === "tl" ? "Bilang ng benta" : "Number of sales", value: totals.orders.toLocaleString(), icon: ShoppingBag },
   ];
+  const best = [...cats].sort((a, b) => b.sales - a.sales)[0]?.name ?? "—";
 
   return (
     <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
@@ -86,19 +89,21 @@ export function DemoDashboard() {
         </div>
       </div>
 
-      <div className="space-y-4 rounded-2xl border border-primary/50 bg-primary/40 p-4 backdrop-blur-md">
+       <div className="space-y-4 rounded-lg border border-border bg-card p-4">
+        <p className="text-lg font-bold">{lang === "tl" ? `Boss, ${peso(totals.revenue * (1 + growth / 100))} ang benta mo ngayong linggo, ${growth >= 0 ? "tumaas" : "bumaba"} ng ${Math.abs(growth)}%. Pinakamabenta ang ${best}.` : `Boss, you sold ${peso(totals.revenue * (1 + growth / 100))} this week, ${growth >= 0 ? "up" : "down"} ${Math.abs(growth)}%. ${best} sold the most.`}</p>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {metrics.map((m) => (
             <div key={m.label} className="rounded-2xl border border-border bg-card p-4">
               <m.icon className="h-4 w-4 text-primary" />
               <p className="mt-3 text-xs text-muted-foreground">{m.label}</p>
-              <p className="font-display text-lg font-semibold tabular-nums md:text-xl">{m.value}</p>
+               <p className="font-display text-2xl font-semibold tabular-nums">{m.value}</p>
             </div>
           ))}
         </div>
         <div className="grid gap-4 md:grid-cols-[1.6fr_1fr]">
           <div className="rounded-2xl border border-border bg-card p-4">
-            <p className="text-sm font-medium">Revenue this week vs last</p>
+             <p className="text-sm font-medium">{lang === "tl" ? "Benta ngayong linggo at last week" : "Sales this week vs last week"}</p>
+             <div className="mt-2 flex gap-4 text-xs text-muted-foreground"><span><i className="mr-1 inline-block h-0.5 w-5 bg-primary"/> {lang === "tl" ? "Ngayong linggo" : "This week"}</span><span><i className="mr-1 inline-block w-5 border-t border-dashed border-muted-foreground"/> Last week</span></div>
             <div className="mt-2 h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={weekly}>
@@ -117,6 +122,7 @@ export function DemoDashboard() {
                 </AreaChart>
               </ResponsiveContainer>
             </div>
+            <ul className="space-y-1 text-xs">{cats.map((c, i) => <li key={c.name} className="flex justify-between"><span><i className="mr-2 inline-block h-2 w-2 rounded-full" style={{ background: COLORS[i] }}/>{c.name}</span><b>{Math.round(c.sales / totals.revenue * 100)}%</b></li>)}</ul>
           </div>
           <div className="rounded-2xl border border-border bg-card p-4">
             <p className="text-sm font-medium">Sales mix by category</p>

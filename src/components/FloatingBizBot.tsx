@@ -1,4 +1,5 @@
 import { useChat } from "@ai-sdk/react";
+import { useRouterState } from "@tanstack/react-router";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { Mic, MicOff, RotateCcw, Volume2, VolumeX, X } from "lucide-react";
 import {
@@ -30,12 +31,12 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { fetchDailyTip, fetchForecasts, fetchGoals, fetchProducts, fetchShopContext } from "@/lib/store";
 
 const CHAT_KEY = "bizbot-conversation-v1";
 const POSITION_KEY = "bizbot-position-v1";
 const MAX_CONTEXT_PRODUCTS = 80;
 const BOT_SIZE_DESKTOP = 224;
-const BOT_SIZE_MOBILE = Math.round(BOT_SIZE_DESKTOP * 2 / 3);
 const BOT_SIZE_PUBLIC_MOBILE = 72;
 const BOT_SIZE_APP = 56;
 
@@ -82,19 +83,15 @@ const clampPosition = (position: BotPosition, size: number): BotPosition => ({
 const isDesktopViewport = () =>
   typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches;
 
-const mobileSizeForPath = () => {
-  if (typeof window === "undefined") return BOT_SIZE_MOBILE;
-  return ["/", "/auth", "/reset-password", "/privacy", "/terms"].includes(window.location.pathname) ? BOT_SIZE_PUBLIC_MOBILE : BOT_SIZE_APP;
-};
-
-const sizeForViewport = () => {
+const sizeForViewport = (pathname: string) => {
   if (typeof window === "undefined") return BOT_SIZE_DESKTOP;
-  const publicPath = ["/", "/auth", "/reset-password", "/privacy", "/terms"].includes(window.location.pathname);
+  const publicPath = ["/", "/auth", "/reset-password", "/privacy", "/terms"].includes(pathname);
   return publicPath ? (isDesktopViewport() ? BOT_SIZE_DESKTOP : BOT_SIZE_PUBLIC_MOBILE) : BOT_SIZE_APP;
 };
 
 export function FloatingBizBot() {
   const { lang, t } = useT();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [open, setOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [listening, setListening] = useState(false);
@@ -102,7 +99,7 @@ export function FloatingBizBot() {
   const [storeContext, setStoreContext] = useState("");
   const [motion, setMotion] = useState(0);
   const [position, setPosition] = useState<BotPosition>({ x: 24, y: 120 });
-  const [botSize, setBotSize] = useState(BOT_SIZE_DESKTOP);
+  const [botSize, setBotSize] = useState(BOT_SIZE_APP);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const voiceReplyRef = useRef(false);
@@ -148,7 +145,7 @@ export function FloatingBizBot() {
 
   useEffect(() => {
     const savedPosition = localStorage.getItem(POSITION_KEY);
-    const size = sizeForViewport();
+    const size = sizeForViewport(pathname);
     let initial = { x: window.innerWidth - size - 24, y: window.innerHeight - size - 40 };
     if (savedPosition) {
       try {
@@ -160,19 +157,19 @@ export function FloatingBizBot() {
     setPosition(clampPosition(initial, size));
     setMessages(loadMessages());
     setHydrated(true);
-  }, [setMessages]);
+  }, [pathname, setMessages]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(min-width: 768px)");
     const apply = () => {
-      const size = sizeForViewport();
+      const size = sizeForViewport(pathname);
       setBotSize(size);
       setPosition((current) => clampPosition(current, size));
     };
     apply();
     mediaQuery.addEventListener("change", apply);
     return () => mediaQuery.removeEventListener("change", apply);
-  }, []);
+  }, [pathname]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -188,17 +185,22 @@ export function FloatingBizBot() {
         setStoreContext("");
         return;
       }
-      const [productsResult, salesResult, itemsResult] = await Promise.all([
-        supabase.from("products").select("id,name,category,price,cost,stock,reorder_level").order("name").limit(MAX_CONTEXT_PRODUCTS),
-        supabase.from("sales").select("total,cost_total,payment_method,created_at").order("created_at", { ascending: false }).limit(200),
-        supabase.from("sale_items").select("product_id,name,category,qty,price,cost,created_at").order("created_at", { ascending: false }).limit(500),
+      const shop = await fetchShopContext();
+      const [products, goals, forecasts, dailyTip] = await Promise.all([fetchProducts(), shop?.member_role === "owner" ? fetchGoals() : Promise.resolve([]), shop?.member_role === "owner" ? fetchForecasts() : Promise.resolve([]), fetchDailyTip()]);
+      const [{ data: customers }, { data: sales }] = await Promise.all([
+        supabase.rpc("get_masked_customers"),
+        shop?.member_role === "owner" ? supabase.from("sales").select("total,cost_total,payment_method,created_at").order("created_at", { ascending: false }).limit(200) : Promise.resolve({ data: [] }),
       ]);
       if (!active) return;
       const context = {
         generatedAt: new Date().toISOString(),
-        products: productsResult.data ?? [],
-        recentSales: salesResult.data ?? [],
-        recentSaleItems: itemsResult.data ?? [],
+        role: shop?.member_role,
+        products: products.slice(0, MAX_CONTEXT_PRODUCTS).map((product) => ({ name: product.name, category: product.category, price: product.price, stock: product.stock, reorderLevel: product.reorder_level, ...(shop?.member_role === "owner" ? { cost: product.cost } : {}) })),
+        recentSales: sales ?? [],
+        goals,
+        forecasts,
+        dailyTip: dailyTip?.tip_text ?? null,
+        customerCount: customers?.length ?? 0,
       };
       setStoreContext(JSON.stringify(context));
     });

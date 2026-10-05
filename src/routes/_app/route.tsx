@@ -79,10 +79,10 @@ function AppLayout() {
         </div>
       </aside>
 
-      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-primary/30 px-4 py-3 backdrop-blur-md md:hidden">
-        <Logo to="/dashboard" />
-        <div className="flex gap-2">
-          <Button variant="ghost" size="icon" onClick={openInstallPrompt} aria-label={t("install.open")} title={t("install.open")}>
+      <header className="sticky top-0 z-20 flex items-center justify-between gap-1 border-b border-border bg-primary/30 px-3 py-3 backdrop-blur-md md:hidden">
+        <Logo to="/dashboard" compact />
+        <div className="flex shrink-0 gap-1.5">
+          <Button variant="ghost" size="icon" onClick={openInstallPrompt} aria-label={t("install.open")} title={t("install.open")} className="hidden min-[420px]:inline-flex">
             <Download className="h-4 w-4" />
           </Button>
           <LanguageToggle />
