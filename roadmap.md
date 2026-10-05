@@ -47,3 +47,4 @@
 - [x] Verify 360–480px and desktop flows, then publish
 - [x] Replace placeholder support email with the real support address (needs the address from the user)
 - [x] Fix pie chart label contrast so text stays readable over every slice colour
+- [x] Enlarge BIZBOT by 20% and restore levitating, screen-bounded dragging

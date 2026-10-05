@@ -7,6 +7,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type PointerEvent as ReactPointerEvent,
 } from "react";
 import { toast } from "sonner";
 import bizBotImage from "@/assets/bizbot-transparent.png";
@@ -32,7 +33,10 @@ import { fetchDailyTip, fetchForecasts, fetchGoals, fetchProducts, fetchShopCont
 
 const CHAT_KEY = "bizbot-conversation-v1";
 const MAX_CONTEXT_PRODUCTS = 80;
-const BOT_SIZE = 56;
+const BOT_SIZE = 68;
+const BOT_MARGIN = 16;
+type BotPosition = { x: number; y: number };
+type DragState = { pointerId: number; offsetX: number; offsetY: number; moved: boolean };
 type SpeechRecognitionEventLike = Event & {
   results: { [index: number]: { [index: number]: { transcript: string } } };
 };
@@ -74,9 +78,12 @@ export function FloatingBizBot() {
   const [listening, setListening] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [storeContext, setStoreContext] = useState("");
+  const [botPosition, setBotPosition] = useState<BotPosition | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const voiceReplyRef = useRef(false);
+  const dragRef = useRef<DragState | null>(null);
+  const suppressClickRef = useRef(false);
 
   const transport = useMemo(
     () =>
@@ -166,6 +173,20 @@ export function FloatingBizBot() {
     };
   }, []);
 
+  useEffect(() => {
+    const keepBotOnScreen = () => {
+      setBotPosition((position) => {
+        if (!position) return null;
+        return {
+          x: Math.min(Math.max(BOT_MARGIN, position.x), window.innerWidth - BOT_SIZE - BOT_MARGIN),
+          y: Math.min(Math.max(BOT_MARGIN, position.y), window.innerHeight - BOT_SIZE - BOT_MARGIN),
+        };
+      });
+    };
+    window.addEventListener("resize", keepBotOnScreen);
+    return () => window.removeEventListener("resize", keepBotOnScreen);
+  }, []);
+
   useEffect(() => () => {
     recognitionRef.current?.stop();
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
@@ -216,6 +237,43 @@ export function FloatingBizBot() {
     localStorage.removeItem(CHAT_KEY);
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     textareaRef.current?.focus();
+  };
+
+  const startDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    dragRef.current = {
+      pointerId: event.pointerId,
+      offsetX: event.clientX - bounds.left,
+      offsetY: event.clientY - bounds.top,
+      moved: false,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const moveBot = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    drag.moved = drag.moved || Math.abs(event.movementX) + Math.abs(event.movementY) > 2;
+    setBotPosition({
+      x: Math.min(Math.max(BOT_MARGIN, event.clientX - drag.offsetX), window.innerWidth - BOT_SIZE - BOT_MARGIN),
+      y: Math.min(Math.max(BOT_MARGIN, event.clientY - drag.offsetY), window.innerHeight - BOT_SIZE - BOT_MARGIN),
+    });
+  };
+
+  const stopDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    suppressClickRef.current = drag.moved;
+    dragRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+  };
+
+  const openBot = () => {
+    if (suppressClickRef.current) {
+      suppressClickRef.current = false;
+      return;
+    }
+    setOpen(true);
   };
 
   return (
@@ -307,17 +365,21 @@ export function FloatingBizBot() {
         <button
           type="button"
           aria-label={t("bot.open")}
-          title={t("bot.open")}
-          onClick={() => setOpen(true)}
-          className="fixed bottom-4 right-4 z-[80] flex h-14 w-14 select-none items-center justify-center overflow-hidden rounded-full border border-primary/60 bg-card shadow-xl outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          title={t("bot.dragHint")}
+          onClick={openBot}
+          onPointerDown={startDrag}
+          onPointerMove={moveBot}
+          onPointerUp={stopDrag}
+          onPointerCancel={stopDrag}
+          style={botPosition ? { left: botPosition.x, top: botPosition.y, width: BOT_SIZE, height: BOT_SIZE } : { width: BOT_SIZE, height: BOT_SIZE }}
+          className="fixed bottom-4 right-4 z-[80] flex touch-none select-none items-center justify-center rounded-full border border-primary/60 bg-card shadow-xl outline-none cursor-grab active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-ring"
         >
           <span className="absolute inset-2 rounded-full bg-primary/25 blur-xl" aria-hidden />
           <img
             src={bizBotImage}
             alt=""
             draggable={false}
-            style={{ width: BOT_SIZE, height: BOT_SIZE }}
-            className="relative object-contain drop-shadow-[0_0_12px_var(--scene-magenta)]"
+            className="bizbot-motion-0 relative h-full w-full object-contain drop-shadow-[0_0_12px_var(--scene-magenta)]"
           />
           <span className="sr-only">{listening ? t("bot.listening") : "BIZBOT"}</span>
         </button>
