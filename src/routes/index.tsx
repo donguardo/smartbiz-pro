@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowRight, Bot, Check, CreditCard, Download, Menu, PackageSearch, QrCode, ScanLine, Smartphone, UserPlus, Store, Receipt } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/lib/theme";
@@ -35,6 +35,9 @@ const STEPS = [
 function Landing() {
   const { t } = useT();
   const [step, setStep] = useState(0);
+  useEffect(() => {
+    if (window.location.hostname.startsWith("admin.")) window.location.replace("/admin");
+  }, []);
   const S = STEPS[step]!;
   return (
     <div className="min-h-screen overflow-x-hidden pb-24">
