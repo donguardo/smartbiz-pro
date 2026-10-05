@@ -110,6 +110,13 @@ function Landing() {
             </div>
           </div>
         </div>
+
+        <div className="relative z-10 mx-auto max-w-6xl px-4 pb-12 md:pb-16">
+          <p className="mb-4 text-center font-mono text-xs uppercase tracking-widest text-primary">{t("showcase.heroTitle")}</p>
+          <div className="mx-auto max-w-xl">
+            <ShowcaseCarousel />
+          </div>
+        </div>
       </section>
 
       <section id="demo" className="mx-auto max-w-6xl px-4 py-16">
