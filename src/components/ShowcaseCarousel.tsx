@@ -45,6 +45,9 @@ export function ShowcaseCarousel() {
   const [focusPaused, setFocusPaused] = useState(false);
   const [announce, setAnnounce] = useState("");
   const touchStartX = useRef<number | null>(null);
+  // Timestamp of the last swipe gesture; a click right after a swipe is
+  // the tail of that swipe, not a tap, so it must not open the slide.
+  const swipeEndedAt = useRef(0);
   // Reduced-motion users get no autoplay; the rest pause for hover, touch or focus.
   const paused = userPaused || hoverPaused || touchPaused || focusPaused;
   const realIndex = (((pos - count) % count) + count) % count;
