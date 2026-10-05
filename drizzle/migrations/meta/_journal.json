@@ -134,6 +134,13 @@
       "when": 1791225235212,
       "tag": "0018_stock_movements",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791225314884,
+      "tag": "0019_stock_movements_cascade",
+      "breakpoints": true
     }
   ]
 }
