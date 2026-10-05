@@ -59,7 +59,7 @@ export function ShowcaseCarousel() {
       aria-roledescription="carousel"
       aria-label={t("nav.showcase")}
     >
-      <div className="-m-3 overflow-hidden rounded-[1.75rem] p-3">
+      <div className="-m-10 overflow-hidden rounded-[2rem] p-10">
         <div
           key={scenario.slug}
           data-business-theme={scenario.theme}
