@@ -16,8 +16,8 @@
 
 - [x] First-visit opening intro video with skip and remembered completion
 - [x] Show installed status and make installation guidance reusable from navigation
-- [ ] Fix phone layouts across landing and account pages
-- [ ] Add Privacy Notice and Terms of Service pages and links
-- [ ] Standardize the MVP BizManager brand and payment wording
-- [ ] Add anti-framing security headers
-- [ ] Add forgot-password and password-reset flows
+- [x] Fix phone layouts across landing and account pages
+- [x] Add Privacy Notice and Terms of Service pages and links
+- [x] Standardize the MVP BizManager brand and payment wording
+- [x] Add anti-framing security headers
+- [x] Add forgot-password and password-reset flows

@@ -45,8 +45,7 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "forgot") {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: "https://mvp.com.ai/reset-password" });
-        if (error) console.warn("Password reset request was not accepted", error.message);
+        await supabase.auth.resetPasswordForEmail(email, { redirectTo: "https://mvp.com.ai/reset-password" });
         setMessage({ kind: "success", text: "If that email has an account, we've sent a reset link." });
       } else if (mode === "signup") {
         const { data, error } = await supabase.auth.signUp({
