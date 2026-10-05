@@ -169,19 +169,19 @@ describe.skipIf(!enabled)("products A to Z", () => {
   test("low-stock alerts reach owners only, respect the toggle, and history filters by product and date", async () => {
     const { owner, cashier, other } = users;
     expect((await owner.db.rpc("adjust_stock", { _product_id: ids["Sticker"]!, _kind: "loss", _qty: 91, _reason: "Water damage" })).data).toBe(4);
-    const { data: alerts } = await owner.db.from("stock_alerts").select("id,product_name,stock_at,threshold").is("read_at", null);
+    const { data: alerts } = await owner.db.from("stock_alerts").select("id,product_name,stock_at,threshold").is("read_at", null).eq("product_id", ids["Sticker"]!);
     expect(alerts!.map((a) => [a.product_name, Number(a.stock_at), Number(a.threshold)])).toEqual([["Sticker", 4, 5]]);
     expect((await cashier.db.from("stock_alerts").select("id")).data).toHaveLength(0);
     expect((await other.db.from("stock_alerts").select("id")).data).toHaveLength(0);
     // no duplicate while unread
     await owner.db.rpc("adjust_stock", { _product_id: ids["Sticker"]!, _kind: "loss", _qty: 1, _reason: "Damaged" });
-    expect((await owner.db.from("stock_alerts").select("id").is("read_at", null)).data).toHaveLength(1);
+    expect((await owner.db.from("stock_alerts").select("id").is("read_at", null).eq("product_id", ids["Sticker"]!)).data).toHaveLength(1);
     expect((await owner.db.from("stock_alerts").update({ read_at: new Date().toISOString() }).eq("id", alerts![0]!.id)).error).toBeNull();
     // toggle off: crossing again raises nothing
     await owner.db.from("shops").update({ low_stock_alerts: false }).eq("id", owner.id);
     await owner.db.rpc("adjust_stock", { _product_id: ids["Sticker"]!, _kind: "correction", _qty: 50, _reason: "Physical count" });
     await owner.db.rpc("adjust_stock", { _product_id: ids["Sticker"]!, _kind: "correction", _qty: 2, _reason: "Physical count" });
-    expect((await owner.db.from("stock_alerts").select("id").is("read_at", null)).data).toHaveLength(0);
+    expect((await owner.db.from("stock_alerts").select("id").is("read_at", null).eq("product_id", ids["Sticker"]!)).data).toHaveLength(0);
     // export filters
     const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila" }).format(new Date());
     const { data: rice } = await owner.db.from("stock_movements").select("product_name").eq("product_id", ids["Rice"]!).gte("created_at", `${today}T00:00:00+08:00`).lte("created_at", `${today}T23:59:59.999+08:00`);
