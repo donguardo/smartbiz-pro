@@ -52,3 +52,4 @@
 - [x] Add BIZBOT minimize and restore controls without leaving the page
 - [x] Remember BIZBOT's dragged position across refreshes and app reopenings
 - [x] Add five interactive business dashboard showcases with matching themes and EN/TL wording
+- [x] Add auto-playing business showcase carousel to the hero with theme-colored slides
