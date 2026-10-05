@@ -117,7 +117,7 @@ function POS() {
               <span className="mt-1 line-clamp-2 font-medium leading-tight">{p.name}</span>
               <span className="mt-auto flex items-end justify-between pt-3">
                 <span className="font-display text-lg font-semibold">{peso(Number(p.price))}{isDecimalUnit(p.unit) && <span className="text-xs font-normal text-muted-foreground">/{p.unit}</span>}</span>
-                <span className={`font-mono text-[11px] ${p.track_stock && p.stock <= p.reorder_level ? "text-destructive" : "text-muted-foreground"}`}>{p.track_stock ? `${p.stock} ${p.unit} left` : p.unit === "service" ? "service" : `per ${p.unit}`}</span>
+                <span className={`whitespace-nowrap font-mono text-[11px] ${p.track_stock && p.stock <= p.reorder_level ? "text-destructive" : "text-muted-foreground"}`}>{p.track_stock ? `${p.stock} ${p.unit} left` : p.unit === "service" ? "service" : `per ${p.unit}`}</span>
               </span>
             </button>
           ))}
