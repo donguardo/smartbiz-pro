@@ -58,43 +58,47 @@ export function ShowcaseCarousel() {
 
   const goTo = (real: number) => {
     setSnap(false);
-    setPos(real + 1);
+    setPos(count + real);
     setAnnounce(slideLabel(real));
   };
-  const goPrev = () => {
+  const jumpTo = (real: number) => {
+    // Reduced motion: no transition runs, so land directly on the slide.
+    setSnap(true);
+    setPos(count + real);
+    setAnnounce(slideLabel(real));
+  };
+  // Step one slide in `dir`; if the next step would run past the rendered
+  // copies, re-centre on the equivalent slide first, then slide as normal.
+  const step = (dir: 1 | -1, target: number) => {
     if (reduced) {
-      // No transition runs, so onTransitionEnd never fires — wrap instantly.
-      const next = (realIndex - 1 + count) % count;
-      setSnap(true);
-      setPos(next + 1);
-      setAnnounce(slideLabel(next));
+      jumpTo(target);
       return;
     }
-    const target = realIndex === 0 ? count - 1 : realIndex - 1;
-    setAnnounce(slideLabel(target));
-    setPos((p) => Math.max(0, p - 1));
-  };
-  const goNext = () => {
-    if (reduced) {
-      const next = (realIndex + 1) % count;
+    const next = pos + dir;
+    if (next < 1 || next > extended.length - 2) {
       setSnap(true);
-      setPos(next + 1);
-      setAnnounce(slideLabel(next));
-      return;
+      setPos(normalize(pos));
+      // Wait for the re-centred frame to paint before sliding again.
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          setSnap(false);
+          setPos((p) => normalize(p) + dir);
+        })
+      );
+    } else {
+      setSnap(false);
+      setPos(next);
     }
-    const target = realIndex === count - 1 ? 0 : realIndex + 1;
-    setAnnounce(slideLabel(target));
-    setPos((p) => Math.min(count + 1, p + 1));
   };
+  const goPrev = () => step(-1, (realIndex - 1 + count) % count);
+  const goNext = () => step(1, (realIndex + 1) % count);
 
   const onTrackTransitionEnd = (e: React.TransitionEvent) => {
     if (e.target !== e.currentTarget || e.propertyName !== "transform") return;
-    if (pos === 0) {
+    if (pos < count || pos >= 2 * count) {
+      // Same slide, re-centred in the middle copy — visually invisible.
       setSnap(true);
-      setPos(count);
-    } else if (pos === count + 1) {
-      setSnap(true);
-      setPos(1);
+      setPos(normalize(pos));
     }
   };
 
