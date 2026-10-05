@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { SHOWCASE_SCENARIOS } from "@/lib/showcase-scenarios";
@@ -35,30 +35,6 @@ export function ShowcaseCarousel() {
     else goPrev();
   };
 
-  const timerRef = useRef({ elapsed: 0, start: 0 });
-
-  useEffect(() => {
-    timerRef.current = { elapsed: 0, start: 0 };
-  }, [index]);
-
-  useEffect(() => {
-    if (paused) return;
-    const timer = timerRef.current;
-    const duration = Math.max(0, AUTOPLAY_MS - timer.elapsed);
-    timer.start = performance.now();
-    let fired = false;
-    const id = window.setTimeout(() => {
-      fired = true;
-      setIndex((i) => (i + 1) % count);
-    }, duration);
-    return () => {
-      window.clearTimeout(id);
-      if (!fired && timer.start) {
-        timer.elapsed += performance.now() - timer.start;
-        timer.start = 0;
-      }
-    };
-  }, [paused, count, index]);
 
   const scenario = SHOWCASE_SCENARIOS[index]!;
   const Icon = scenario.icon;
@@ -124,6 +100,9 @@ export function ShowcaseCarousel() {
       >
         <div
           key={index}
+          onAnimationEnd={(e) => {
+            if (e.animationName === "showcase-progress") setIndex((i) => (i + 1) % count);
+          }}
           style={{ "--carousel-duration": `${AUTOPLAY_MS}ms` } as React.CSSProperties}
           className={`showcase-progress h-full rounded-full bg-primary ${paused ? "showcase-progress-paused" : ""}`}
         />
