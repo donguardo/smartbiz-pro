@@ -1,6 +1,6 @@
 {
-  "name": "AI Business Manager",
-  "short_name": "BizManager",
+  "name": "MVP BizManager",
+  "short_name": "MVP BizManager",
   "description": "AI POS and business manager for small and medium businesses.",
   "start_url": "/dashboard",
   "scope": "/",
