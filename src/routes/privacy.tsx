@@ -19,7 +19,7 @@ const sections = [
   { title: "Sharing and retention", body: "Placeholder: Identify service providers, legal disclosures, retention periods, and safeguards applied to personal information." },
   { title: "Your rights", body: "Under Republic Act No. 10173, the Data Privacy Act of 2012, data subjects may have rights to be informed, access, object, correct, erase or block, obtain data portability, and seek damages, subject to applicable law." },
   { title: "Deleting your account", body: "You can delete your account and data at any time from Settings → Account → \"Delete my account\", or by following the steps on our Delete your account page (/delete-account)." },
-  { title: "Contact and complaints", body: "Placeholder: Add the organization’s privacy contact details and instructions for raising a concern or contacting the National Privacy Commission." },
+  { title: "Contact and complaints", body: "Write to the address below with any question, complaint, or request about your personal information, including access, correction, or deletion. You may also raise a concern with the National Privacy Commission (Philippines).", email: "orangewareph@gmail.com" },
 ];
 
 function PrivacyPage() {

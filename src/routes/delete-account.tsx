@@ -3,7 +3,7 @@ import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/lib/theme";
 import { LanguageToggle, useT } from "@/lib/i18n";
 
-export const SUPPORT_EMAIL = "support@mvp.com.ai";
+export const SUPPORT_EMAIL = "orangewareph@gmail.com";
 
 export const Route = createFileRoute("/delete-account")({
   head: () => ({ meta: [

@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/lib/theme";
 
-type LegalSection = { title: string; body: string };
+type LegalSection = { title: string; body: string; email?: string };
 
 export function LegalPage({ title, updated, intro, sections }: { title: string; updated: string; intro: string; sections: LegalSection[] }) {
   return (
@@ -23,6 +23,7 @@ export function LegalPage({ title, updated, intro, sections }: { title: string; 
             <section key={section.title}>
               <h2 className="text-xl font-semibold">{section.title}</h2>
               <p className="mt-2 max-w-3xl leading-7 text-muted-foreground">{section.body}</p>
+              {section.email && <a className="mt-2 inline-block font-semibold text-primary underline" href={`mailto:${section.email}`}>{section.email}</a>}
             </section>
           ))}
         </div>
