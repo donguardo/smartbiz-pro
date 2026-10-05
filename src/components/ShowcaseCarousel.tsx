@@ -120,7 +120,7 @@ export function ShowcaseCarousel() {
       <div
         data-business-theme={scenario.theme}
         aria-hidden
-        className="mt-1 h-1 w-full overflow-hidden rounded-full bg-muted"
+        className="showcase-theme mt-1 h-1 w-full overflow-hidden rounded-full bg-muted"
       >
         <div
           key={index}
