@@ -1,30 +1,20 @@
 import { useEffect, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { ImagePlus, Store, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import { qk } from "@/lib/store";
+import { useShopProfile } from "@/lib/shop-profile";
 
 const SUGGESTED = ["Sari-sari store", "Coffee shop", "Café", "Restaurant", "Laundry", "Beauty parlor", "Bakery", "Pharmacy", "Hardware", "Grocery"];
 const MAX_CATEGORIES = 12;
 
-async function fetchShopProfile(shopId: string) {
-  const { data, error } = await supabase.from("shops").select("id, name, logo_url, business_categories").eq("id", shopId).single();
-  if (error) throw error;
-  let logoSrc: string | null = null;
-  if (data.logo_url) {
-    const { data: signed } = await supabase.storage.from("shop-logos").createSignedUrl(data.logo_url, 3600);
-    logoSrc = signed?.signedUrl ?? null;
-  }
-  return { ...data, logoSrc };
-}
-
 export function BusinessProfile({ shopId }: { shopId: string }) {
   const { t } = useT();
   const qc = useQueryClient();
-  const { data } = useQuery({ queryKey: ["shop-profile", shopId], queryFn: () => fetchShopProfile(shopId) });
+  const { data } = useShopProfile(shopId);
   const [name, setName] = useState("");
   const [cats, setCats] = useState<string[]>([]);
   const [newCat, setNewCat] = useState("");

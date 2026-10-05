@@ -1,0 +1,24 @@
+@media print {
+  :root {
+    --receipt-paper: #ffffff;
+    --receipt-ink: #000000;
+  }
+  body:has(#receipt) * { visibility: hidden; }
+  body:has(#receipt) #receipt,
+  body:has(#receipt) #receipt * { visibility: visible; }
+  body:has(#receipt) #receipt {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 80mm;
+    max-width: 100%;
+    padding: 5mm;
+    margin: 0;
+    border-radius: 0;
+    background: var(--receipt-paper);
+    color: var(--receipt-ink);
+  }
+  #receipt * {
+    color: var(--receipt-ink);
+    border-color: var(--receipt-ink);
+  }
+}

@@ -4,8 +4,12 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Banknote, CreditCard, Minus, Plus, Printer, QrCode, ScanLine, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchCustomers, fetchProducts, fetchProfile, qk, type Product } from "@/lib/store";
+import { fetchCustomers, fetchProducts, fetchShopContext, qk, type Product } from "@/lib/store";
 import { peso } from "@/lib/format";
+import { useShopProfile } from "@/lib/shop-profile";
+import { useT } from "@/lib/i18n";
+import { Button } from "@/components/ui/button";
+import "@/receipt-print.css";
 
 export const Route = createFileRoute("/_app/pos")({
   head: () => ({ meta: [
@@ -26,7 +30,10 @@ type Receipt = { no: string; lines: Line[]; total: number; method: Method; tende
 function POS() {
   const qc = useQueryClient();
   const { data: products = [] } = useQuery({ queryKey: qk.products, queryFn: fetchProducts });
-  const { data: profile } = useQuery({ queryKey: qk.profile, queryFn: fetchProfile });
+  const { t } = useT();
+  const { data: shop } = useQuery({ queryKey: qk.shop, queryFn: fetchShopContext });
+  const { data: business } = useShopProfile(shop?.shop_id);
+  const receiptRef = useRef<HTMLDivElement>(null);
   const { data: customers = [] } = useQuery({ queryKey: qk.customers, queryFn: fetchCustomers });
   const [cart, setCart] = useState<Line[]>([]);
   const [scan, setScan] = useState("");
@@ -201,8 +208,9 @@ function POS() {
       {receipt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4 print:static print:bg-transparent">
           <div className="w-full max-w-sm">
-            <div id="receipt" className="rounded-2xl bg-card p-6 font-mono text-sm text-card-foreground">
-              <p className="text-center font-bold uppercase">{profile?.business_name ?? "Store"}</p>
+            <div id="receipt" ref={receiptRef} className="rounded-2xl bg-card p-6 font-mono text-sm text-card-foreground">
+              {business?.logoSrc && <img src={business.logoSrc} alt={t("profile.logo")} className="mx-auto mb-3 h-20 w-20 object-contain" />}
+              <p className="break-words text-center font-bold">{business?.name ?? shop?.shop_name ?? "Store"}</p>
               <p className="text-center text-xs text-muted-foreground">{receipt.at.toLocaleString("en-PH")}</p>
               <p className="text-center text-xs text-muted-foreground">Receipt {receipt.no}</p>
               <div className="my-3 border-t border-dashed border-border" />
@@ -216,7 +224,11 @@ function POS() {
               <p className="mt-4 text-center text-xs text-muted-foreground">Thank you! Come again.</p>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2 print:hidden">
-              <button onClick={() => window.print()} className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card py-3 font-semibold"><Printer className="h-4 w-4" /> Print</button>
+              <Button variant="outline" onClick={async () => {
+                const images = Array.from(receiptRef.current?.querySelectorAll("img") ?? []);
+                await Promise.all(images.map((image) => image.decode().catch(() => undefined)));
+                window.print();
+              }}><Printer className="h-4 w-4" /> Print</Button>
               <button onClick={() => { setReceipt(null); scanRef.current?.focus(); }} className="rounded-xl bg-primary py-3 font-semibold text-primary-foreground">New sale</button>
             </div>
           </div>

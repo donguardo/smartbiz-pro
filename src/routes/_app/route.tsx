@@ -6,7 +6,8 @@ import { useSession } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeToggle, syncThemeFromAccount } from "@/lib/theme";
 import { LanguageToggle, useT } from "@/lib/i18n";
-import { Logo } from "@/components/Logo";
+import { StoreIdentity } from "@/components/StoreIdentity";
+import { useShopProfile } from "@/lib/shop-profile";
 import { fetchProfile, fetchShopContext, qk } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { openInstallPrompt } from "@/lib/install";
@@ -41,6 +42,8 @@ function AppLayout() {
   useEffect(() => { if (userId) void syncThemeFromAccount(); }, [userId]);
   const { data: profile } = useQuery({ queryKey: qk.profile, queryFn: fetchProfile, enabled: !!session });
   const { data: shop } = useQuery({ queryKey: qk.shop, queryFn: fetchShopContext, enabled: !!session });
+  const { data: business } = useShopProfile(shop?.shop_id);
+  const businessName = business?.name ?? shop?.shop_name ?? profile?.business_name ?? "…";
   const visibleNav = shop?.member_role === "owner" ? [...NAV, ...OWNER_NAV, SETTINGS_NAV] : [...NAV, SETTINGS_NAV];
 
   if (loading || !session) {
@@ -50,8 +53,7 @@ function AppLayout() {
   return (
     <div className="min-h-screen md:grid md:grid-cols-[232px_1fr]">
       <aside className="sticky top-0 hidden h-screen flex-col border-r border-sidebar-border bg-sidebar p-4 backdrop-blur-xl md:flex">
-        <Logo to="/dashboard" />
-        <p className="mt-6 truncate px-2 font-mono text-xs uppercase tracking-widest text-muted-foreground">{profile?.business_name ?? "…"}</p>
+        <div className="mb-4"><StoreIdentity name={businessName} logoSrc={business?.logoSrc} /></div>
         <nav className="mt-2 space-y-1">
           {visibleNav.map((n) => {
             const active = path.startsWith(n.to);
@@ -82,7 +84,7 @@ function AppLayout() {
       </aside>
 
       <header className="sticky top-0 z-20 flex items-center justify-between gap-1 border-b border-border bg-card/95 px-3 py-3 backdrop-blur-md md:hidden">
-        <Logo to="/dashboard" compact />
+        <StoreIdentity name={businessName} logoSrc={business?.logoSrc} />
         <div className="flex shrink-0 gap-1">
           <Button variant="ghost" size="icon" onClick={openInstallPrompt} aria-label={t("install.open")} title={t("install.open")} className="hidden min-[420px]:inline-flex">
             <Download className="h-4 w-4" />
