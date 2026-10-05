@@ -9,20 +9,28 @@ export const Route = createFileRoute("/showcase/$business")({
   loader: ({ params }) => {
     const scenario = getShowcaseScenario(params.business);
     if (!scenario) throw notFound();
-    return scenario;
+    return scenario.slug;
   },
-  head: ({ loaderData }) => ({ meta: [
-    { title: `${loaderData.sampleName} ${loaderData.name.en} Dashboard — MVP BizManager` },
-    { name: "description", content: `${loaderData.story.en} Explore its interactive sales, profit, category, and operations dashboard.` },
-    { property: "og:title", content: `${loaderData.name.en} Dashboard Preview — MVP BizManager` },
-    { property: "og:description", content: loaderData.customer.en },
-  ] }),
+  head: ({ loaderData }) => {
+    const scenario = loaderData ? getShowcaseScenario(loaderData) : undefined;
+    if (!scenario) return { meta: [{ title: "Dashboard unavailable — MVP BizManager" }, { name: "robots", content: "noindex" }] };
+    return { meta: [
+      { title: `${scenario.sampleName} ${scenario.name.en} Dashboard — MVP BizManager` },
+      { name: "description", content: `${scenario.story.en} Explore its interactive sales, profit, category, and operations dashboard.` },
+      { property: "og:title", content: `${scenario.name.en} Dashboard Preview — MVP BizManager` },
+      { property: "og:description", content: scenario.customer.en },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ] };
+  },
   component: BusinessShowcase,
 });
 
 function BusinessShowcase() {
-  const scenario = Route.useLoaderData();
+  const slug = Route.useLoaderData();
+  const scenario = getShowcaseScenario(slug);
   const { lang, t } = useT();
+  if (!scenario) return null;
   return (
     <div className="min-h-screen bg-background pb-24 text-foreground">
       <ShowcaseHeader backToGallery />

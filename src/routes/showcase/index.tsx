@@ -10,6 +10,8 @@ export const Route = createFileRoute("/showcase/")({
     { name: "description", content: "Preview interactive MVP BizManager dashboards for coffee shops, laundries, beauty parlors, cafés, and restaurants." },
     { property: "og:title", content: "Business Dashboard Showcase — MVP BizManager" },
     { property: "og:description", content: "Explore five interactive sample dashboards made for Philippine small businesses." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
   ] }),
   component: ShowcaseGallery,
 });
