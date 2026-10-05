@@ -530,7 +530,7 @@
   .bizbot-motion-4,
   .bizbot-motion-5,
   .bizbot-motion-6,
-  .showcase-slide-in { animation: none; }
+  .showcase-track { transition: none; }
   .showcase-progress {
     animation-name: showcase-tick;
     transform: scaleX(1);
