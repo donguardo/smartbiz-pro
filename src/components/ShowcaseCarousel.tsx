@@ -27,14 +27,16 @@ export function ShowcaseCarousel() {
   const { t, lang } = useT();
   const reduced = usePrefersReducedMotion();
   const count = SHOWCASE_SCENARIOS.length;
-  // Track renders [last, ...all, first] so a neighbour always peeks on both edges.
+  // Track renders the deck three times so navigation can keep sliding past the
+  // edges in the same direction; the position is re-centred invisibly after
+  // each slide finishes, making the loop truly endless.
   const extended = [
-    SHOWCASE_SCENARIOS[count - 1]!,
     ...SHOWCASE_SCENARIOS,
-    SHOWCASE_SCENARIOS[0]!,
+    ...SHOWCASE_SCENARIOS,
+    ...SHOWCASE_SCENARIOS,
   ];
-  // pos is the position in `extended`; real slides live at 1..count.
-  const [pos, setPos] = useState(1);
+  // pos is the position in `extended`; the middle copy's slides live at count..2*count-1.
+  const [pos, setPos] = useState(count);
   const [snap, setSnap] = useState(false); // true = jump without transition
   const [userPaused, setUserPaused] = useState(false);
   const [hoverPaused, setHoverPaused] = useState(false);
@@ -44,7 +46,9 @@ export function ShowcaseCarousel() {
   const touchStartX = useRef<number | null>(null);
   // Reduced-motion users get no autoplay; the rest pause for hover, touch or focus.
   const paused = userPaused || hoverPaused || touchPaused || focusPaused;
-  const realIndex = ((pos - 1) % count + count) % count;
+  const realIndex = (((pos - count) % count) + count) % count;
+  // Equivalent middle-copy position for the same visual slide.
+  const normalize = (p: number) => count + ((((p - count) % count) + count) % count);
 
   const slideLabel = (i: number) =>
     t("carousel.slideOf")
