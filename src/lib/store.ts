@@ -92,7 +92,10 @@ export function computeInsights(products: Product[], items: SaleItem[]): Insight
     if (!p.track_stock || p.archived_at) continue;
     const daily = (sold14.get(p.id) ?? 0) / 14;
     const daysLeft = daily > 0 ? p.stock / daily : Infinity;
-    if (p.stock <= p.reorder_level || daysLeft < 5) {
+    const last = lastSold.get(p.id);
+    const ageDays = (now - new Date(p.created_at).getTime()) / 86400000;
+    const brandNewEmpty = ageDays < 1 && p.stock === 0 && !last;
+    if (!brandNewEmpty && (p.stock <= p.reorder_level || daysLeft < 5)) {
       const qty = Math.max(p.reorder_level * 2 - p.stock, Math.ceil(daily * 14) - p.stock, 1);
       out.push({
         kind: "reorder", product: p,
@@ -100,18 +103,17 @@ export function computeInsights(products: Product[], items: SaleItem[]): Insight
         detail: `${p.stock} left${Number.isFinite(daysLeft) ? ` · ~${Math.max(0, Math.floor(daysLeft))} days of stock` : ""}. Suggest ordering ${qty} units.`,
       });
     }
-    const last = lastSold.get(p.id);
-    const ageDays = (now - new Date(p.created_at).getTime()) / 86400000;
-    if (p.stock > 0 && (!last ? ageDays >= 0 && (sold14.get(p.id) ?? 0) === 0 : now - last > 21 * 86400000)) {
+    if (p.stock > 0 && (!last ? ageDays > 14 : now - last > 21 * 86400000)) {
       out.push({
         kind: "dead", product: p,
         title: `${p.name} isn't selling`,
         detail: `No sales in the last ${last ? Math.floor((now - last) / 86400000) : 14}+ days · ₱${(Number(p.cost) * p.stock).toFixed(0)} tied up in stock. Consider a promo or bundle.`,
       });
     }
-    const daily30 = (sold30.get(p.id) ?? 0) / 30;
+    const sold30d = sold30.get(p.id) ?? 0;
+    const daily30 = sold30d / 30;
     const supply = daily30 > 0 ? p.stock / daily30 : Infinity;
-    if (daily30 > 0 && supply > 60) out.push({ kind: "overstock", product: p, title: `Too much ${p.name}`, detail: `${Math.round(supply)} days of supply · ₱${(Number(p.cost) * p.stock).toFixed(0)} tied up. Try a promo or order less next time.` });
+    if (ageDays > 30 && sold30d > 0 && p.stock > 3 * sold30d) out.push({ kind: "overstock", product: p, title: `Too much ${p.name}`, detail: `${Math.round(supply)} days of supply · ₱${(Number(p.cost) * p.stock).toFixed(0)} tied up. Try a promo or order less next time.` });
   }
   return out.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "reorder" ? -1 : 1));
 }
