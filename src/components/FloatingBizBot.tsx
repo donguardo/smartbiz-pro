@@ -37,7 +37,6 @@ const CHAT_KEY = "bizbot-conversation-v1";
 const POSITION_KEY = "bizbot-position-v1";
 const MAX_CONTEXT_PRODUCTS = 80;
 const BOT_SIZE_DESKTOP = 224;
-const BOT_SIZE_MOBILE = Math.round(BOT_SIZE_DESKTOP * 2 / 3);
 const BOT_SIZE_PUBLIC_MOBILE = 72;
 const BOT_SIZE_APP = 56;
 
