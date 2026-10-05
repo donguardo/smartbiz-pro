@@ -59,11 +59,12 @@ export function ShowcaseCarousel() {
       aria-roledescription="carousel"
       aria-label={t("nav.showcase")}
     >
-      <div
-        key={scenario.slug}
-        data-business-theme={scenario.theme}
-        className="showcase-theme animate-fade-in overflow-hidden rounded-2xl border border-border bg-card shadow-xl"
-      >
+      <div className="-m-3 overflow-hidden rounded-[1.75rem] p-3">
+        <div
+          key={scenario.slug}
+          data-business-theme={scenario.theme}
+          className="showcase-theme showcase-slide-in overflow-hidden rounded-2xl border border-border bg-card shadow-xl"
+        >
         <div className="flex items-center gap-3 border-b border-border bg-muted/60 px-5 py-3">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
             <Icon className="h-5 w-5" />
@@ -93,6 +94,7 @@ export function ShowcaseCarousel() {
           >
             {t("showcase.open")} <ArrowRight className="h-4 w-4" />
           </Link>
+        </div>
         </div>
       </div>
 
