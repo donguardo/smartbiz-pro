@@ -261,6 +261,30 @@ export type Database = {
           },
         ]
       }
+      platform_admins: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          email: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          email: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           category: string
@@ -925,7 +949,53 @@ export type Database = {
     }
     Functions: {
       accept_shop_invite: { Args: { _code: string }; Returns: string }
+      admin_account_deletions: {
+        Args: never
+        Returns: {
+          deleted_on: string
+          deletions: number
+        }[]
+      }
+      admin_platform_totals: {
+        Args: never
+        Returns: {
+          sales_count: number
+          sales_total: number
+          shops: number
+          users: number
+        }[]
+      }
+      admin_refresh_runs: {
+        Args: never
+        Returns: {
+          error: string
+          finished_at: string
+          id: string
+          job: string
+          shops_processed: number
+          started_at: string
+          status: string
+        }[]
+      }
+      admin_shop_list: {
+        Args: never
+        Returns: {
+          created_at: string
+          owner_email: string
+          shop_id: string
+          shop_name: string
+          staff_count: number
+        }[]
+      }
+      admin_signups_by_day: {
+        Args: never
+        Returns: {
+          day: string
+          signups: number
+        }[]
+      }
       anonymize_customer: { Args: { _customer_id: string }; Returns: undefined }
+      assert_platform_admin_mfa: { Args: never; Returns: undefined }
       cancel_shop_invite: { Args: { _invite_id: string }; Returns: undefined }
       create_shop_customer: {
         Args: { _consented: boolean; _mobile: string; _name: string }
@@ -1011,6 +1081,7 @@ export type Database = {
           stock: number
         }[]
       }
+      is_platform_admin: { Args: never; Returns: boolean }
       is_shop_member: { Args: { _shop_id: string }; Returns: boolean }
       is_shop_owner: { Args: { _shop_id: string }; Returns: boolean }
       record_sale: {
