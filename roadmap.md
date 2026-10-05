@@ -44,4 +44,4 @@
 - [x] Complete requested Taglish dashboard labels and summaries
 - [x] Harden sales writes to server-only functions and move sample sales seeding server-side
 - [x] Inspect scheduled database jobs and report external domain/email/test-account blockers
-- [ ] Verify 360–480px and desktop flows, then publish
+- [x] Verify 360–480px and desktop flows, then publish
