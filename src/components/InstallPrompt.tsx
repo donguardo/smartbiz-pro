@@ -58,7 +58,7 @@ export function InstallPrompt() {
 
   if (!show) return null;
   return (
-    <div role="dialog" aria-label={t("install.title")} className="fixed inset-x-3 bottom-3 z-[60] mx-auto max-w-md rounded-2xl border border-primary/50 bg-primary/40 p-4 text-foreground shadow-2xl backdrop-blur-md">
+    <div role="dialog" aria-label={t("install.title")} className="fixed inset-x-3 bottom-3 z-[90] mx-auto max-w-md rounded-2xl border border-primary/50 bg-primary/40 p-4 text-foreground shadow-2xl backdrop-blur-md">
       <button onClick={close} aria-label={t("install.later")} className="absolute right-2 top-2 rounded-md p-1 hover:bg-muted"><X className="h-4 w-4" /></button>
       <div className="flex items-start gap-3 pr-6">
         <img src={logoAsset.url} alt="" className="h-12 w-12 shrink-0 object-contain" />
