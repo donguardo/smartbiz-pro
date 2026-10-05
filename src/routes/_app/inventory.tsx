@@ -58,7 +58,7 @@ function Inventory() {
   const toggleCashiers = async () => {
     if (!shop) return;
     const { error } = await supabase.from("shops").update({ allow_cashier_products: !settings?.allow_cashier_products }).eq("id", shop.shop_id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     qc.invalidateQueries({ queryKey: qk.productSettings });
   };
 
@@ -67,7 +67,7 @@ function Inventory() {
     if (!form || !shop) return;
     const category = (form.category === NEW_CAT ? form.newCategory : form.category).trim() || "General";
     const stock = form.track ? Number(form.stock || 0) : 0;
-    if (form.track && !isDecimalUnit(form.unit) && !Number.isInteger(stock)) return toast.error("Decimals are only allowed for kg, g or L");
+    if (form.track && !isDecimalUnit(form.unit) && !Number.isInteger(stock)) { toast.error("Decimals are only allowed for kg, g or L"); return; }
     setBusy(true);
     try {
       let photo_path = form.photo_path;
@@ -89,13 +89,13 @@ function Inventory() {
   const del = async (p: Product) => {
     if (!confirm(`Delete ${p.name}? If it already has sales it will be archived instead.`)) return;
     const { data, error } = await supabase.rpc("remove_product", { _id: p.id });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success(data === "archived" ? `${p.name} archived — hidden from Register, kept in reports` : `${p.name} deleted`);
     refresh();
   };
   const restore = async (p: Product) => {
     const { error } = await supabase.from("products").update({ archived_at: null }).eq("id", p.id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     refresh();
   };
 
@@ -106,7 +106,7 @@ function Inventory() {
     setBusy(true);
     const { error } = await supabase.from("products").insert(rows.map((r) => ({ ...r, cost: owner ? r.cost : 0 })));
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success(`${rows.length} products imported`); setCsv(null); refresh();
   };
   const downloadSample = () => {
@@ -162,7 +162,7 @@ function Inventory() {
               return (
                 <tr key={p.id} className={p.archived_at ? "opacity-60" : ""}>
                   <td className="p-3"><div className="flex items-center gap-3">
-                    {p.photo_path && photos[p.photo_path] ? <img src={photos[p.photo_path]} alt="" className="h-10 w-10 rounded-lg object-cover" /> : <div className="h-10 w-10 rounded-lg bg-muted" />}
+                    {p.photo_path && photos[p.photo_path] ? <img src={photos[p.photo_path] ?? ""} alt="" className="h-10 w-10 rounded-lg object-cover" /> : <div className="h-10 w-10 rounded-lg bg-muted" />}
                     <div><p className="font-medium">{p.name}</p><p className="font-mono text-xs text-muted-foreground">{p.sku || "—"} · per {p.unit}</p></div>
                   </div></td>
                   <td className="p-3 text-muted-foreground">{p.category}</td>
@@ -220,10 +220,10 @@ function Inventory() {
               <label className="text-xs text-muted-foreground">Reorder at<input type="number" min="0" step="1" value={form.reorder_level} onChange={(e) => set({ reorder_level: e.target.value })} className={input} /></label>
             </div>}
             <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-border p-3 text-sm">
-              {form.file ? <img src={URL.createObjectURL(form.file)} alt="" className="h-12 w-12 rounded object-cover" /> : form.photo_path && photos[form.photo_path] ? <img src={photos[form.photo_path]} alt="" className="h-12 w-12 rounded object-cover" /> : <ImagePlus className="h-6 w-6 text-muted-foreground" />}
+              {form.file ? <img src={URL.createObjectURL(form.file)} alt="" className="h-12 w-12 rounded object-cover" /> : form.photo_path && photos[form.photo_path] ? <img src={photos[form.photo_path] ?? ""} alt="" className="h-12 w-12 rounded object-cover" /> : <ImagePlus className="h-6 w-6 text-muted-foreground" />}
               <span className="flex-1">Photo (optional, max 2 MB)</span>
               {(form.file || form.photo_path) && <button type="button" onClick={(e) => { e.preventDefault(); set({ file: null, photo_path: null }); }} className="text-xs text-destructive">Remove</button>}
-              <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f && f.size > 2 * 1024 * 1024) return toast.error("Photo must be 2 MB or smaller"); set({ file: f ?? null }); }} />
+              <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f && f.size > 2 * 1024 * 1024) { toast.error("Photo must be 2 MB or smaller"); return; } set({ file: f ?? null }); }} />
             </label>
             <button disabled={busy} className="w-full rounded-xl bg-primary py-3 font-semibold text-primary-foreground disabled:opacity-50">{busy ? "Saving…" : "Save"}</button>
           </form>

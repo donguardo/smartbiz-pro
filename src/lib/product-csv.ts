@@ -10,7 +10,7 @@ export const SAMPLE_CSV = [
 ].join("\n");
 
 export type CsvProduct = { name: string; category: string; price: number; cost: number; unit: Unit; track_stock: boolean; stock_qty: number; reorder_level: number; sku: string };
-export type CsvRow = { line: number; data?: CsvProduct; errors: string[] };
+export type CsvRow = { line: number; data?: CsvProduct | undefined; errors: string[] };
 
 function splitLine(line: string) {
   const out: string[] = []; let cur = ""; let q = false;
