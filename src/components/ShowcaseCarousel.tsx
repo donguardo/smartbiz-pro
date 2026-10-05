@@ -78,7 +78,7 @@ export function ShowcaseCarousel() {
         </div>
         <div className="px-5 py-4">
           <p className="text-sm font-medium">{scenario.tagline[lang]}</p>
-          <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{scenario.story[lang]}</p>
+          <p className="mt-1 line-clamp-2 min-h-10 text-sm text-muted-foreground">{scenario.story[lang]}</p>
           <div className="mt-3 flex flex-wrap gap-1.5">
             {scenario.categories.slice(0, 3).map((c) => (
               <span key={c.name.en} className="rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground">
