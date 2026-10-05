@@ -261,6 +261,30 @@ export type Database = {
           },
         ]
       }
+      image_generation_access_state: {
+        Row: {
+          blocked: boolean
+          id: string
+          message: string | null
+          status: number | null
+          updated_at: string
+        }
+        Insert: {
+          blocked?: boolean
+          id?: string
+          message?: string | null
+          status?: number | null
+          updated_at?: string
+        }
+        Update: {
+          blocked?: boolean
+          id?: string
+          message?: string | null
+          status?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       platform_admins: {
         Row: {
           created_at: string

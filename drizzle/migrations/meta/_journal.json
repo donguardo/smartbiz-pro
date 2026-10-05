@@ -113,6 +113,13 @@
       "when": 1791212890810,
       "tag": "0015_fix_activity_trigger_shop_profile",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1791213106902,
+      "tag": "0016_image_generation_access_state",
+      "breakpoints": true
     }
   ]
 }
