@@ -23,12 +23,14 @@
 - [x] Add forgot-password and password-reset flows
 
 ## Core Benefits Expansion
-- [ ] D1: Simplify signed-in and demo dashboards, calmer accessible colors, light default, compact in-app BIZBOT
-- [ ] R1: Add shops, owner/cashier memberships, secure invites, role-aware navigation and permissions
-- [ ] G1: Add daily, weekly and monthly sales goals with live progress and celebrations
-- [ ] G2: Add saved 7/30-day forecasts, weekly opportunity summaries and scheduled refreshes
-- [ ] G3: Add consent-based customers, server-masked mobile numbers and customer insights
-- [ ] G4: Add suppliers, expenses, notes, private documents and expiry reminders
-- [ ] G5: Add overstock analysis, daily localized AI tips and feedback
-- [ ] Sync all new English/Tagalog wording to backend translations
-- [ ] Verify owner, cashier and second-shop isolation across desktop and 360px mobile
+- [x] D1: Simplify signed-in and demo dashboards, calmer accessible colors, light default, compact in-app BIZBOT
+- [x] R1: Add shops, owner/cashier memberships, secure invites, role-aware navigation and permissions
+- [x] G1: Add daily, weekly and monthly sales goals with live progress and celebrations
+- [x] G2: Add saved 7/30-day forecasts and weekly opportunity summaries
+- [ ] Schedule the secured daily forecast, opportunity and tip refresh (requires Lovable scheduling or Inngest)
+- [x] G3: Add consent-based customers, server-masked mobile numbers and customer insights
+- [x] G4: Add suppliers, expenses, notes, private documents and expiry reminders
+- [x] G5: Add overstock analysis, daily localized AI tips and feedback
+- [x] Sync all new English/Tagalog wording to backend translations
+- [x] Verify the owner workspace across desktop and 360px mobile
+- [ ] Verify cashier permissions and second-shop isolation (requires suitable additional test accounts)

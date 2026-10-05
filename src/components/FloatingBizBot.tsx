@@ -99,7 +99,7 @@ export function FloatingBizBot() {
   const [storeContext, setStoreContext] = useState("");
   const [motion, setMotion] = useState(0);
   const [position, setPosition] = useState<BotPosition>({ x: 24, y: 120 });
-  const [botSize, setBotSize] = useState(BOT_SIZE_DESKTOP);
+  const [botSize, setBotSize] = useState(BOT_SIZE_APP);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const voiceReplyRef = useRef(false);
