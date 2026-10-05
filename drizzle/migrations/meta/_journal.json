@@ -92,6 +92,20 @@
       "when": 1791212088600,
       "tag": "0012_theme_prefs_cleanup_on_profile_delete",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791212162597,
+      "tag": "0013_shop_profile",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791212190622,
+      "tag": "0014_shop_logos_member_read",
+      "breakpoints": true
     }
   ]
 }
