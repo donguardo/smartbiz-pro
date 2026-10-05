@@ -33,7 +33,7 @@ const ids: Record<string, string> = {};
 
 async function makeUser(role: keyof typeof users) {
   const email = `qa-${role}-${run}@example.com`;
-  const { data, error } = await admin.auth.admin.createUser({ email, password: PASSWORD, email_confirm: true });
+  const { data, error } = await admin.auth.admin.createUser({ email, password: PASSWORD, email_confirm: true, user_metadata: { owner_name: `QA ${role} owner`, mobile: "09171234567", business_type: "Sari-sari" } });
   if (error) throw error;
   const db = createClient<Database>(URL!, ANON!, opts(ANON!));
   const { error: e2 } = await db.auth.signInWithPassword({ email, password: PASSWORD });
@@ -80,6 +80,15 @@ describe.skipIf(!enabled)("products A to Z", () => {
     expect(list.map((p) => p.name)).toEqual(["Haircut", "Rice", "Sticker"]); // A to Z
     for (const p of list) { ids[p.name] = p.id; expect(p.shop_id).toBe(owner.id); }
     expect(Number(list.find((p) => p.name === "Haircut")!.stock)).toBe(0);
+    expect(list.find((p) => p.name === "Haircut")!.cost).toBeNull(); // blank cost stays unknown
+    const { data: shop } = await owner.db.from("shops").select("owner_name,mobile,business_type").eq("id", owner.id).single();
+    expect(shop).toEqual({ owner_name: "QA owner owner", mobile: "09171234567", business_type: "Sari-sari" });
+  });
+
+  test("a brand-new member-less user gets their own new shop as Owner", async () => {
+    const { data } = await users.other.db.rpc("get_my_shop_context");
+    expect(data![0]!.member_role).toBe("owner");
+    expect(data![0]!.shop_id).toBe(users.other.id);
   });
 
   test("selling 1.5 kg Rice charges ₱78 on the server and leaves 48.5 kg", async () => {
@@ -101,6 +110,8 @@ describe.skipIf(!enabled)("products A to Z", () => {
     expect(e2?.message).toContain("Whole quantities");
     const { error: e3 } = await sell(owner.db, [{ product_id: ids["Sticker"]!, qty: 2 }], 10);
     expect(e3?.message).toContain("too low");
+    const { error: e4 } = await sell(owner.db, [{ product_id: ids["Sticker"]!, qty: 1000 }]);
+    expect(e4?.message).toBe("Not enough stock: Sticker (100 left)");
   });
 
   test("owner stock adjustments are recorded with reason and history", async () => {
