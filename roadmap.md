@@ -63,3 +63,4 @@
 - [x] Add a visible progress indicator to the hero carousel
 - [x] Redesign the hero carousel as a peeking slide-track: next/previous business cards visible on the left/right edges while sliding
 - [x] Platform Super Admin (/admin, allowlist + MFA, view-only) — blocked: first admin email + admin.mvp.com.ai domain connection
+- [x] Business profile manager (logo, name, categories) in Settings
