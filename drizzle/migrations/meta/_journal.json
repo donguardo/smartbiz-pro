@@ -15,6 +15,13 @@
       "when": 1790577808257,
       "tag": "0001_translations_and_language_pref",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791178408981,
+      "tag": "0002_core_benefits_shop_security",
+      "breakpoints": true
     }
   ]
 }
