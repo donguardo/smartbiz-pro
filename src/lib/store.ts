@@ -1,18 +1,31 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
-export type Product = Database["public"]["Tables"]["products"]["Row"];
+export type Unit = "pc" | "pack" | "kg" | "g" | "L" | "service";
+export const UNITS: Unit[] = ["pc", "pack", "kg", "g", "L", "service"];
+export const isDecimalUnit = (u: string) => u === "kg" || u === "g" || u === "L";
+export type Product = Omit<Database["public"]["Tables"]["products"]["Row"], "stock" | "stock_qty"> & { stock: number; cost: number };
 export type Sale = Database["public"]["Tables"]["sales"]["Row"];
 export type SaleItem = Database["public"]["Tables"]["sale_items"]["Row"];
 export type ShopContext = Database["public"]["Functions"]["get_my_shop_context"]["Returns"][number];
 export type CustomerChoice = Database["public"]["Functions"]["get_masked_customers"]["Returns"][number];
 
-export const qk = { products: ["products"], sales: ["sales"], items: ["sale_items"], profile: ["profile"], shop: ["shop-context"], customers: ["customers-masked"], goals: ["sales-goals"], forecasts: ["sales-forecasts"], tip: ["daily-tip"], cashierToday: ["cashier-today"] };
+export const qk = { products: ["products"], sales: ["sales"], items: ["sale_items"], profile: ["profile"], shop: ["shop-context"], customers: ["customers-masked"], goals: ["sales-goals"], forecasts: ["sales-forecasts"], tip: ["daily-tip"], cashierToday: ["cashier-today"], productSettings: ["product-settings"] };
 
-export async function fetchProducts() {
-  const { data, error } = await supabase.rpc("get_shop_products");
+/** All shop products A→Z, including archived ones (filter with activeProducts). */
+export async function fetchAllProducts() {
+  const { data, error } = await supabase.rpc("get_shop_products_v2");
   if (error) throw error;
-  return data.map((p) => ({ ...p, cost: Number(p.cost ?? 0), user_id: "" })) as Product[];
+  return data.map((p) => ({ ...p, stock: Number(p.stock ?? 0), price: Number(p.price), cost: Number(p.cost ?? 0), user_id: "" })) as Product[];
+}
+/** Active (non-archived) products A→Z. */
+export async function fetchProducts() {
+  return (await fetchAllProducts()).filter((p) => !p.archived_at);
+}
+export async function fetchProductSettings() {
+  const { data, error } = await supabase.rpc("get_product_settings");
+  if (error) throw error;
+  return data[0] ?? { allow_cashier_products: false, can_edit: false };
 }
 export async function fetchSales() {
   const since = new Date(Date.now() - 60 * 86400000).toISOString();
@@ -24,7 +37,7 @@ export async function fetchItems() {
   const since = new Date(Date.now() - 60 * 86400000).toISOString();
   const { data, error } = await supabase.from("sale_items").select("*").gte("created_at", since);
   if (error) throw error;
-  return data;
+  return data.map((i) => ({ ...i, qty: Number(i.quantity ?? i.qty) }));
 }
 export async function fetchProfile() {
   const { data: u } = await supabase.auth.getUser();
@@ -65,6 +78,7 @@ export function computeInsights(products: Product[], items: SaleItem[]): Insight
   }
   const out: Insight[] = [];
   for (const p of products) {
+    if (!p.track_stock || p.archived_at) continue;
     const daily = (sold14.get(p.id) ?? 0) / 14;
     const daysLeft = daily > 0 ? p.stock / daily : Infinity;
     if (p.stock <= p.reorder_level || daysLeft < 5) {
