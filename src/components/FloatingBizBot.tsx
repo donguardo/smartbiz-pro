@@ -190,7 +190,7 @@ export function FloatingBizBot() {
         return;
       }
       const shop = await fetchShopContext();
-      const [products, goals, forecasts, dailyTip] = await Promise.all([fetchProducts(), fetchGoals(), fetchForecasts(), fetchDailyTip()]);
+      const [products, goals, forecasts, dailyTip] = await Promise.all([fetchProducts(), shop?.member_role === "owner" ? fetchGoals() : Promise.resolve([]), shop?.member_role === "owner" ? fetchForecasts() : Promise.resolve([]), fetchDailyTip()]);
       const [{ data: customers }, { data: sales }] = await Promise.all([
         supabase.rpc("get_masked_customers"),
         shop?.member_role === "owner" ? supabase.from("sales").select("total,cost_total,payment_method,created_at").order("created_at", { ascending: false }).limit(200) : Promise.resolve({ data: [] }),
