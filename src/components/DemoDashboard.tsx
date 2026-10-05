@@ -5,6 +5,7 @@ import {
 import { peso, pesoShort } from "@/lib/format";
 import { TrendingUp, ShoppingBag, Percent, Wallet } from "lucide-react";
 import { useT } from "@/lib/i18n";
+import { tooltipProps, axisProps } from "@/lib/chart-theme";
 
 type Cat = { name: string; sales: number; margin: number };
 
@@ -114,9 +115,9 @@ export function DemoDashboard() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid stroke="var(--border)" vertical={false} />
-                  <XAxis dataKey="day" stroke="var(--muted-foreground)" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="var(--muted-foreground)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={pesoShort} width={50} />
-                  <Tooltip formatter={(v: number) => peso(v)} contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--popover-foreground)" }} />
+                  <XAxis dataKey="day" {...axisProps} />
+                  <YAxis {...axisProps} tickFormatter={pesoShort} width={50} />
+                  <Tooltip formatter={(v: number) => peso(v)} {...tooltipProps} />
                   <Area type="monotone" dataKey="lastWeek" stroke="var(--muted-foreground)" strokeDasharray="4 4" fill="transparent" isAnimationActive={false} />
                   <Area type="monotone" dataKey="thisWeek" stroke="var(--chart-1)" strokeWidth={2.5} fill="url(#dg)" />
                 </AreaChart>
@@ -131,11 +132,11 @@ export function DemoDashboard() {
                   <Pie data={cats} dataKey="sales" nameKey="name" innerRadius={50} outerRadius={85} paddingAngle={3} stroke="none">
                     {cats.map((_, i) => <Cell key={i} fill={COLORS[i]} />)}
                   </Pie>
-                  <Tooltip formatter={(v: number) => peso(v)} contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--popover-foreground)" }} />
+                  <Tooltip formatter={(v: number) => peso(v)} {...tooltipProps} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
-             <ul className="space-y-1 text-xs">{cats.map((c, i) => <li key={c.name} className="flex justify-between"><span><i className="mr-2 inline-block h-2 w-2 rounded-full" style={{ background: COLORS[i] }}/>{c.name}</span><b>{Math.round(c.sales / totals.revenue * 100)}%</b></li>)}</ul>
+             <ul className="space-y-1 text-xs text-foreground">{cats.map((c, i) => <li key={c.name} className="flex justify-between"><span><i className="mr-2 inline-block h-2 w-2 rounded-full" style={{ background: COLORS[i] }}/>{c.name}</span><b>{Math.round(c.sales / totals.revenue * 100)}%</b></li>)}</ul>
           </div>
         </div>
       </div>
