@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import { qk } from "@/lib/store";
 import { useShopProfile } from "@/lib/shop-profile";
+import { StoreImagePicker } from "@/components/StoreImagePicker";
 
 const SUGGESTED = ["Sari-sari store", "Coffee shop", "Café", "Restaurant", "Laundry", "Beauty parlor", "Bakery", "Pharmacy", "Hardware", "Grocery"];
 const MAX_CATEGORIES = 12;
@@ -126,6 +127,7 @@ export function BusinessProfile({ shopId }: { shopId: string }) {
           <Button onClick={save} disabled={busy}>{t("profile.save")}</Button>
         </div>
       </div>
+      <StoreImagePicker onSave={uploadLogo} disabled={busy} />
     </section>
   );
 }
