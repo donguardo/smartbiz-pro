@@ -55,3 +55,4 @@
 - [x] Add auto-playing business showcase carousel to the hero with theme-colored slides
 - [x] Add touch-swipe navigation to the hero showcase carousel
 - [x] Add visible pause and play control to the hero showcase carousel
+- [x] Make each business slide change a pronounced elastic bounce-in transition
