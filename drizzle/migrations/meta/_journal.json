@@ -22,6 +22,13 @@
       "when": 1791178408981,
       "tag": "0002_core_benefits_shop_security",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791178476469,
+      "tag": "0003_secure_shop_document_storage",
+      "breakpoints": true
     }
   ]
 }
