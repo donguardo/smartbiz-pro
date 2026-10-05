@@ -138,7 +138,7 @@
   --scene-glow: #e879f9;
 }
 
-:root[data-business-theme="cafe"] {
+:root[data-business-theme="cafe"], .showcase-theme[data-business-theme="cafe"] {
   --background: #F8F3EE;
   --foreground: #2B211C;
   --card: #FFFDFC;
@@ -170,7 +170,7 @@
   --sidebar-ring: #8B5E3C;
 }
 
-.dark[data-business-theme="cafe"] {
+.dark[data-business-theme="cafe"], .dark .showcase-theme[data-business-theme="cafe"] {
   --background: #17110E;
   --foreground: #F7EEE8;
   --card: #2A201B;
@@ -202,7 +202,7 @@
   --sidebar-ring: #D09A6B;
 }
 
-:root[data-business-theme="coffeehouse"] {
+:root[data-business-theme="coffeehouse"], .showcase-theme[data-business-theme="coffeehouse"] {
   --background: #F3F7F4;
   --foreground: #172A21;
   --card: #FFFFFF;
@@ -234,7 +234,7 @@
   --sidebar-ring: #00754A;
 }
 
-.dark[data-business-theme="coffeehouse"] {
+.dark[data-business-theme="coffeehouse"], .dark .showcase-theme[data-business-theme="coffeehouse"] {
   --background: #071710;
   --foreground: #EDF8F1;
   --card: #102A1E;
@@ -266,7 +266,7 @@
   --sidebar-ring: #42C98F;
 }
 
-:root[data-business-theme="fiesta"] {
+:root[data-business-theme="fiesta"], .showcase-theme[data-business-theme="fiesta"] {
   --background: #FFF7F7;
   --foreground: #291A1D;
   --card: #FFFFFF;
@@ -298,7 +298,7 @@
   --sidebar-ring: #C41230;
 }
 
-.dark[data-business-theme="fiesta"] {
+.dark[data-business-theme="fiesta"], .dark .showcase-theme[data-business-theme="fiesta"] {
   --background: #19090C;
   --foreground: #FFF3F4;
   --card: #2D1117;
