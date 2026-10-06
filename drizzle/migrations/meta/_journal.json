@@ -176,6 +176,13 @@
       "when": 1791266697233,
       "tag": "0024_enforce_shop_subscription",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1791275256139,
+      "tag": "0025_subscription_guard_rpcs",
+      "breakpoints": true
     }
   ]
 }
