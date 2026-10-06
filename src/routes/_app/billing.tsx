@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CreditCard, ExternalLink } from "lucide-react";
+import { CreditCard, Download, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "@/lib/auth";
 import { useBilling, billingKey } from "@/lib/billing";
@@ -10,6 +10,8 @@ import { getPaddleEnvironment, openSubscriptionCheckout } from "@/lib/paddle";
 import { createBillingPortal } from "@/utils/payments.functions";
 import { Button } from "@/components/ui/button";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { OwnerRedirect } from "@/components/OwnerRedirect";
+import { downloadShopData } from "@/lib/export-data";
 
 export const Route = createFileRoute("/_app/billing")({
   head: () => ({ meta: [
@@ -20,7 +22,7 @@ export const Route = createFileRoute("/_app/billing")({
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
   ] }),
-  component: BillingPage,
+  component: () => <OwnerRedirect><BillingPage /></OwnerRedirect>,
 });
 
 const fmt = (d: string | null) => (d ? new Date(d).toLocaleDateString("en-PH", { dateStyle: "medium" }) : "—");
@@ -67,6 +69,12 @@ export function BillingPanel() {
     catch (e) { toast.error(e instanceof Error ? e.message : "Could not open billing portal"); }
     finally { setBusy(false); }
   };
+  const downloadData = async () => {
+    setBusy(true);
+    try { await downloadShopData(); toast.success("Your data download has started."); }
+    catch (e) { toast.error(e instanceof Error ? e.message : "Could not export your data"); }
+    finally { setBusy(false); }
+  };
 
   return (
     <div className="space-y-4 rounded-2xl border border-border bg-card p-6">
@@ -77,6 +85,7 @@ export function BillingPanel() {
         <div className="flex flex-wrap gap-2">
           {(!subscribed || (b.state === "canceled")) && <Button disabled={busy} onClick={subscribe}>Subscribe now</Button>}
           {subscribed && <Button variant="outline" disabled={busy} onClick={manage}><ExternalLink className="h-4 w-4" /> Manage billing & payment method</Button>}
+          {!b.has_access && <Button variant="outline" disabled={busy} onClick={downloadData}><Download className="h-4 w-4" /> Download my data (CSV)</Button>}
         </div>
       )}
       <p className="text-xs text-muted-foreground">Charged in USD at checkout (about ₱499). 30-day money-back guarantee — see our <a href="/refund-policy" target="_blank" className="underline">Refund Policy</a>.</p>

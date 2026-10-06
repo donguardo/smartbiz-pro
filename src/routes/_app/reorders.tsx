@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_app/reorders")({
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },
   ] }),
-  component: () => <OwnerOnly><Reorders /></OwnerOnly>,
+  component: () => <OwnerRedirect><Reorders /></OwnerRedirect>,
 });
 
 const STATUS: Record<string, string> = { draft: "Draft", sent: "Sent", received: "Received", cancelled: "Cancelled" };
