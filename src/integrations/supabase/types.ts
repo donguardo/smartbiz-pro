@@ -409,6 +409,112 @@ export type Database = {
           },
         ]
       }
+      purchase_order_items: {
+        Row: {
+          id: string
+          order_id: string
+          product_id: string
+          product_name: string
+          qty: number
+          shop_id: string
+          unit: string
+          unit_cost: number | null
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          product_id: string
+          product_name: string
+          qty: number
+          shop_id: string
+          unit: string
+          unit_cost?: number | null
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          product_id?: string
+          product_name?: string
+          qty?: number
+          shop_id?: string
+          unit?: string
+          unit_cost?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_order_items_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_orders: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          note: string | null
+          received_at: string | null
+          shop_id: string
+          status: string
+          supplier_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          note?: string | null
+          received_at?: string | null
+          shop_id: string
+          status?: string
+          supplier_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          note?: string | null
+          received_at?: string | null
+          shop_id?: string
+          status?: string
+          supplier_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_orders_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_orders_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       refresh_runs: {
         Row: {
           error: string | null
@@ -1202,6 +1308,10 @@ export type Database = {
       assert_platform_admin_mfa: { Args: never; Returns: undefined }
       can_edit_products: { Args: { _shop_id: string }; Returns: boolean }
       cancel_shop_invite: { Args: { _invite_id: string }; Returns: undefined }
+      create_reorder_from_alerts: {
+        Args: { _alert_ids: string[]; _supplier_id?: string }
+        Returns: string
+      }
       create_shop_customer: {
         Args: { _consented: boolean; _mobile: string; _name: string }
         Returns: string
@@ -1315,6 +1425,10 @@ export type Database = {
       is_platform_admin: { Args: never; Returns: boolean }
       is_shop_member: { Args: { _shop_id: string }; Returns: boolean }
       is_shop_owner: { Args: { _shop_id: string }; Returns: boolean }
+      receive_purchase_order: {
+        Args: { _order_id: string }
+        Returns: undefined
+      }
       record_sale: {
         Args: {
           _amount_tendered: number
