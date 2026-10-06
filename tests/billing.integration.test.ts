@@ -130,12 +130,12 @@ describe.skipIf(!enabled)("subscription enforcement", () => {
     await expectAllowed(users.owner.db);
   });
 
-  test("after the trial expires, owner and cashier cannot read or change protected data", async () => {
+  test("after the trial expires, the owner is read-only and the cashier is fully blocked", async () => {
     await setTrialStart(15 * day);
     const { data } = await users.owner.db.rpc("get_shop_billing", { _env: "sandbox" });
     expect(data?.[0]?.has_access).toBe(false);
     expect(data?.[0]?.state).toBe("trial_ended");
-    await expectBlocked(users.owner.db);
+    await expectOwnerReadOnly(users.owner.db);
     await expectBlocked(users.cashier.db);
     // Shop context still resolves so the app can show the subscribe screen.
     const ctx = await users.cashier.db.rpc("get_my_shop_context");
