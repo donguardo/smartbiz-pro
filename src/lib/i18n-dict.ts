@@ -59,6 +59,7 @@ export const DICT: Record<string, { en: string; tl: string }> = {
   "app.nav.customers": { en: "Customers", tl: "Mga suki" },
   "app.nav.business": { en: "Business", tl: "Negosyo" },
   "app.nav.reorders": { en: "Reorders", tl: "Pag-order muli" },
+  "app.nav.billing": { en: "Billing", tl: "Bayarin" },
   "app.nav.settings": { en: "Settings", tl: "Settings" },
   "dash.salesWeek": { en: "Sales this week", tl: "Benta ngayong linggo" },
   "dash.profit": { en: "Profit", tl: "Tubo" },

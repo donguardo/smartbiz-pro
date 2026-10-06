@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Bot, Download, LayoutDashboard, LogOut, Package, ScanLine, Settings, Users, BriefcaseBusiness, ClipboardList } from "lucide-react";
+import { Bot, Download, LayoutDashboard, LogOut, Package, ScanLine, Settings, Users, BriefcaseBusiness, ClipboardList, CreditCard } from "lucide-react";
 import { useSession } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeToggle, syncThemeFromAccount } from "@/lib/theme";
@@ -12,6 +12,9 @@ import { useShopProfile } from "@/lib/shop-profile";
 import { fetchProfile, fetchShopContext, qk } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { openInstallPrompt } from "@/lib/install";
+import { useBilling } from "@/lib/billing";
+import { BillingPanel } from "./billing";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 export const Route = createFileRoute("/_app")({
   ssr: false,
@@ -29,6 +32,7 @@ const OWNER_NAV = [
   { to: "/customers", label: "app.nav.customers", icon: Users },
   { to: "/business", label: "app.nav.business", icon: BriefcaseBusiness },
   { to: "/reorders", label: "app.nav.reorders", icon: ClipboardList },
+  { to: "/billing", label: "app.nav.billing", icon: CreditCard },
 ] as const;
 const SETTINGS_NAV = { to: "/settings", label: "app.nav.settings", icon: Settings } as const;
 
@@ -46,6 +50,8 @@ function AppLayout() {
   const { data: shop } = useQuery({ queryKey: qk.shop, queryFn: fetchShopContext, enabled: !!session, retry: 1 });
   const { data: business } = useShopProfile(shop?.shop_id);
   const businessName = business?.name ?? shop?.shop_name ?? profile?.business_name ?? "…";
+  const { data: billing } = useBilling(!!session && !!shop);
+  const locked = !!billing && !billing.has_access && !path.startsWith("/billing") && !path.startsWith("/settings");
   const visibleNav = shop?.member_role === "owner" ? [...NAV, ...OWNER_NAV, SETTINGS_NAV] : [...NAV, SETTINGS_NAV];
 
   if (loading || !session) {
@@ -101,7 +107,13 @@ function AppLayout() {
       </header>
 
       <main className="min-w-0 pb-32 md:pb-24">
-        <Outlet />
+        {locked ? (
+          <div><PaymentTestModeBanner /><div className="mx-auto max-w-xl space-y-4 p-4 md:p-6">
+            <h1 className="text-2xl font-bold">Subscribe to keep using MVP BizManager</h1>
+            <p className="text-muted-foreground">{billing?.is_owner ? "Your free trial or subscription has ended. Subscribe to unlock your shop again — your data is safe." : "This shop's subscription has ended. Ask the owner to subscribe."}</p>
+            <BillingPanel />
+          </div></div>
+        ) : <Outlet />}
       </main>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-primary/50 bg-primary/50 pb-[env(safe-area-inset-bottom)] text-foreground shadow-[0_-8px_24px_rgba(0,0,0,0.25)] backdrop-blur-xl md:hidden">
