@@ -1,3 +1,6 @@
+import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, AlertTriangle, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -77,6 +80,46 @@ export function BillingEventLog() {
           </li>
         ))}</ul>
       )}
+    </div>
+  );
+}
+
+function FailureInfo({ reason, eventId }: { reason: string | null; eventId: string | null }) {
+  return (
+    <div className="mt-1 rounded-md bg-destructive/10 px-2 py-1 text-xs text-destructive">
+      <p>Reason: {reason || "Unknown"}</p>
+      <p className="break-all">Paddle event ID: <span className="font-mono select-all">{eventId ?? "—"}</span>
+        {eventId && <button type="button" className="ml-2 underline" onClick={() => void navigator.clipboard.writeText(eventId).then(() => toast.success("Event ID copied"))}>Copy</button>}</p>
+    </div>
+  );
+}
+
+const SEEN_KEY = "billing-failure-seen-v1";
+
+// Owners get a toast + banner when an event's final delivery failed; dismissing remembers it on this device.
+export function BillingFailureAlert() {
+  const [seen, setSeen] = useState<string | null>(null);
+  useEffect(() => { setSeen(localStorage.getItem(SEEN_KEY) ?? ""); }, []);
+  const q = useQuery({
+    queryKey: ["billing-events-failures"],
+    refetchInterval: 60000,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("billing_events").select("id, paddle_event_id, event_type, sync_status, detail, environment, created_at").order("created_at", { ascending: false }).limit(100);
+      if (error) throw error;
+      return groupDeliveries(data).filter((g) => g.final.sync_status === "failed");
+    },
+  });
+  const fresh = seen === null ? [] : (q.data ?? []).filter((g) => g.final.created_at > seen);
+  const latest = fresh[0]?.final.created_at;
+  useEffect(() => {
+    if (latest) toast.error(`${fresh.length} payment update(s) failed to sync`, { id: "billing-failure" });
+  }, [latest, fresh.length]);
+  if (!fresh.length || !latest) return null;
+  const dismiss = () => { localStorage.setItem(SEEN_KEY, latest); setSeen(latest); };
+  return (
+    <div role="alert" className="flex flex-wrap items-center justify-between gap-2 border-b border-destructive/40 bg-destructive/15 px-4 py-2 text-sm text-destructive">
+      <span className="flex items-center gap-2"><AlertTriangle className="h-4 w-4" />{fresh.length} Paddle payment update(s) failed to sync. Latest: {fresh[0]!.final.detail}</span>
+      <span className="flex gap-3"><Link to="/billing" className="font-medium underline">Investigate</Link><button type="button" className="underline" onClick={dismiss}>Dismiss</button></span>
     </div>
   );
 }
