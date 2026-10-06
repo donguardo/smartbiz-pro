@@ -58,7 +58,9 @@ export function BillingEventLog() {
   });
   return (
     <div className="space-y-3 rounded-2xl border border-border bg-card p-6">
-      <h2 className="text-lg font-bold">Payment updates received</h2>
+      <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-lg font-bold">Payment updates received</h2>
+        <Button size="sm" variant="outline" onClick={() => window.dispatchEvent(new Event(TEST_EVENT))}>Test failure alert</Button></div>
+      <p className="text-xs text-muted-foreground">The test only shows the alert on this screen. Nothing is sent to Paddle or saved.</p>
       {q.isLoading ? <p className="text-muted-foreground">Loading…</p> : !q.data?.length ? <p className="text-sm text-muted-foreground">No updates from Paddle yet.</p> : (
         <ul className="divide-y divide-border text-sm">{q.data.map(({ key, attempts, final }) => (
           <li key={key} className="py-2">
@@ -95,10 +97,17 @@ function FailureInfo({ reason, eventId }: { reason: string | null; eventId: stri
 }
 
 const SEEN_KEY = "billing-failure-seen-v1";
+const TEST_EVENT = "billing-failure-test";
 
 // Owners get a toast + banner when an event's final delivery failed; dismissing remembers it on this device.
 export function BillingFailureAlert() {
   const [seen, setSeen] = useState<string | null>(null);
+  const [test, setTest] = useState(false);
+  useEffect(() => {
+    const on = () => { setTest(true); toast.error("TEST: 1 payment update failed to sync", { id: "billing-failure-test" }); };
+    window.addEventListener(TEST_EVENT, on);
+    return () => window.removeEventListener(TEST_EVENT, on);
+  }, []);
   useEffect(() => { setSeen(localStorage.getItem(SEEN_KEY) ?? ""); }, []);
   const q = useQuery({
     queryKey: ["billing-events-failures"],
@@ -114,6 +123,12 @@ export function BillingFailureAlert() {
   useEffect(() => {
     if (latest) toast.error(`${fresh.length} payment update(s) failed to sync`, { id: "billing-failure" });
   }, [latest, fresh.length]);
+  if (test && !fresh.length) return (
+    <div role="alert" className="flex flex-wrap items-center justify-between gap-2 border-b border-destructive/40 bg-destructive/15 px-4 py-2 text-sm text-destructive">
+      <span className="flex items-center gap-2"><AlertTriangle className="h-4 w-4" />TEST ALERT — 1 Paddle payment update failed to sync. Latest: Could not update subscription (sample)</span>
+      <span className="flex gap-3"><Link to="/billing" className="font-medium underline">Investigate</Link><button type="button" className="underline" onClick={() => setTest(false)}>Dismiss</button></span>
+    </div>
+  );
   if (!fresh.length || !latest) return null;
   const dismiss = () => { localStorage.setItem(SEEN_KEY, latest); setSeen(latest); };
   return (
