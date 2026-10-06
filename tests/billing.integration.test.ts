@@ -154,7 +154,7 @@ describe.skipIf(!enabled)("subscription enforcement", () => {
     await setSubscription("canceled", 5 * day);
     await expectAllowed(users.owner.db);
     await setSubscription("canceled", -day);
-    await expectBlocked(users.owner.db);
+    await expectOwnerReadOnly(users.owner.db);
     await expectBlocked(users.cashier.db);
   });
 
@@ -163,6 +163,6 @@ describe.skipIf(!enabled)("subscription enforcement", () => {
       user_id: users.owner.id, shop_id: shopId(), paddle_subscription_id: `forged_${run}`, paddle_customer_id: "x", product_id: "x", price_id: "x", status: "active",
     });
     expect(error).not.toBeNull();
-    await expectBlocked(users.owner.db);
+    await expectOwnerReadOnly(users.owner.db);
   });
 });
