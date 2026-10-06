@@ -1149,6 +1149,7 @@ export type Database = {
           id: string
           paddle_customer_id: string
           paddle_subscription_id: string
+          past_due_since: string | null
           price_id: string
           product_id: string
           provider: string
@@ -1166,6 +1167,7 @@ export type Database = {
           id?: string
           paddle_customer_id: string
           paddle_subscription_id: string
+          past_due_since?: string | null
           price_id: string
           product_id: string
           provider?: string
@@ -1183,6 +1185,7 @@ export type Database = {
           id?: string
           paddle_customer_id?: string
           paddle_subscription_id?: string
+          past_due_since?: string | null
           price_id?: string
           product_id?: string
           provider?: string
@@ -1605,6 +1608,10 @@ export type Database = {
       remove_shop_cashier: { Args: { _member_id: string }; Returns: undefined }
       seed_sample_store: { Args: never; Returns: undefined }
       shop_has_access: { Args: { _shop_id: string }; Returns: boolean }
+      subscription_is_paid: {
+        Args: { _s: Database["public"]["Tables"]["subscriptions"]["Row"] }
+        Returns: boolean
+      }
       update_product: { Args: { _data: Json; _id: string }; Returns: undefined }
       void_sale: { Args: { _sale_id: string }; Returns: undefined }
     }

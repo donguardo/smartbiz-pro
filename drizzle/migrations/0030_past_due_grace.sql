@@ -1,0 +1,49 @@
+ALTER TABLE public.subscriptions ADD COLUMN IF NOT EXISTS past_due_since timestamptz;
+UPDATE public.subscriptions SET past_due_since = updated_at WHERE status = 'past_due' AND past_due_since IS NULL;
+
+CREATE OR REPLACE FUNCTION public.subscriptions_track_past_due()
+RETURNS trigger LANGUAGE plpgsql SET search_path TO 'public' AS $$
+BEGIN
+  IF NEW.status = 'past_due' THEN
+    IF TG_OP = 'UPDATE' AND OLD.status = 'past_due' THEN NEW.past_due_since := COALESCE(OLD.past_due_since, now());
+    ELSE NEW.past_due_since := COALESCE(NEW.past_due_since, now()); END IF;
+  ELSE
+    NEW.past_due_since := NULL;
+  END IF;
+  RETURN NEW;
+END $$;
+DROP TRIGGER IF EXISTS subscriptions_track_past_due ON public.subscriptions;
+CREATE TRIGGER subscriptions_track_past_due BEFORE INSERT OR UPDATE ON public.subscriptions
+  FOR EACH ROW EXECUTE FUNCTION public.subscriptions_track_past_due();
+
+-- A failed payment keeps access for 7 days, then locks even while retries continue.
+CREATE OR REPLACE FUNCTION public.subscription_is_paid(_s public.subscriptions)
+RETURNS boolean LANGUAGE sql STABLE SET search_path TO 'public' AS $$
+  SELECT (_s.status IN ('active','trialing') AND (_s.current_period_end IS NULL OR _s.current_period_end > now()))
+      OR (_s.status = 'past_due' AND COALESCE(_s.past_due_since, now()) > now() - interval '7 days')
+      OR (_s.status = 'canceled' AND _s.current_period_end > now())
+$$;
+
+CREATE OR REPLACE FUNCTION public.shop_has_access(_shop_id uuid)
+RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public' AS $$
+  SELECT _shop_id IS NOT NULL AND (
+    EXISTS (SELECT 1 FROM public.shops s WHERE s.id = _shop_id AND s.created_at + interval '14 days' > now())
+    OR EXISTS (SELECT 1 FROM public.subscriptions x WHERE x.shop_id = _shop_id AND x.environment = public.payments_env() AND public.subscription_is_paid(x))
+  )
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_shop_billing(_env text)
+RETURNS TABLE(has_access boolean, state text, trial_ends_at timestamptz, period_end timestamptz, cancel_at_period_end boolean, is_owner boolean, env text)
+LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path TO 'public' AS $$
+DECLARE v_shop uuid := public.current_shop_id_raw(); v_trial timestamptz; v_s public.subscriptions%ROWTYPE; v_paid boolean := false; v_env text := public.payments_env();
+BEGIN
+  IF v_shop IS NULL OR NOT public.is_shop_member(v_shop) THEN RAISE EXCEPTION 'Forbidden'; END IF;
+  SELECT created_at + interval '14 days' INTO v_trial FROM public.shops WHERE id = v_shop;
+  SELECT * INTO v_s FROM public.subscriptions s WHERE s.shop_id = v_shop AND s.environment = v_env ORDER BY s.created_at DESC LIMIT 1;
+  IF v_s.id IS NOT NULL THEN v_paid := public.subscription_is_paid(v_s); END IF;
+  RETURN QUERY SELECT (v_paid OR v_trial > now()),
+    CASE WHEN v_paid THEN v_s.status WHEN v_trial > now() THEN 'trial'
+         WHEN v_s.status = 'past_due' THEN 'past_due_locked'
+         WHEN v_s.id IS NOT NULL THEN 'expired' ELSE 'trial_ended' END,
+    v_trial, v_s.current_period_end, COALESCE(v_s.cancel_at_period_end, false), public.is_shop_owner(v_shop), v_env;
+END $$;
