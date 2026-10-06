@@ -12,6 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteRouteImport } from './routes/_app/route'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AppCallbackRouteImport } from './routes/app-callback'
+import { Route as AppLoginRouteImport } from './routes/app-login'
+import { Route as AppReturnRouteImport } from './routes/app-return'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DeleteAccountRouteImport } from './routes/delete-account'
 import { Route as InviteRouteImport } from './routes/invite'
@@ -47,6 +50,21 @@ const AppRouteRoute = AppRouteRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppCallbackRoute = AppCallbackRouteImport.update({
+  id: '/app-callback',
+  path: '/app-callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppLoginRoute = AppLoginRouteImport.update({
+  id: '/app-login',
+  path: '/app-login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppReturnRoute = AppReturnRouteImport.update({
+  id: '/app-return',
+  path: '/app-return',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -165,6 +183,9 @@ const ApiPublicPaymentsWebhookRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/app-callback': typeof AppCallbackRoute
+  '/app-login': typeof AppLoginRoute
+  '/app-return': typeof AppReturnRoute
   '/auth': typeof AuthRoute
   '/delete-account': typeof DeleteAccountRoute
   '/invite': typeof InviteRoute
@@ -191,6 +212,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/app-callback': typeof AppCallbackRoute
+  '/app-login': typeof AppLoginRoute
+  '/app-return': typeof AppReturnRoute
   '/auth': typeof AuthRoute
   '/delete-account': typeof DeleteAccountRoute
   '/invite': typeof InviteRoute
@@ -219,6 +243,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteRouteWithChildren
   '/admin': typeof AdminRoute
+  '/app-callback': typeof AppCallbackRoute
+  '/app-login': typeof AppLoginRoute
+  '/app-return': typeof AppReturnRoute
   '/auth': typeof AuthRoute
   '/delete-account': typeof DeleteAccountRoute
   '/invite': typeof InviteRoute
@@ -247,6 +274,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/app-callback'
+    | '/app-login'
+    | '/app-return'
     | '/auth'
     | '/delete-account'
     | '/invite'
@@ -273,6 +303,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/app-callback'
+    | '/app-login'
+    | '/app-return'
     | '/auth'
     | '/delete-account'
     | '/invite'
@@ -300,6 +333,9 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/admin'
+    | '/app-callback'
+    | '/app-login'
+    | '/app-return'
     | '/auth'
     | '/delete-account'
     | '/invite'
@@ -328,6 +364,9 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRouteRoute: typeof AppRouteRouteWithChildren
   AdminRoute: typeof AdminRoute
+  AppCallbackRoute: typeof AppCallbackRoute
+  AppLoginRoute: typeof AppLoginRoute
+  AppReturnRoute: typeof AppReturnRoute
   AuthRoute: typeof AuthRoute
   DeleteAccountRoute: typeof DeleteAccountRoute
   InviteRoute: typeof InviteRoute
@@ -364,6 +403,27 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app-callback': {
+      id: '/app-callback'
+      path: '/app-callback'
+      fullPath: '/app-callback'
+      preLoaderRoute: typeof AppCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app-login': {
+      id: '/app-login'
+      path: '/app-login'
+      fullPath: '/app-login'
+      preLoaderRoute: typeof AppLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app-return': {
+      id: '/app-return'
+      path: '/app-return'
+      fullPath: '/app-return'
+      preLoaderRoute: typeof AppReturnRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -555,6 +615,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRouteRoute: AppRouteRouteWithChildren,
   AdminRoute: AdminRoute,
+  AppCallbackRoute: AppCallbackRoute,
+  AppLoginRoute: AppLoginRoute,
+  AppReturnRoute: AppReturnRoute,
   AuthRoute: AuthRoute,
   DeleteAccountRoute: DeleteAccountRoute,
   InviteRoute: InviteRoute,
