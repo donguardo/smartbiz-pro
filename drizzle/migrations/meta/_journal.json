@@ -169,6 +169,13 @@
       "when": 1791266204545,
       "tag": "0023_shop_subscriptions",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1791266697233,
+      "tag": "0024_enforce_shop_subscription",
+      "breakpoints": true
     }
   ]
 }

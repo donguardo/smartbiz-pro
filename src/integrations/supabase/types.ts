@@ -1384,6 +1384,7 @@ export type Database = {
         }[]
       }
       current_shop_id: { Args: never; Returns: string }
+      current_shop_id_raw: { Args: never; Returns: string }
       decrement_stock: {
         Args: { _product_id: string; _qty: number }
         Returns: undefined
@@ -1515,6 +1516,7 @@ export type Database = {
       remove_product: { Args: { _id: string }; Returns: string }
       remove_shop_cashier: { Args: { _member_id: string }; Returns: undefined }
       seed_sample_store: { Args: never; Returns: undefined }
+      shop_has_access: { Args: { _shop_id: string }; Returns: boolean }
       update_product: { Args: { _data: Json; _id: string }; Returns: undefined }
       void_sale: { Args: { _sale_id: string }; Returns: undefined }
     }
