@@ -6,7 +6,7 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "../src/integrations/supabase/types";
-import { groupDeliveries } from "../src/components/BillingDiagnostics";
+import { groupDeliveries } from "../src/lib/billing-deliveries";
 
 const URL = process.env["SUPABASE_URL"] ?? process.env["VITE_SUPABASE_URL"];
 const ANON = process.env["SUPABASE_PUBLISHABLE_KEY"] ?? process.env["VITE_SUPABASE_PUBLISHABLE_KEY"];

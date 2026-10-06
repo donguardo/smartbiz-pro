@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, AlertTriangle, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { groupDeliveries } from "@/lib/billing-deliveries";
 
 const when = (d: string) => new Date(d).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" });
 const modeName = (e: string | null | undefined) => (e === "live" ? "Live" : e === "sandbox" ? "Test" : "—");
@@ -37,21 +38,6 @@ export function BillingLinkCheck() {
       )}
     </div>
   );
-}
-
-type EventRow = { id: string; paddle_event_id: string | null; event_type: string; sync_status: string; detail: string | null; environment: string; created_at: string };
-
-// Paddle re-sends the same event id on retry; group attempts so the newest one is the final result.
-export function groupDeliveries(rows: EventRow[]) {
-  const groups = new Map<string, EventRow[]>();
-  for (const r of rows) {
-    const k = r.paddle_event_id ?? r.id;
-    groups.set(k, [...(groups.get(k) ?? []), r]);
-  }
-  return [...groups.values()].map((attempts) => {
-    const sorted = [...attempts].sort((a, b) => a.created_at.localeCompare(b.created_at));
-    return { key: sorted[0]!.paddle_event_id ?? sorted[0]!.id, attempts: sorted, final: sorted[sorted.length - 1]! };
-  }).sort((a, b) => b.final.created_at.localeCompare(a.final.created_at));
 }
 
 const badge = (s: string) => s === "synced" ? "shrink-0 rounded-full bg-primary/15 px-2 py-0.5 text-xs text-primary" : "shrink-0 rounded-full bg-destructive/15 px-2 py-0.5 text-xs text-destructive";
