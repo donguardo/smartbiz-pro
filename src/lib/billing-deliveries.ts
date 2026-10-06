@@ -1,6 +1,6 @@
 export type EventRow = { id: string; paddle_event_id: string | null; event_type: string; sync_status: string; detail: string | null; environment: string; created_at: string };
 
-// Paddle re-sends the same event id on retry; group attempts so the newest one is the final result.
+// The payment provider re-sends the same event id on retry; group attempts so the newest one is the final result.
 export function groupDeliveries(rows: EventRow[]) {
   const groups = new Map<string, EventRow[]>();
   for (const r of rows) {

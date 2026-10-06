@@ -26,7 +26,7 @@ export function BillingLinkCheck() {
     else {
       rows.push({ ok: !!c.shop_ok, text: c.shop_ok ? "Subscription is linked to this shop" : "Subscription is NOT linked to this shop" });
       rows.push({ ok: !!c.env_ok, text: c.env_ok ? `Payment mode matches (${modeName(c.payments_env)})` : `Subscription is ${modeName(c.subscription_env)} but the app is in ${modeName(c.payments_env)} mode — it won't count` });
-      rows.push({ ok: true, text: `Paddle status: ${c.subscription_status}` });
+      rows.push({ ok: true, text: `Payment status: ${c.subscription_status}` });
     }
     if (Number(c.other_env_count) > 0) rows.push({ ok: true, text: `${c.other_env_count} subscription(s) from the other payment mode are ignored` });
   }
@@ -60,8 +60,8 @@ export function BillingEventLog() {
     <div className="space-y-3 rounded-2xl border border-border bg-card p-6">
       <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-lg font-bold">Payment updates received</h2>
         <Button size="sm" variant="outline" onClick={() => window.dispatchEvent(new Event(TEST_EVENT))}>Test failure alert</Button></div>
-      <p className="text-xs text-muted-foreground">The test only shows the alert on this screen. Nothing is sent to Paddle or saved.</p>
-      {q.isLoading ? <p className="text-muted-foreground">Loading…</p> : !q.data?.length ? <p className="text-sm text-muted-foreground">No updates from Paddle yet.</p> : (
+      <p className="text-xs text-muted-foreground">The test only shows the alert on this screen. Nothing is sent to the payment provider or saved.</p>
+      {q.isLoading ? <p className="text-muted-foreground">Loading…</p> : !q.data?.length ? <p className="text-sm text-muted-foreground">No payment updates yet.</p> : (
         <ul className="divide-y divide-border text-sm">{q.data.map(({ key, attempts, final }) => (
           <li key={key} className="py-2">
             <div className="flex items-start justify-between gap-3">
@@ -90,7 +90,7 @@ function FailureInfo({ reason, eventId }: { reason: string | null; eventId: stri
   return (
     <div className="mt-1 rounded-md bg-destructive/10 px-2 py-1 text-xs text-destructive">
       <p>Reason: {reason || "Unknown"}</p>
-      <p className="break-all">Paddle event ID: <span className="font-mono select-all">{eventId ?? "—"}</span>
+      <p className="break-all">Event ID: <span className="font-mono select-all">{eventId ?? "—"}</span>
         {eventId && <button type="button" className="ml-2 underline" onClick={() => void navigator.clipboard.writeText(eventId).then(() => toast.success("Event ID copied"))}>Copy</button>}</p>
     </div>
   );
@@ -125,7 +125,7 @@ export function BillingFailureAlert() {
   }, [latest, fresh.length]);
   if (test && !fresh.length) return (
     <div role="alert" className="flex flex-wrap items-center justify-between gap-2 border-b border-destructive/40 bg-destructive/15 px-4 py-2 text-sm text-destructive">
-      <span className="flex items-center gap-2"><AlertTriangle className="h-4 w-4" />TEST ALERT — 1 Paddle payment update failed to sync. Latest: Could not update subscription (sample)</span>
+      <span className="flex items-center gap-2"><AlertTriangle className="h-4 w-4" />TEST ALERT — 1 payment update failed to sync. Latest: Could not update subscription (sample)</span>
       <span className="flex gap-3"><Link to="/billing" className="font-medium underline">Investigate</Link><button type="button" className="underline" onClick={() => setTest(false)}>Dismiss</button></span>
     </div>
   );
@@ -133,7 +133,7 @@ export function BillingFailureAlert() {
   const dismiss = () => { localStorage.setItem(SEEN_KEY, latest); setSeen(latest); };
   return (
     <div role="alert" className="flex flex-wrap items-center justify-between gap-2 border-b border-destructive/40 bg-destructive/15 px-4 py-2 text-sm text-destructive">
-      <span className="flex items-center gap-2"><AlertTriangle className="h-4 w-4" />{fresh.length} Paddle payment update(s) failed to sync. Latest: {fresh[0]!.final.detail}</span>
+      <span className="flex items-center gap-2"><AlertTriangle className="h-4 w-4" />{fresh.length} payment update(s) failed to sync. Latest: {fresh[0]!.final.detail}</span>
       <span className="flex gap-3"><Link to="/billing" className="font-medium underline">Investigate</Link><button type="button" className="underline" onClick={dismiss}>Dismiss</button></span>
     </div>
   );
