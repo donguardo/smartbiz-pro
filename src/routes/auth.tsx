@@ -108,7 +108,15 @@ function AuthPage() {
     // On the live site this redirects in the same tab; inside the editor
     // preview the helper uses a secure popup (Google can't load in frames).
     const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/auth" });
-    if (r.error) { toast.error("Google sign-in failed. Please try again."); return; }
+    if (r.error) {
+      // Pop-up blocked or closed (editor preview): offer a one-tap retry,
+      // which counts as a fresh click so browsers allow the pop-up.
+      toast.error("Google sign-in didn't open. Allow pop-ups for this page, then tap Retry.", {
+        action: { label: "Retry", onClick: () => { void google(); } },
+        duration: 10000,
+      });
+      return;
+    }
     if (r.redirected) return;
     window.location.assign("/dashboard");
   };
