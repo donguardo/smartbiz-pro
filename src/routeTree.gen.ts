@@ -18,6 +18,7 @@ import { Route as InviteRouteImport } from './routes/invite'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as AppBillingRouteImport } from './routes/_app/billing'
 import { Route as AppBusinessRouteImport } from './routes/_app/business'
 import { Route as AppCopilotRouteImport } from './routes/_app/copilot'
 import { Route as AppCustomersRouteImport } from './routes/_app/customers'
@@ -31,6 +32,7 @@ import { Route as ShowcaseIndexRouteImport } from './routes/showcase/index'
 import { Route as ShowcaseBusinessRouteImport } from './routes/showcase/$business'
 import { Route as ApiPublicBizbotRouteImport } from './routes/api/public/bizbot'
 import { Route as ApiPublicDailyBusinessRefreshRouteImport } from './routes/api/public/daily-business-refresh'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -75,6 +77,11 @@ const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppBillingRoute = AppBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => AppRouteRoute,
 } as any)
 const AppBusinessRoute = AppBusinessRouteImport.update({
   id: '/business',
@@ -142,6 +149,12 @@ const ApiPublicDailyBusinessRefreshRoute =
     path: '/api/public/daily-business-refresh',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -152,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
+  '/billing': typeof AppBillingRoute
   '/business': typeof AppBusinessRoute
   '/copilot': typeof AppCopilotRoute
   '/customers': typeof AppCustomersRoute
@@ -165,6 +179,7 @@ export interface FileRoutesByFullPath {
   '/showcase/': typeof ShowcaseIndexRoute
   '/api/public/bizbot': typeof ApiPublicBizbotRoute
   '/api/public/daily-business-refresh': typeof ApiPublicDailyBusinessRefreshRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -175,6 +190,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
+  '/billing': typeof AppBillingRoute
   '/business': typeof AppBusinessRoute
   '/copilot': typeof AppCopilotRoute
   '/customers': typeof AppCustomersRoute
@@ -188,6 +204,7 @@ export interface FileRoutesByTo {
   '/showcase': typeof ShowcaseIndexRoute
   '/api/public/bizbot': typeof ApiPublicBizbotRoute
   '/api/public/daily-business-refresh': typeof ApiPublicDailyBusinessRefreshRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -200,6 +217,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
+  '/_app/billing': typeof AppBillingRoute
   '/_app/business': typeof AppBusinessRoute
   '/_app/copilot': typeof AppCopilotRoute
   '/_app/customers': typeof AppCustomersRoute
@@ -213,6 +231,7 @@ export interface FileRoutesById {
   '/showcase/': typeof ShowcaseIndexRoute
   '/api/public/bizbot': typeof ApiPublicBizbotRoute
   '/api/public/daily-business-refresh': typeof ApiPublicDailyBusinessRefreshRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -225,6 +244,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/terms'
+    | '/billing'
     | '/business'
     | '/copilot'
     | '/customers'
@@ -238,6 +258,7 @@ export interface FileRouteTypes {
     | '/showcase/'
     | '/api/public/bizbot'
     | '/api/public/daily-business-refresh'
+    | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -248,6 +269,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/terms'
+    | '/billing'
     | '/business'
     | '/copilot'
     | '/customers'
@@ -261,6 +283,7 @@ export interface FileRouteTypes {
     | '/showcase'
     | '/api/public/bizbot'
     | '/api/public/daily-business-refresh'
+    | '/api/public/payments/webhook'
   id:
     | '__root__'
     | '/'
@@ -272,6 +295,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/terms'
+    | '/_app/billing'
     | '/_app/business'
     | '/_app/copilot'
     | '/_app/customers'
@@ -285,6 +309,7 @@ export interface FileRouteTypes {
     | '/showcase/'
     | '/api/public/bizbot'
     | '/api/public/daily-business-refresh'
+    | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -302,6 +327,7 @@ export interface RootRouteChildren {
   ShowcaseIndexRoute: typeof ShowcaseIndexRoute
   ApiPublicBizbotRoute: typeof ApiPublicBizbotRoute
   ApiPublicDailyBusinessRefreshRoute: typeof ApiPublicDailyBusinessRefreshRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -368,6 +394,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/billing': {
+      id: '/_app/billing'
+      path: '/billing'
+      fullPath: '/billing'
+      preLoaderRoute: typeof AppBillingRouteImport
+      parentRoute: typeof AppRouteRoute
     }
     '/_app/business': {
       id: '/_app/business'
@@ -460,10 +493,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicDailyBusinessRefreshRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface AppRouteRouteChildren {
+  AppBillingRoute: typeof AppBillingRoute
   AppBusinessRoute: typeof AppBusinessRoute
   AppCopilotRoute: typeof AppCopilotRoute
   AppCustomersRoute: typeof AppCustomersRoute
@@ -475,6 +516,7 @@ interface AppRouteRouteChildren {
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppBillingRoute: AppBillingRoute,
   AppBusinessRoute: AppBusinessRoute,
   AppCopilotRoute: AppCopilotRoute,
   AppCustomersRoute: AppCustomersRoute,
@@ -504,6 +546,7 @@ const rootRouteChildren: RootRouteChildren = {
   ShowcaseIndexRoute: ShowcaseIndexRoute,
   ApiPublicBizbotRoute: ApiPublicBizbotRoute,
   ApiPublicDailyBusinessRefreshRoute: ApiPublicDailyBusinessRefreshRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
