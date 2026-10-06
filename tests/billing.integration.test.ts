@@ -70,6 +70,8 @@ async function expectBlocked(db: DB) {
   expect((await db.from("products").insert({ name: `Blocked ${run}`, price: 1, unit: "pc" })).error).not.toBeNull();
   expect((await db.rpc("update_product", { _id: productId, _data: { price: 999 } })).error).not.toBeNull();
   expect((await db.from("customers").select("id")).data ?? []).toHaveLength(0);
+  expect((await db.rpc("adjust_stock", { _product_id: productId, _kind: "restock", _qty: 5, _reason: "blocked test" })).error).not.toBeNull();
+  expect((await db.rpc("remove_product", { _id: productId })).error).not.toBeNull();
 }
 async function expectAllowed(db: DB) {
   const { data, error } = await db.rpc("get_shop_products_v2");
