@@ -94,7 +94,7 @@ function OrderEditor({ id, onClose }: { id: string; onClose: () => void }) {
     const v = raw.trim() === "" ? null : Number(raw);
     if (field === "qty" && (!v || v <= 0 || (!isDecimalUnit(unit) && !Number.isInteger(v)))) { toast.error(isDecimalUnit(unit) ? "Enter a quantity above 0" : "Enter a whole quantity above 0"); return; }
     if (v != null && (!Number.isFinite(v) || v < 0)) { toast.error("Enter 0 or more"); return; }
-    void run(() => supabase.from("purchase_order_items").update({ [field]: v }).eq("id", itemId));
+    void run(() => supabase.from("purchase_order_items").update(field === "qty" ? { qty: v as number } : { unit_cost: v }).eq("id", itemId));
   };
   const copyText = async () => {
     const lines = [supplier ? `Order for ${supplier.name}:` : "Order:", ...items.map((i) => `• ${i.product_name} — ${Number(i.qty)} ${i.unit}`), order.note ? `Note: ${order.note}` : ""].filter(Boolean);
