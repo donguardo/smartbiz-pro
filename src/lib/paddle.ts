@@ -1,4 +1,5 @@
 import { resolvePaddlePrice } from "@/utils/payments.functions";
+import { supabase } from "@/integrations/supabase/client";
 
 const clientToken = import.meta.env["VITE_PAYMENTS_CLIENT_TOKEN"] as string | undefined;
 
@@ -32,6 +33,9 @@ export function initializePaddle() {
 }
 
 export async function openSubscriptionCheckout(opts: { userId: string; email?: string | undefined }) {
+  // Never open checkout when the client token's mode doesn't match the server's payments mode.
+  const { data: serverEnv, error } = await supabase.rpc("get_payments_env");
+  if (error || serverEnv !== getPaddleEnvironment()) throw new Error("Payments are being set up. Please try again later.");
   await initializePaddle();
   const priceId = await resolvePaddlePrice({ data: { priceId: "bizmanager_monthly", environment: getPaddleEnvironment() } });
   window.Paddle.Checkout.open({

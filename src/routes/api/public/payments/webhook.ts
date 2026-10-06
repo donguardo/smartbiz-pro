@@ -17,6 +17,7 @@ async function onCreated(data: any, env: PaddleEnv) {
   const db = await admin();
   // The plan covers the shop this user owns; never trust a shop id from the browser.
   const { data: owner } = await db.from("shop_members").select("shop_id").eq("user_id", userId).eq("role", "owner").order("created_at").limit(1).maybeSingle();
+  if (!owner?.shop_id) console.warn("Subscription with no owner shop", data.id);
   const { error } = await db.from("subscriptions").upsert({
     user_id: userId,
     shop_id: owner?.shop_id ?? null,
@@ -55,6 +56,7 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        // SECURITY: envParam is untrusted until verifyWebhook passes with that env's own secret.
         const envParam = new URL(request.url).searchParams.get("env");
         if (envParam !== "sandbox" && envParam !== "live") return new Response("Bad env", { status: 400 });
         try {
