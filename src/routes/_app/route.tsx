@@ -32,7 +32,7 @@ const OWNER_NAV = [
   { to: "/customers", label: "app.nav.customers", icon: Users },
   { to: "/business", label: "app.nav.business", icon: BriefcaseBusiness },
   { to: "/reorders", label: "app.nav.reorders", icon: ClipboardList },
-  { to: "/billing", label: "Billing", icon: CreditCard },
+  { to: "/billing", label: "app.nav.billing", icon: CreditCard },
 ] as const;
 const SETTINGS_NAV = { to: "/settings", label: "app.nav.settings", icon: Settings } as const;
 
