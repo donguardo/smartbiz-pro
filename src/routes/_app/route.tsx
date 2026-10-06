@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Bot, Download, LayoutDashboard, LogOut, Package, ScanLine, Settings, Users, BriefcaseBusiness } from "lucide-react";
+import { Bot, Download, LayoutDashboard, LogOut, Package, ScanLine, Settings, Users, BriefcaseBusiness, ClipboardList } from "lucide-react";
 import { useSession } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeToggle, syncThemeFromAccount } from "@/lib/theme";
@@ -28,6 +28,7 @@ const NAV = [
 const OWNER_NAV = [
   { to: "/customers", label: "app.nav.customers", icon: Users },
   { to: "/business", label: "app.nav.business", icon: BriefcaseBusiness },
+  { to: "/reorders", label: "app.nav.reorders", icon: ClipboardList },
 ] as const;
 const SETTINGS_NAV = { to: "/settings", label: "app.nav.settings", icon: Settings } as const;
 
