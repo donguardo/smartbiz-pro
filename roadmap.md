@@ -87,4 +87,4 @@
 - [ ] Patch 3 retest checklist T3a/T4/T5/T8 (needs Paddle sandbox webhook simulator and test-card checkout)
 
 - [ ] Email owners on failed Paddle deliveries — blocked: email domain not set up
-- [ ] Stripe webhook signing secret — waiting on user to create the webhook in Stripe
+- [x] Switched billing from Paddle to built-in Stripe
