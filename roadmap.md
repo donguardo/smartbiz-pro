@@ -85,3 +85,5 @@
 - [x] Automated tests: expired-trial lockout and subscription restore (tests/billing.integration.test.ts)
 - [x] Patch 3: payments test mode — server-side payments_env (app_config), access counts only same-mode subscriptions, locked shops owner read-only + data export, Billing/Reorders owner-only, webhook env verified by signature
 - [ ] Patch 3 retest checklist T3a/T4/T5/T8 (needs Paddle sandbox webhook simulator and test-card checkout)
+
+- [ ] Email owners on failed Paddle deliveries — blocked: email domain not set up
