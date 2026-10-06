@@ -105,6 +105,16 @@ function AuthPage() {
   };
 
   const google = async () => {
+    // Always sign in within the same tab. Inside the editor preview (an iframe)
+    // the auth helper would open a popup, so start the redirect flow directly.
+    let inIframe = false;
+    try { inIframe = window.self !== window.top; } catch { inIframe = true; }
+    if (inIframe) {
+      const state = [...crypto.getRandomValues(new Uint8Array(16))].map((b) => b.toString(16).padStart(2, "0")).join("");
+      const params = new URLSearchParams({ provider: "google", redirect_uri: window.location.origin + "/auth", state });
+      window.location.href = `/~oauth/initiate?${params.toString()}`;
+      return;
+    }
     const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/auth" });
     if (r.error) toast.error("Google sign-in failed. Please try again.");
   };
