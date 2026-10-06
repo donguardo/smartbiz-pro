@@ -66,5 +66,5 @@ export function buildZip(files: { name: string; content: string }[]): Blob {
   end.setUint16(10, files.length, true);
   end.setUint32(12, centralSize, true);
   end.setUint32(16, offset, true);
-  return new Blob([...parts, ...central, new Uint8Array(end.buffer)], { type: "application/zip" });
+  return new Blob([...parts, ...central, new Uint8Array(end.buffer)].map((p) => p.slice().buffer as ArrayBuffer), { type: "application/zip" });
 }
