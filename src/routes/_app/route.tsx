@@ -8,6 +8,7 @@ import { ThemeToggle, syncThemeFromAccount } from "@/lib/theme";
 import { LanguageToggle, useT } from "@/lib/i18n";
 import { StoreIdentity } from "@/components/StoreIdentity";
 import { StockAlertsBell } from "@/components/StockAlerts";
+import { BillingFailureAlert } from "@/components/BillingDiagnostics";
 import { useShopProfile } from "@/lib/shop-profile";
 import { fetchProfile, fetchShopContext, qk } from "@/lib/store";
 import { Button } from "@/components/ui/button";
@@ -107,6 +108,7 @@ function AppLayout() {
       </header>
 
       <main className="min-w-0 pb-32 md:pb-24">
+        {shop?.member_role === "owner" && <BillingFailureAlert />}
         {locked ? (
           <div><PaymentTestModeBanner /><div className="mx-auto max-w-xl space-y-4 p-4 md:p-6">
             <h1 className="text-2xl font-bold">Subscribe to keep using MVP BizManager</h1>
