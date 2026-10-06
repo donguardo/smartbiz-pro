@@ -1,59 +1,86 @@
-// Minimal Stripe REST client (fetch + WebCrypto) so it runs on the Worker runtime.
-const API = "https://api.stripe.com/v1";
+import Stripe from 'stripe';
+const getEnv = (key: string): string => {
+  const value = process.env[key];
+  if (!value) throw new Error(`${key} is not configured`);
+  return value;
+};
 
-function key(): string {
-  const k = process.env["STRIPE_SECRET_KEY"];
-  if (!k) throw new Error("Stripe is not configured");
-  return k;
+export type StripeEnv = 'sandbox' | 'live';
+
+const GATEWAY_STRIPE_BASE = 'https://connector-gateway.lovable.dev/stripe';
+
+export function getConnectionApiKey(env: StripeEnv): string {
+  return env === 'sandbox'
+    ? getEnv('STRIPE_SANDBOX_API_KEY')
+    : getEnv('STRIPE_LIVE_API_KEY');
 }
 
-// Test keys map to the app's "sandbox" mode so the same access rules apply as for Paddle.
-export function stripeEnv(): "sandbox" | "live" {
-  return key().startsWith("sk_live_") || key().startsWith("rk_live_") ? "live" : "sandbox";
+// Routes api.stripe.com requests through the connector gateway.
+// Only api.stripe.com is proxied (not files.stripe.com or connect.stripe.com).
+export function createStripeClient(env: StripeEnv): Stripe {
+  const connectionApiKey = getConnectionApiKey(env);
+  const lovableApiKey = getEnv('LOVABLE_API_KEY');
+
+  return new Stripe(connectionApiKey, {
+    apiVersion: '2026-03-25.dahlia',
+    httpClient: Stripe.createFetchHttpClient((input, init) => {
+      const stripeUrl = input instanceof Request ? input.url : input.toString();
+      const gatewayUrl = stripeUrl.replace('https://api.stripe.com', GATEWAY_STRIPE_BASE);
+      return fetch(gatewayUrl, {
+        ...init,
+        headers: {
+          ...Object.fromEntries(
+            new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined)).entries(),
+          ),
+          'X-Connection-Api-Key': connectionApiKey,
+          'Lovable-API-Key': lovableApiKey,
+        },
+      });
+    }),
+  });
 }
 
-function form(obj: Record<string, unknown>, prefix = "", out = new URLSearchParams()) {
-  for (const [k, v] of Object.entries(obj)) {
-    if (v === undefined || v === null) continue;
-    const name = prefix ? `${prefix}[${k}]` : k;
-    if (Array.isArray(v)) v.forEach((item, i) => (typeof item === "object" ? form(item as Record<string, unknown>, `${name}[${i}]`, out) : out.append(`${name}[${i}]`, String(item))));
-    else if (typeof v === "object") form(v as Record<string, unknown>, name, out);
-    else out.append(name, String(v));
+export function getStripeErrorMessage(error: unknown): string {
+  if (error && typeof error === 'object') {
+    const stripeError = error as {
+      message?: string; type?: string; code?: string; decline_code?: string; param?: string; requestId?: string;
+      raw?: { message?: string; type?: string; code?: string; decline_code?: string; param?: string; requestId?: string };
+    };
+    const message = stripeError.raw?.message ?? stripeError.message;
+    if (message) {
+      const details = [
+        stripeError.raw?.type ?? stripeError.type,
+        stripeError.raw?.code ?? stripeError.code,
+        stripeError.raw?.decline_code ?? stripeError.decline_code,
+        stripeError.raw?.param ?? stripeError.param,
+        stripeError.raw?.requestId ?? stripeError.requestId,
+      ].filter(Boolean);
+      return details.length ? `${message} (${details.join(', ')})` : message;
+    }
   }
-  return out;
+  return 'Stripe request failed';
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function stripe(method: "GET" | "POST", path: string, body?: Record<string, unknown>): Promise<any> {
-  const res = await fetch(`${API}${path}`, {
-    method,
-    headers: { Authorization: `Bearer ${key()}`, "Content-Type": "application/x-www-form-urlencoded" },
-    ...(body ? { body: form(body).toString() } : {}),
-  });
-  const json = await res.json();
-  if (!res.ok) {
-    console.error("Stripe error", res.status, json?.error?.message);
-    throw new Error(json?.error?.message ?? "Stripe request failed");
+export async function verifyWebhook(req: Request, env: StripeEnv): Promise<{ id: string; type: string; data: { object: any } }> {
+  const signature = req.headers.get("stripe-signature");
+  const body = await req.text();
+  const secret = env === 'sandbox' ? getEnv('PAYMENTS_SANDBOX_WEBHOOK_SECRET') : getEnv('PAYMENTS_LIVE_WEBHOOK_SECRET');
+  if (!signature || !body) throw new Error("Missing signature or body");
+
+  let timestamp: string | undefined;
+  const v1Signatures: string[] = [];
+  for (const part of signature.split(",")) {
+    const [key, value] = part.split("=", 2);
+    if (key === "t") timestamp = value;
+    if (key === "v1" && value) v1Signatures.push(value);
   }
-  return json;
-}
+  if (!timestamp || v1Signatures.length === 0) throw new Error("Invalid signature format");
+  if (Math.abs(Date.now() / 1000 - Number(timestamp)) > 300) throw new Error("Webhook timestamp too old");
 
-function hex(buf: ArrayBuffer) {
-  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-// Verifies the Stripe-Signature header (v1 HMAC-SHA256, 5-minute tolerance).
-export async function verifyStripeWebhook(payload: string, header: string | null) {
-  const secret = process.env["STRIPE_WEBHOOK_SECRET"];
-  if (!secret) throw new Error("STRIPE_WEBHOOK_SECRET is not configured");
-  if (!header) throw new Error("Missing signature");
-  const parts = Object.fromEntries(header.split(",").map((p) => p.split("=") as [string, string]));
-  const t = parts["t"];
-  const sigs = header.split(",").filter((p) => p.startsWith("v1=")).map((p) => p.slice(3));
-  if (!t || !sigs.length) throw new Error("Bad signature header");
-  if (Math.abs(Date.now() / 1000 - Number(t)) > 300) throw new Error("Signature too old");
-  const k = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-  const expected = hex(await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(`${t}.${payload}`)));
-  if (!sigs.some((s) => s.length === expected.length && [...s].every((c, i) => c === expected[i]))) throw new Error("Invalid signature");
-  return JSON.parse(payload);
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const signed = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${timestamp}.${body}`));
+  const expected = [...new Uint8Array(signed)].map((b) => b.toString(16).padStart(2, "0")).join("");
+  if (!v1Signatures.includes(expected)) throw new Error("Invalid webhook signature");
+  return JSON.parse(body);
 }

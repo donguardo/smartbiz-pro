@@ -34,7 +34,6 @@ import { Route as ShowcaseBusinessRouteImport } from './routes/showcase/$busines
 import { Route as ApiPublicBizbotRouteImport } from './routes/api/public/bizbot'
 import { Route as ApiPublicDailyBusinessRefreshRouteImport } from './routes/api/public/daily-business-refresh'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
-import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe/webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -162,11 +161,6 @@ const ApiPublicPaymentsWebhookRoute =
     path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
-  id: '/api/public/stripe/webhook',
-  path: '/api/public/stripe/webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -193,7 +187,6 @@ export interface FileRoutesByFullPath {
   '/api/public/bizbot': typeof ApiPublicBizbotRoute
   '/api/public/daily-business-refresh': typeof ApiPublicDailyBusinessRefreshRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
-  '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -220,7 +213,6 @@ export interface FileRoutesByTo {
   '/api/public/bizbot': typeof ApiPublicBizbotRoute
   '/api/public/daily-business-refresh': typeof ApiPublicDailyBusinessRefreshRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
-  '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -249,7 +241,6 @@ export interface FileRoutesById {
   '/api/public/bizbot': typeof ApiPublicBizbotRoute
   '/api/public/daily-business-refresh': typeof ApiPublicDailyBusinessRefreshRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
-  '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -278,7 +269,6 @@ export interface FileRouteTypes {
     | '/api/public/bizbot'
     | '/api/public/daily-business-refresh'
     | '/api/public/payments/webhook'
-    | '/api/public/stripe/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -305,7 +295,6 @@ export interface FileRouteTypes {
     | '/api/public/bizbot'
     | '/api/public/daily-business-refresh'
     | '/api/public/payments/webhook'
-    | '/api/public/stripe/webhook'
   id:
     | '__root__'
     | '/'
@@ -333,7 +322,6 @@ export interface FileRouteTypes {
     | '/api/public/bizbot'
     | '/api/public/daily-business-refresh'
     | '/api/public/payments/webhook'
-    | '/api/public/stripe/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -353,7 +341,6 @@ export interface RootRouteChildren {
   ApiPublicBizbotRoute: typeof ApiPublicBizbotRoute
   ApiPublicDailyBusinessRefreshRoute: typeof ApiPublicDailyBusinessRefreshRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
-  ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -533,13 +520,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/stripe/webhook': {
-      id: '/api/public/stripe/webhook'
-      path: '/api/public/stripe/webhook'
-      fullPath: '/api/public/stripe/webhook'
-      preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -588,7 +568,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicBizbotRoute: ApiPublicBizbotRoute,
   ApiPublicDailyBusinessRefreshRoute: ApiPublicDailyBusinessRefreshRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
-  ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
