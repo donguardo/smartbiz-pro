@@ -72,3 +72,14 @@
 - [x] Create ₱499/user/month plan in payment provider
 - [x] Checkout + subscription sync + access control (awaiting business rules)
 - [x] Customer billing portal
+
+## Billing launch checklist (real payments)
+- [ ] Legal business details — blocked: need your legal business name (or your own name if selling as an individual)
+- [ ] Terms of Service — still placeholder; must name the seller, include the Paddle reseller (Merchant of Record) clause, acceptable use, IP, suspension (waits on legal name)
+- [ ] Privacy Notice — must name the seller as data controller, list data collected, and name Paddle as a recipient (waits on legal name)
+- [x] Refund policy — /refund-policy, 30-day money-back guarantee, linked in footer and Billing
+- [ ] Payment readiness check — not started (runs from the Payments dashboard after the pages above are done)
+- [x] Project published
+- [ ] Payment-provider verification — action required: complete the verification form in the Payments dashboard
+- [ ] Domain review, business/identity checks, final review — by the payment provider after verification
+- [x] Automated tests: expired-trial lockout and subscription restore (tests/billing.integration.test.ts)
