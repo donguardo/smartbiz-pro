@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
-import { SkipForward } from "lucide-react";
+import { SkipForward, Volume2, VolumeX } from "lucide-react";
 import introVideo from "@/assets/bizmanager-intro.mp4.asset.json";
 import introVideoWebm from "@/assets/bizmanager-intro.webm.asset.json";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ export function FirstVisitIntro() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const videoRef = useRef<HTMLVideoElement>(null);
   const [show, setShow] = useState(false);
+  const [muted, setMuted] = useState(true);
 
   useEffect(() => {
     if (pathname !== "/") {
@@ -40,6 +41,7 @@ export function FirstVisitIntro() {
   }, [show]);
 
   const finish = () => {
+    videoRef.current?.pause();
     localStorage.setItem(INTRO_SEEN_KEY, "1");
     setShow(false);
     window.dispatchEvent(new Event(INTRO_COMPLETE_EVENT));
@@ -53,7 +55,7 @@ export function FirstVisitIntro() {
         ref={videoRef}
         className="h-full w-full object-contain"
         autoPlay
-        muted
+        muted={muted}
         playsInline
         preload="auto"
         onEnded={finish}
@@ -62,6 +64,24 @@ export function FirstVisitIntro() {
         <source src={introVideoWebm.url} type="video/webm" />
         <source src={introVideo.url} type="video/mp4" />
       </video>
+      <Button
+        type="button"
+        variant="secondary"
+        size="icon"
+        aria-label={t(muted ? "intro.soundOn" : "intro.soundOff")}
+        title={t(muted ? "intro.soundOn" : "intro.soundOff")}
+        aria-pressed={!muted}
+        onClick={() => {
+          const video = videoRef.current;
+          if (!video) return;
+          video.muted = !muted;
+          setMuted(!muted);
+          void video.play().catch(() => undefined);
+        }}
+        className="absolute left-4 top-[max(1rem,env(safe-area-inset-top))] h-11 w-11 border border-border bg-popover/90 shadow-2xl backdrop-blur-md sm:left-6"
+      >
+        {muted ? <VolumeX aria-hidden="true" /> : <Volume2 aria-hidden="true" />}
+      </Button>
       <Button
         type="button"
         variant="secondary"

@@ -161,6 +161,8 @@ export const DICT: Record<string, { en: string; tl: string }> = {
   "install.done": { en: "Done", tl: "Tapos" },
   "intro.title": { en: "Welcome to MVP BizManager", tl: "Maligayang pagdating sa MVP BizManager" },
   "intro.skip": { en: "Skip", tl: "Laktawan" },
+  "intro.soundOn": { en: "Turn sound on", tl: "I-on ang tunog" },
+  "intro.soundOff": { en: "Mute sound", tl: "I-mute ang tunog" },
   "account.title": { en: "Account", tl: "Account" },
   "account.delete": { en: "Delete my account", tl: "Burahin ang account ko" },
   "account.permanent": { en: "This cannot be undone. Here is what will be deleted:", tl: "Hindi na ito maibabalik. Ito ang mabubura:" },
