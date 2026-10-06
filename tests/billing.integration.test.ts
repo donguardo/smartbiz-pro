@@ -158,6 +158,28 @@ describe.skipIf(!enabled)("subscription enforcement", () => {
     await expectBlocked(users.cashier.db);
   });
 
+  test("a failed payment keeps access for 7 days, then locks", async () => {
+    await admin.from("subscriptions").delete().eq("user_id", users.owner.id);
+    const pastDue = async (id: string, daysAgo: number) => {
+      const { error } = await admin.from("subscriptions").insert({
+        user_id: users.owner.id, shop_id: shopId(), paddle_subscription_id: `${id}_${run}`, paddle_customer_id: `ctm_${run}`,
+        product_id: "bizmanager_plan", price_id: "bizmanager_monthly", status: "past_due", environment: "sandbox", provider: "stripe",
+        current_period_start: new Date(Date.now() - 20 * day).toISOString(), current_period_end: new Date(Date.now() + 10 * day).toISOString(),
+        past_due_since: new Date(Date.now() - daysAgo * day).toISOString(),
+      });
+      if (error) throw error;
+    };
+    await pastDue("pd3", 3);
+    expect((await users.owner.db.rpc("get_shop_billing", { _env: "sandbox" })).data?.[0]?.has_access).toBe(true);
+    await expectAllowed(users.cashier.db);
+    await admin.from("subscriptions").delete().eq("user_id", users.owner.id);
+    await pastDue("pd8", 8);
+    const b = (await users.owner.db.rpc("get_shop_billing", { _env: "sandbox" })).data?.[0];
+    expect(b?.has_access).toBe(false);
+    expect(b?.state).toBe("past_due_locked");
+    await expectBlocked(users.cashier.db);
+  });
+
   test("browser users cannot write subscription rows themselves", async () => {
     const { error } = await users.owner.db.from("subscriptions").insert({
       user_id: users.owner.id, shop_id: shopId(), paddle_subscription_id: `forged_${run}`, paddle_customer_id: "x", product_id: "x", price_id: "x", status: "active",
