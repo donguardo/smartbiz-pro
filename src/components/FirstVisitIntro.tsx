@@ -14,7 +14,7 @@ export function FirstVisitIntro() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const videoRef = useRef<HTMLVideoElement>(null);
   const [show, setShow] = useState(false);
-  const [muted, setMuted] = useState(true);
+  const [muted, setMuted] = useState(false);
 
   useEffect(() => {
     if (pathname !== "/") {
@@ -34,8 +34,22 @@ export function FirstVisitIntro() {
     if (!show) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    void videoRef.current?.play().catch(() => undefined);
+    const video = videoRef.current;
+    let active = true;
+    if (video) {
+      video.muted = false;
+      setMuted(false);
+      void video.play().catch(() => {
+        if (!active) return;
+        // Browsers may require a tap before allowing audible autoplay.
+        video.muted = true;
+        setMuted(true);
+        void video.play().catch(() => undefined);
+      });
+    }
     return () => {
+      active = false;
+      video?.pause();
       document.body.style.overflow = previousOverflow;
     };
   }, [show]);
@@ -54,7 +68,6 @@ export function FirstVisitIntro() {
       <video
         ref={videoRef}
         className="h-full w-full object-contain"
-        autoPlay
         muted={muted}
         playsInline
         preload="auto"
