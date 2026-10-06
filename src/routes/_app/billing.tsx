@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useSession } from "@/lib/auth";
 import { useBilling, billingKey } from "@/lib/billing";
 import { getPaddleEnvironment, openSubscriptionCheckout } from "@/lib/paddle";
-import { createBillingPortal } from "@/utils/payments.functions";
+import { createBillingPortal, createStripeCheckout } from "@/utils/payments.functions";
 import { Button } from "@/components/ui/button";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { OwnerRedirect } from "@/components/OwnerRedirect";
@@ -35,8 +35,12 @@ export function BillingPanel() {
   const portal = useServerFn(createBillingPortal);
   const [busy, setBusy] = useState(false);
 
+  const stripeCheckout = useServerFn(createStripeCheckout);
+
   useEffect(() => {
-    if (!new URLSearchParams(window.location.search).has("checkout")) return;
+    const p = new URLSearchParams(window.location.search).get("checkout");
+    if (!p) return;
+    if (p === "cancel") { toast("Checkout canceled — you were not charged."); return; }
     toast.success("Thanks! Your subscription is being activated.");
     const id = setInterval(() => void qc.invalidateQueries({ queryKey: billingKey }), 3000);
     const stop = setTimeout(() => clearInterval(id), 30000);
@@ -57,6 +61,11 @@ export function BillingPanel() {
     paused: "Paused",
   };
 
+  const payStripe = async () => {
+    setBusy(true);
+    try { const url = await stripeCheckout(); window.location.assign(url); }
+    catch (e) { toast.error(e instanceof Error ? e.message : "Could not open Stripe checkout"); setBusy(false); }
+  };
   const subscribe = async () => {
     if (!user) return;
     setBusy(true);
@@ -84,12 +93,15 @@ export function BillingPanel() {
       <p className={b.state === "past_due" || !b.has_access ? "text-destructive" : "text-muted-foreground"}>{label[b.state] ?? b.state}</p>
       {!b.is_owner ? <p className="text-sm text-muted-foreground">Only the shop owner can manage billing.</p> : (
         <div className="flex flex-wrap gap-2">
-          {(!subscribed || (b.state === "canceled")) && <Button disabled={busy} onClick={subscribe}>Subscribe now</Button>}
+          {(!subscribed || (b.state === "canceled")) && <>
+            <Button disabled={busy} onClick={payStripe}>Pay with Stripe — ₱499/mo</Button>
+            <Button variant="outline" disabled={busy} onClick={subscribe}>Subscribe with Paddle</Button>
+          </>}
           {subscribed && <Button variant="outline" disabled={busy} onClick={manage}><ExternalLink className="h-4 w-4" /> Manage billing & payment method</Button>}
           {!b.has_access && <Button variant="outline" disabled={busy} onClick={downloadData}><Download className="h-4 w-4" /> Download my data (CSV)</Button>}
         </div>
       )}
-      <p className="text-xs text-muted-foreground">Charged in USD at checkout (about ₱499). 30-day money-back guarantee — see our <a href="/refund-policy" target="_blank" className="underline">Refund Policy</a>.</p>
+      <p className="text-xs text-muted-foreground">Stripe charges ₱499 PHP per month. Paddle checkout is still available and is charged in USD (about ₱499). 30-day money-back guarantee — see our <a href="/refund-policy" target="_blank" className="underline">Refund Policy</a>.</p>
     </div>
   );
 }

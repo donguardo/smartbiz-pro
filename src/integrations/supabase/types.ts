@@ -993,6 +993,7 @@ export type Database = {
           mobile: string | null
           name: string
           owner_name: string | null
+          stripe_customer_id: string | null
           updated_at: string
         }
         Insert: {
@@ -1007,6 +1008,7 @@ export type Database = {
           mobile?: string | null
           name?: string
           owner_name?: string | null
+          stripe_customer_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -1021,6 +1023,7 @@ export type Database = {
           mobile?: string | null
           name?: string
           owner_name?: string | null
+          stripe_customer_id?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1148,6 +1151,7 @@ export type Database = {
           paddle_subscription_id: string
           price_id: string
           product_id: string
+          provider: string
           shop_id: string | null
           status: string
           updated_at: string
@@ -1164,6 +1168,7 @@ export type Database = {
           paddle_subscription_id: string
           price_id: string
           product_id: string
+          provider?: string
           shop_id?: string | null
           status?: string
           updated_at?: string
@@ -1180,6 +1185,7 @@ export type Database = {
           paddle_subscription_id?: string
           price_id?: string
           product_id?: string
+          provider?: string
           shop_id?: string | null
           status?: string
           updated_at?: string
