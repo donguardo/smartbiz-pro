@@ -105,6 +105,8 @@ function AuthPage() {
   };
 
   const google = async () => {
+    // Android app WebView (user agent contains "MVPBizApp"): the app opens this in a Custom Tab.
+    if (/MVPBizApp/.test(navigator.userAgent)) { window.location.href = "/app-login"; return; }
     // On the live site this redirects in the same tab; inside the editor
     // preview the helper uses a secure popup (Google can't load in frames).
     const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/auth" });
