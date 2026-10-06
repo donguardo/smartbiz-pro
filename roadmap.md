@@ -67,3 +67,8 @@
 - [x] Add preset business icons and prompt-based AI logo previews with explicit save to the store profile — preset save/reload/removal and real AI generation verified in signed-in Settings; mobile layout checked.
 - [x] Fix profile/logo saves blocked by shared activity trigger — actual business name save/reload, private logo upload/reload, and removal verified; original test shop details restored.
 - [x] Show saved business name and private store logo in app navigation, digital receipts, and receipt-only printing — signed-in name checked; logo/receipt rendering checked with isolated sample responses, without creating real sales.
+
+## Payments
+- [ ] Create ₱499/user/month plan in payment provider
+- [ ] Checkout + subscription sync + access control (awaiting business rules)
+- [ ] Customer billing portal
