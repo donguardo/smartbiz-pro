@@ -6,6 +6,7 @@ import { CheckCircle2, AlertTriangle, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { groupDeliveries } from "@/lib/billing-deliveries";
+import { useT } from "@/lib/i18n";
 
 const when = (d: string) => new Date(d).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" });
 const modeName = (e: string | null | undefined) => (e === "live" ? "Live" : e === "sandbox" ? "Test" : "—");
@@ -101,6 +102,7 @@ const TEST_EVENT = "billing-failure-test";
 
 // Owners get a toast + banner when an event's final delivery failed; dismissing remembers it on this device.
 export function BillingFailureAlert() {
+  const { t } = useT();
   const [seen, setSeen] = useState<string | null>(null);
   const [test, setTest] = useState(false);
   useEffect(() => {
@@ -125,16 +127,16 @@ export function BillingFailureAlert() {
   }, [latest, fresh.length]);
   if (test && !fresh.length) return (
     <div role="alert" className="flex flex-wrap items-center justify-between gap-2 border-b border-destructive/40 bg-destructive/15 px-4 py-2 text-sm text-destructive">
-      <span className="flex items-center gap-2"><AlertTriangle className="h-4 w-4" />TEST ALERT — 1 payment update failed to sync. Latest: Could not update subscription (sample)</span>
-      <span className="flex gap-3"><Link to="/billing" className="font-medium underline">Investigate</Link><button type="button" className="underline" onClick={() => setTest(false)}>Dismiss</button></span>
+      <span className="flex items-center gap-2"><AlertTriangle className="h-4 w-4" />{t("billing.alert.test")}</span>
+      <span className="flex gap-3"><Link to="/billing" className="font-medium underline">{t("billing.alert.investigate")}</Link><button type="button" className="underline" onClick={() => setTest(false)}>{t("billing.alert.dismiss")}</button></span>
     </div>
   );
   if (!fresh.length || !latest) return null;
   const dismiss = () => { localStorage.setItem(SEEN_KEY, latest); setSeen(latest); };
   return (
     <div role="alert" className="flex flex-wrap items-center justify-between gap-2 border-b border-destructive/40 bg-destructive/15 px-4 py-2 text-sm text-destructive">
-      <span className="flex items-center gap-2"><AlertTriangle className="h-4 w-4" />{fresh.length} payment update(s) failed to sync. Latest: {fresh[0]!.final.detail}</span>
-      <span className="flex gap-3"><Link to="/billing" className="font-medium underline">Investigate</Link><button type="button" className="underline" onClick={dismiss}>Dismiss</button></span>
+      <span className="flex items-center gap-2"><AlertTriangle className="h-4 w-4" />{t("billing.alert.failed", { n: fresh.length, detail: fresh[0]!.final.detail ?? "" })}</span>
+      <span className="flex gap-3"><Link to="/billing" className="font-medium underline">{t("billing.alert.investigate")}</Link><button type="button" className="underline" onClick={dismiss}>{t("billing.alert.dismiss")}</button></span>
     </div>
   );
 }
