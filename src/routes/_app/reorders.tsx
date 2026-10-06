@@ -5,7 +5,7 @@ import { ClipboardCopy, PackageCheck, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { OwnerOnly } from "@/components/OwnerOnly";
+import { OwnerRedirect } from "@/components/OwnerRedirect";
 import { isDecimalUnit, qk } from "@/lib/store";
 import { peso } from "@/lib/format";
 
