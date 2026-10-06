@@ -59,6 +59,7 @@ const setSubscription = async (status: string, periodEndMs: number) => {
 const sell = (db: DB) =>
   db.rpc("record_sale", { _payment_method: "cash", _amount_tendered: 1000, _customer_id: null as unknown as string, _items: [{ product_id: productId, qty: 1 }] });
 
+// Cashiers of a locked shop can read and change nothing.
 async function expectBlocked(db: DB) {
   const rpcList = await db.rpc("get_shop_products_v2");
   expect(rpcList.data ?? []).toHaveLength(0);
@@ -70,6 +71,20 @@ async function expectBlocked(db: DB) {
   expect((await db.from("products").insert({ name: `Blocked ${run}`, price: 1, unit: "pc" })).error).not.toBeNull();
   expect((await db.rpc("update_product", { _id: productId, _data: { price: 999 } })).error).not.toBeNull();
   expect((await db.from("customers").select("id")).data ?? []).toHaveLength(0);
+  expect((await db.rpc("adjust_stock", { _product_id: productId, _kind: "restock", _qty: 5, _reason: "blocked test" })).error).not.toBeNull();
+  expect((await db.rpc("remove_product", { _id: productId })).error).not.toBeNull();
+}
+// The owner of a locked shop keeps read-only access (for data export) but every write fails.
+async function expectOwnerReadOnly(db: DB) {
+  const direct = await db.from("products").select("id");
+  expect(direct.error).toBeNull();
+  expect((direct.data ?? []).length).toBeGreaterThan(0);
+  const sales = await db.from("sales").select("id");
+  expect(sales.error).toBeNull();
+  expect((await db.from("customers").select("id")).error).toBeNull();
+  expect((await sell(db)).error).not.toBeNull();
+  expect((await db.from("products").insert({ name: `Blocked ${run}`, price: 1, unit: "pc" })).error).not.toBeNull();
+  expect((await db.rpc("update_product", { _id: productId, _data: { price: 999 } })).error).not.toBeNull();
   expect((await db.rpc("adjust_stock", { _product_id: productId, _kind: "restock", _qty: 5, _reason: "blocked test" })).error).not.toBeNull();
   expect((await db.rpc("remove_product", { _id: productId })).error).not.toBeNull();
 }
