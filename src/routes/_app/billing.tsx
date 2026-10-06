@@ -79,7 +79,7 @@ export function BillingPanel() {
           {subscribed && <Button variant="outline" disabled={busy} onClick={manage}><ExternalLink className="h-4 w-4" /> Manage billing & payment method</Button>}
         </div>
       )}
-      <p className="text-xs text-muted-foreground">Charged in USD at checkout (about ₱499). Payments are processed securely by our payment partner.</p>
+      <p className="text-xs text-muted-foreground">Charged in USD at checkout (about ₱499). 30-day money-back guarantee — see our <a href="/refund-policy" target="_blank" className="underline">Refund Policy</a>.</p>
     </div>
   );
 }
