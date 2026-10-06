@@ -188,4 +188,24 @@ describe.skipIf(!enabled)("products A to Z", () => {
     expect(rice!.every((r) => r.product_name === "Rice") && rice!.length).toBe(1);
     expect((await owner.db.from("stock_movements").select("id").lt("created_at", "2000-01-01T00:00:00+08:00")).data).toHaveLength(0);
   }, 30000);
+  test("an owner turns a low-stock alert into a draft supplier reorder and receives it", async () => {
+    const { owner, cashier, other } = users;
+    await owner.db.from("shops").update({ low_stock_alerts: true }).eq("id", owner.id);
+    const { data: sup } = await owner.db.from("suppliers").insert({ shop_id: owner.id, name: "QA Supplier" }).select("id").single();
+    expect((await owner.db.from("supplier_products").insert({ shop_id: owner.id, supplier_id: sup!.id, product_id: ids["Rice"]!, cost_price: 44 })).error).toBeNull();
+    await owner.db.rpc("adjust_stock", { _product_id: ids["Rice"]!, _kind: "correction", _qty: 3.5, _reason: "Physical count" });
+    const { data: alert } = await owner.db.from("stock_alerts").select("id").eq("product_id", ids["Rice"]!).is("read_at", null).single();
+    expect((await cashier.db.rpc("create_reorder_from_alerts", { _alert_ids: [alert!.id], _supplier_id: sup!.id })).error).not.toBeNull();
+    expect((await other.db.rpc("create_reorder_from_alerts", { _alert_ids: [alert!.id] })).error).not.toBeNull();
+    const { data: orderId, error } = await owner.db.rpc("create_reorder_from_alerts", { _alert_ids: [alert!.id], _supplier_id: sup!.id });
+    expect(error).toBeNull();
+    const { data: items } = await owner.db.from("purchase_order_items").select("product_name,qty,unit_cost").eq("order_id", orderId!);
+    expect(items!.map((i) => [i.product_name, Number(i.qty), Number(i.unit_cost)])).toEqual([["Rice", 6.5, 44]]); // 5*2 - 3.5, supplier price
+    expect((await owner.db.from("stock_alerts").select("read_at").eq("id", alert!.id).single()).data!.read_at).not.toBeNull();
+    expect((await cashier.db.from("purchase_orders").select("id")).data).toHaveLength(0);
+    expect((await other.db.from("purchase_order_items").select("id")).data).toHaveLength(0);
+    expect((await owner.db.rpc("receive_purchase_order", { _order_id: orderId! })).error).toBeNull();
+    expect(Number((await productsOf(owner.db)).find((p) => p.name === "Rice")!.stock)).toBe(10);
+    expect((await owner.db.rpc("receive_purchase_order", { _order_id: orderId! })).error).not.toBeNull();
+  }, 30000);
 });
