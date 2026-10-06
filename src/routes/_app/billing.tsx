@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { OwnerRedirect } from "@/components/OwnerRedirect";
 import { downloadShopData } from "@/lib/export-data";
+import { BillingLinkCheck, BillingEventLog } from "@/components/BillingDiagnostics";
 
 export const Route = createFileRoute("/_app/billing")({
   head: () => ({ meta: [
@@ -100,6 +101,8 @@ function BillingPage() {
       <div className="mx-auto max-w-xl space-y-4 p-4 md:p-6">
         <h1 className="text-2xl font-bold">Billing</h1>
         <BillingPanel />
+        <BillingLinkCheck />
+        <BillingEventLog />
       </div>
     </div>
   );
