@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CreditCard, Download, ExternalLink } from "lucide-react";
+import { CreditCard, Download, ExternalLink, X } from "lucide-react";
 import { toast } from "sonner";
+import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { useSession } from "@/lib/auth";
 import { useBilling, billingKey } from "@/lib/billing";
-import { getPaddleEnvironment, openSubscriptionCheckout } from "@/lib/paddle";
-import { createBillingPortal, createStripeCheckout } from "@/utils/payments.functions";
+import { getStripe, getStripeEnvironment } from "@/lib/stripe";
+import { createBillingPortal, createCheckoutSession } from "@/utils/payments.functions";
 import { Button } from "@/components/ui/button";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { OwnerRedirect } from "@/components/OwnerRedirect";
@@ -28,19 +29,31 @@ export const Route = createFileRoute("/_app/billing")({
 
 const fmt = (d: string | null) => (d ? new Date(d).toLocaleDateString("en-PH", { dateStyle: "medium" }) : "—");
 
+function CheckoutForm() {
+  const checkout = useServerFn(createCheckoutSession);
+  const fetchClientSecret = useCallback(async () => {
+    const r = await checkout({ data: { environment: getStripeEnvironment(), returnUrl: `${window.location.origin}/billing?checkout=success` } });
+    if ("error" in r) { toast.error(r.error); throw new Error(r.error); }
+    if (!r.clientSecret) throw new Error("Checkout could not start");
+    return r.clientSecret;
+  }, [checkout]);
+  return (
+    <EmbeddedCheckoutProvider stripe={getStripe()} options={{ fetchClientSecret }}>
+      <EmbeddedCheckout />
+    </EmbeddedCheckoutProvider>
+  );
+}
+
 export function BillingPanel() {
   const { user } = useSession();
   const qc = useQueryClient();
   const { data: b, isLoading } = useBilling(!!user);
   const portal = useServerFn(createBillingPortal);
   const [busy, setBusy] = useState(false);
-
-  const stripeCheckout = useServerFn(createStripeCheckout);
+  const [paying, setPaying] = useState(false);
 
   useEffect(() => {
-    const p = new URLSearchParams(window.location.search).get("checkout");
-    if (!p) return;
-    if (p === "cancel") { toast("Checkout canceled — you were not charged."); return; }
+    if (!new URLSearchParams(window.location.search).has("checkout")) return;
     toast.success("Thanks! Your subscription is being activated.");
     const id = setInterval(() => void qc.invalidateQueries({ queryKey: billingKey }), 3000);
     const stop = setTimeout(() => clearInterval(id), 30000);
@@ -61,21 +74,17 @@ export function BillingPanel() {
     paused: "Paused",
   };
 
-  const payStripe = async () => {
-    setBusy(true);
-    try { const url = await stripeCheckout(); window.location.assign(url); }
-    catch (e) { toast.error(e instanceof Error ? e.message : "Could not open Stripe checkout"); setBusy(false); }
-  };
-  const subscribe = async () => {
-    if (!user) return;
-    setBusy(true);
-    try { await openSubscriptionCheckout({ userId: user.id, email: user.email ?? undefined }); }
+  const startPay = () => {
+    try { getStripeEnvironment(); setPaying(true); }
     catch (e) { toast.error(e instanceof Error ? e.message : "Could not open checkout"); }
-    finally { setBusy(false); }
   };
   const manage = async () => {
     setBusy(true);
-    try { const url = await portal({ data: { environment: getPaddleEnvironment() } }); window.open(url, "_blank", "noopener"); }
+    try {
+      const r = await portal({ data: { environment: getStripeEnvironment(), returnUrl: `${window.location.origin}/billing` } });
+      if ("error" in r) throw new Error(r.error);
+      window.open(r.url, "_blank", "noopener");
+    }
     catch (e) { toast.error(e instanceof Error ? e.message : "Could not open billing portal"); }
     finally { setBusy(false); }
   };
@@ -93,15 +102,18 @@ export function BillingPanel() {
       <p className={b.state === "past_due" || !b.has_access ? "text-destructive" : "text-muted-foreground"}>{label[b.state] ?? b.state}</p>
       {!b.is_owner ? <p className="text-sm text-muted-foreground">Only the shop owner can manage billing.</p> : (
         <div className="flex flex-wrap gap-2">
-          {(!subscribed || (b.state === "canceled")) && <>
-            <Button disabled={busy} onClick={payStripe}>Pay with Stripe — ₱499/mo</Button>
-            <Button variant="outline" disabled={busy} onClick={subscribe}>Subscribe with Paddle</Button>
-          </>}
+          {(!subscribed || b.state === "canceled") && !paying && <Button disabled={busy} onClick={startPay}>Subscribe — ₱499/mo</Button>}
           {subscribed && <Button variant="outline" disabled={busy} onClick={manage}><ExternalLink className="h-4 w-4" /> Manage billing & payment method</Button>}
           {!b.has_access && <Button variant="outline" disabled={busy} onClick={downloadData}><Download className="h-4 w-4" /> Download my data (CSV)</Button>}
         </div>
       )}
-      <p className="text-xs text-muted-foreground">Stripe charges ₱499 PHP per month. Paddle checkout is still available and is charged in USD (about ₱499). 30-day money-back guarantee — see our <a href="/refund-policy" target="_blank" className="underline">Refund Policy</a>.</p>
+      {paying && (
+        <div className="space-y-2">
+          <div className="flex justify-end"><Button size="sm" variant="ghost" onClick={() => setPaying(false)}><X className="h-4 w-4" /> Close</Button></div>
+          <div className="overflow-hidden rounded-xl bg-background"><CheckoutForm /></div>
+        </div>
+      )}
+      <p className="text-xs text-muted-foreground">Charged ₱499 PHP per month; tax is added at checkout where it applies. 30-day money-back guarantee — see our <a href="/refund-policy" target="_blank" className="underline">Refund Policy</a>.</p>
     </div>
   );
 }
