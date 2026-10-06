@@ -58,7 +58,7 @@ function DeleteDialog({ onClose }: { onClose: () => void }) {
       navigate({ to: "/" });
     } catch (e) {
       const msg = e instanceof Error ? e.message : "";
-      toast.error(msg.includes("WRONG_PASSWORD") ? t("account.wrongPassword") : msg.includes("REAUTH_REQUIRED") ? t("account.reauthNeeded") : t("account.failed"));
+      toast.error(msg.includes("WRONG_PASSWORD") ? t("account.wrongPassword") : msg.includes("REAUTH_REQUIRED") ? t("account.reauthNeeded") : msg.includes("ACTIVE_SUBSCRIPTION") ? t("account.cancelPlanFirst") : t("account.failed"));
     } finally { setBusy(false); }
   };
 

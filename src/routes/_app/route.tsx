@@ -111,8 +111,8 @@ function AppLayout() {
         {shop?.member_role === "owner" && <BillingFailureAlert />}
         {locked ? (
           <div><PaymentTestModeBanner /><div className="mx-auto max-w-xl space-y-4 p-4 md:p-6">
-            <h1 className="text-2xl font-bold">Subscribe to keep using MVP BizManager</h1>
-            <p className="text-muted-foreground">{billing?.is_owner ? "Your free trial or subscription has ended. Subscribe to unlock your shop again — your data is safe." : "This shop's subscription has ended. Ask the owner to subscribe."}</p>
+            <h1 className="text-2xl font-bold">{t("billing.locked.title")}</h1>
+            <p className="text-muted-foreground">{billing?.is_owner ? t("billing.locked.owner") : t("billing.locked.cashier")}</p>
             <BillingPanel />
           </div></div>
         ) : <Outlet />}

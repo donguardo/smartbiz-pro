@@ -37,6 +37,15 @@ export const deleteMyAccount = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: owned } = await supabaseAdmin.from("shop_members").select("shop_id").eq("user_id", userId).eq("role", "owner");
+    // A sole owner must cancel a renewing plan first, so the card is never charged for a deleted shop.
+    for (const o of owned ?? []) {
+      const { count } = await supabaseAdmin.from("shop_members").select("id", { count: "exact", head: true }).eq("shop_id", o.shop_id).eq("role", "owner");
+      if ((count ?? 0) > 1) continue;
+      const { data: renewing } = await supabaseAdmin.from("subscriptions").select("id")
+        .eq("shop_id", o.shop_id).eq("cancel_at_period_end", false)
+        .in("status", ["active", "trialing", "past_due", "unpaid", "incomplete", "paused"]).limit(1);
+      if (renewing?.length) throw new Error("ACTIVE_SUBSCRIPTION");
+    }
     const { data: files, error: dataError } = await supabaseAdmin.rpc("delete_account_data", { _user_id: userId, _user_hash: userHash });
     if (dataError) { console.error("delete_account_data failed", dataError.message); throw new Error("Deletion failed"); }
 

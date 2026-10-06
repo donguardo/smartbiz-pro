@@ -18,6 +18,15 @@ async function syncSubscription(sub: any, env: StripeEnv, forceStatus?: string):
   if (customerId) {
     const { data } = await db.from("shops").select("id").eq("stripe_customer_id", customerId).maybeSingle();
     shopId = data?.id ?? null;
+    if (!shopId) {
+      // Customers differ between test and live; fall back to the shop id stamped on the customer at checkout.
+      const c = await createStripeClient(env).customers.retrieve(customerId);
+      const metaShop = (c as { deleted?: boolean; metadata?: Record<string, string> }).metadata?.["shop_id"];
+      if (metaShop) {
+        const { data: s2 } = await db.from("shops").select("id").eq("id", metaShop).maybeSingle();
+        shopId = s2?.id ?? null;
+      }
+    }
   }
   if (!shopId) return { shopId: null, userId: null, status: "failed", detail: "No shop linked to this customer" };
   let userId: string | null = sub.metadata?.userId ?? null;

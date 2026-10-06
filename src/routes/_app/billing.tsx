@@ -6,6 +6,7 @@ import { CreditCard, Download, ExternalLink, X } from "lucide-react";
 import { toast } from "sonner";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { useSession } from "@/lib/auth";
+import { useT } from "@/lib/i18n";
 import { useBilling, billingKey } from "@/lib/billing";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 import { createBillingPortal, createCheckoutSession } from "@/utils/payments.functions";
@@ -46,6 +47,7 @@ function CheckoutForm() {
 
 export function BillingPanel() {
   const { user } = useSession();
+  const { t } = useT();
   const qc = useQueryClient();
   const { data: b, isLoading } = useBilling(!!user);
   const portal = useServerFn(createBillingPortal);
@@ -54,24 +56,25 @@ export function BillingPanel() {
 
   useEffect(() => {
     if (!new URLSearchParams(window.location.search).has("checkout")) return;
-    toast.success("Thanks! Your subscription is being activated.");
+    toast.success(t("billing.thanks"));
     const id = setInterval(() => void qc.invalidateQueries({ queryKey: billingKey }), 3000);
     const stop = setTimeout(() => clearInterval(id), 30000);
     return () => { clearInterval(id); clearTimeout(stop); };
-  }, [qc]);
+  }, [qc, t]);
 
-  if (isLoading || !b) return <p className="text-muted-foreground">Loading…</p>;
-  const subscribed = !["trial", "trial_ended"].includes(b.state) && b.state !== "expired";
+  if (isLoading || !b) return <p className="text-muted-foreground">{t("billing.loading")}</p>;
+  const subscribed = !["trial", "trial_ended", "expired"].includes(b.state);
 
   const label: Record<string, string> = {
-    trial: `Free trial — ends ${fmt(b.trial_ends_at)}`,
-    trial_ended: "Your free trial has ended",
-    expired: "Your subscription has ended",
-    active: b.cancel_at_period_end ? `Canceled — access until ${fmt(b.period_end)}` : `Active — renews ${fmt(b.period_end)}`,
-    trialing: `Active — renews ${fmt(b.period_end)}`,
-    past_due: "Payment failed — please update your payment method",
-    canceled: `Canceled — access until ${fmt(b.period_end)}`,
-    paused: "Paused",
+    trial: t("billing.state.trial", { date: fmt(b.trial_ends_at) }),
+    trial_ended: t("billing.state.trial_ended"),
+    expired: t("billing.state.expired"),
+    active: b.cancel_at_period_end ? t("billing.state.canceled", { date: fmt(b.period_end) }) : t("billing.state.active", { date: fmt(b.period_end) }),
+    trialing: t("billing.state.active", { date: fmt(b.period_end) }),
+    past_due: t("billing.state.past_due"),
+    past_due_locked: t("billing.state.past_due_locked"),
+    canceled: t("billing.state.canceled", { date: fmt(b.period_end) }),
+    paused: t("billing.state.paused"),
   };
 
   const startPay = () => {
@@ -90,30 +93,30 @@ export function BillingPanel() {
   };
   const downloadData = async () => {
     setBusy(true);
-    try { await downloadShopData(); toast.success("Your data download has started."); }
+    try { await downloadShopData(); toast.success(t("billing.downloadStarted")); }
     catch (e) { toast.error(e instanceof Error ? e.message : "Could not export your data"); }
     finally { setBusy(false); }
   };
 
   return (
     <div className="space-y-4 rounded-2xl border border-border bg-card p-6">
-      <div className="flex items-center gap-3"><CreditCard className="h-5 w-5 text-primary" /><h2 className="text-lg font-bold">MVP BizManager plan</h2></div>
-      <p className="font-display text-3xl font-bold">₱499<span className="text-base font-normal text-muted-foreground">/month</span></p>
-      <p className={b.state === "past_due" || !b.has_access ? "text-destructive" : "text-muted-foreground"}>{label[b.state] ?? b.state}</p>
-      {!b.is_owner ? <p className="text-sm text-muted-foreground">Only the shop owner can manage billing.</p> : (
+      <div className="flex items-center gap-3"><CreditCard className="h-5 w-5 text-primary" /><h2 className="text-lg font-bold">{t("billing.plan")}</h2></div>
+      <p className="font-display text-3xl font-bold">₱499<span className="text-base font-normal text-muted-foreground">{t("billing.perMonth")}</span></p>
+      <p className={b.state.startsWith("past_due") || !b.has_access ? "text-destructive" : "text-muted-foreground"}>{label[b.state] ?? b.state}</p>
+      {!b.is_owner ? <p className="text-sm text-muted-foreground">{t("billing.ownerOnly")}</p> : (
         <div className="flex flex-wrap gap-2">
-          {(!subscribed || b.state === "canceled") && !paying && <Button disabled={busy} onClick={startPay}>Subscribe — ₱499/mo</Button>}
-          {subscribed && <Button variant="outline" disabled={busy} onClick={manage}><ExternalLink className="h-4 w-4" /> Manage billing & payment method</Button>}
-          {!b.has_access && <Button variant="outline" disabled={busy} onClick={downloadData}><Download className="h-4 w-4" /> Download my data (CSV)</Button>}
+          {(!subscribed || b.state === "canceled") && !paying && <Button disabled={busy} onClick={startPay}>{t("billing.subscribe")}</Button>}
+          {subscribed && <Button variant="outline" disabled={busy} onClick={manage}><ExternalLink className="h-4 w-4" /> {t("billing.manage")}</Button>}
+          {!b.has_access && <Button variant="outline" disabled={busy} onClick={downloadData}><Download className="h-4 w-4" /> {t("billing.download")}</Button>}
         </div>
       )}
       {paying && (
         <div className="space-y-2">
-          <div className="flex justify-end"><Button size="sm" variant="ghost" onClick={() => setPaying(false)}><X className="h-4 w-4" /> Close</Button></div>
+          <div className="flex justify-end"><Button size="sm" variant="ghost" onClick={() => setPaying(false)}><X className="h-4 w-4" /> {t("billing.close")}</Button></div>
           <div className="overflow-hidden rounded-xl bg-background"><CheckoutForm /></div>
         </div>
       )}
-      <p className="text-xs text-muted-foreground">Charged ₱499 PHP per month; tax is added at checkout where it applies. 30-day money-back guarantee — see our <a href="/refund-policy" target="_blank" className="underline">Refund Policy</a>.</p>
+      <p className="text-xs text-muted-foreground">{t("billing.fine")} <a href="/refund-policy" target="_blank" className="underline">{t("billing.refund")}</a>.</p>
     </div>
   );
 }
