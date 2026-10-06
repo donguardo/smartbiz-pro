@@ -97,7 +97,7 @@ function OrderEditor({ id, onClose }: { id: string; onClose: () => void }) {
     void run(() => supabase.from("purchase_order_items").update({ [field]: v }).eq("id", itemId));
   };
   const copyText = async () => {
-    const lines = [`Order from ${order.shop_id ? "" : ""}${supplier ? `to ${supplier.name}` : ""}`.trim(), ...items.map((i) => `• ${i.product_name} — ${Number(i.qty)} ${i.unit}`), order.note ? `Note: ${order.note}` : ""].filter(Boolean);
+    const lines = [supplier ? `Order for ${supplier.name}:` : "Order:", ...items.map((i) => `• ${i.product_name} — ${Number(i.qty)} ${i.unit}`), order.note ? `Note: ${order.note}` : ""].filter(Boolean);
     await navigator.clipboard.writeText(lines.join("\n"));
     toast.success("Order copied — paste it in Messenger, Viber or SMS");
   };

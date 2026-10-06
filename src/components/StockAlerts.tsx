@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, BellRing, X } from "lucide-react";
 import { toast } from "sonner";
@@ -18,6 +18,11 @@ async function fetchAlerts() {
 export function StockAlertsBell({ className = "" }: { className?: string }) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+  const [reorderIds, setReorderIds] = useState<string[] | null>(null);
+  const [supplierId, setSupplierId] = useState("");
+  const [creating, setCreating] = useState(false);
+  const { data: suppliers = [] } = useQuery({ queryKey: ["suppliers"], queryFn: async () => { const { data, error } = await supabase.from("suppliers").select("*").order("name"); if (error) throw error; return data; }, enabled: open });
   const seen = useRef<Set<string> | null>(null);
   const { data: alerts = [] } = useQuery({ queryKey: alertsKey, queryFn: fetchAlerts, refetchInterval: 2 * 60000, refetchOnWindowFocus: true });
 
@@ -38,6 +43,18 @@ export function StockAlertsBell({ className = "" }: { className?: string }) {
     void qc.invalidateQueries({ queryKey: alertsKey });
   };
 
+  const createReorder = async () => {
+    if (!reorderIds?.length) return;
+    setCreating(true);
+    const { data, error } = await supabase.rpc("create_reorder_from_alerts", { _alert_ids: reorderIds, ...(supplierId ? { _supplier_id: supplierId } : {}) });
+    setCreating(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Draft reorder created");
+    setReorderIds(null); setOpen(false);
+    void qc.invalidateQueries({ queryKey: alertsKey });
+    void navigate({ to: "/reorders", search: { id: data } });
+  };
+
   const Icon = alerts.length ? BellRing : Bell;
   return (
     <div className={`relative ${className}`}>
@@ -55,11 +72,19 @@ export function StockAlertsBell({ className = "" }: { className?: string }) {
                 {alerts.map((a) => (
                   <li key={a.id} className="flex items-start justify-between gap-2 py-2 text-sm">
                     <span><b>{a.product_name}</b><span className="block text-xs text-muted-foreground">{Number(a.stock_at)} {a.unit} left · alert at {Number(a.threshold)} · {new Date(a.created_at).toLocaleString("en-PH", { timeZone: "Asia/Manila", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span></span>
-                    <button onClick={() => markRead([a.id])} className="shrink-0 text-xs text-primary underline">Dismiss</button>
+                    <span className="flex shrink-0 flex-col items-end gap-1"><button onClick={() => setReorderIds([a.id])} className="text-xs font-semibold text-primary underline">Reorder</button><button onClick={() => markRead([a.id])} className="text-xs text-muted-foreground underline">Dismiss</button></span>
                   </li>
                 ))}
               </ul>
-              <div className="mt-2 flex justify-between gap-2">
+              {reorderIds && <div className="mt-2 space-y-2 rounded-lg border border-primary/40 p-2 text-sm">
+                <p className="font-medium">Draft reorder for {reorderIds.length} product{reorderIds.length === 1 ? "" : "s"}</p>
+                <select aria-label="Supplier" value={supplierId} onChange={(e) => setSupplierId(e.target.value)} className="w-full rounded-md border border-input bg-background px-2 py-1.5">
+                  <option value="">Choose supplier later</option>{suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+                <div className="flex gap-2"><button disabled={creating} onClick={createReorder} className="flex-1 rounded-md bg-primary py-1.5 font-semibold text-primary-foreground disabled:opacity-50">{creating ? "Creating…" : "Create draft"}</button><button onClick={() => setReorderIds(null)} className="rounded-md border border-border px-3">Cancel</button></div>
+              </div>}
+              <div className="mt-2 flex flex-wrap justify-between gap-2">
+                <button onClick={() => setReorderIds(alerts.map((a) => a.id))} className="text-sm font-semibold text-primary underline">Reorder all</button>
                 <Link to="/inventory" onClick={() => setOpen(false)} className="text-sm font-medium text-primary">Open Products</Link>
                 <button onClick={() => markRead(alerts.map((a) => a.id))} className="text-sm text-muted-foreground underline">Mark all read</button>
               </div>
