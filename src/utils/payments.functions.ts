@@ -57,7 +57,8 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       }
 
       const meta = { userId: context.userId, shop_id: shop.shopId, managed_payments: "false" };
-      const session = await stripe.checkout.sessions.create({
+      const { createTaxAwareCheckout } = await import("@/lib/checkout-tax.server");
+      const session = await createTaxAwareCheckout((params) => stripe.checkout.sessions.create(params), {
         line_items: [{ price: price.id, quantity: 1 }],
         mode: "subscription",
         ui_mode: "embedded_page",
@@ -68,7 +69,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         client_reference_id: shop.shopId,
         metadata: meta,
         subscription_data: { metadata: meta },
-      });
+      }, data.environment);
       return { clientSecret: session.client_secret ?? "" };
     } catch (error) {
       return { error: getStripeErrorMessage(error) };
