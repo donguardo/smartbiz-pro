@@ -97,6 +97,53 @@ export type Database = {
         }
         Relationships: []
       }
+      billing_events: {
+        Row: {
+          created_at: string
+          detail: string | null
+          environment: string
+          event_type: string
+          id: string
+          paddle_event_id: string | null
+          paddle_subscription_id: string | null
+          shop_id: string | null
+          sync_status: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          environment: string
+          event_type: string
+          id?: string
+          paddle_event_id?: string | null
+          paddle_subscription_id?: string | null
+          shop_id?: string | null
+          sync_status: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          environment?: string
+          event_type?: string
+          id?: string
+          paddle_event_id?: string | null
+          paddle_subscription_id?: string | null
+          shop_id?: string | null
+          sync_status?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_events_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_messages: {
         Row: {
           created_at: string
@@ -1434,6 +1481,20 @@ export type Database = {
         Returns: {
           member_role: Database["public"]["Enums"]["shop_role"]
           sole_owner: boolean
+        }[]
+      }
+      get_billing_link_check: {
+        Args: never
+        Returns: {
+          env_ok: boolean
+          other_env_count: number
+          paddle_subscription_id: string
+          payments_env: string
+          shop_id: string
+          shop_ok: boolean
+          subscription_env: string
+          subscription_shop_id: string
+          subscription_status: string
         }[]
       }
       get_cashier_today_summary: {
