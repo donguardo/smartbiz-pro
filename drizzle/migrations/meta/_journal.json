@@ -183,6 +183,20 @@
       "when": 1791275256139,
       "tag": "0025_subscription_guard_rpcs",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1791276097558,
+      "tag": "0026_payments_mode",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1791276125770,
+      "tag": "0027_locked_read_only",
+      "breakpoints": true
     }
   ]
 }

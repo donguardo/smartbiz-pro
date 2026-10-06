@@ -5,7 +5,7 @@ import { ClipboardCopy, PackageCheck, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { OwnerOnly } from "@/components/OwnerOnly";
+import { OwnerRedirect } from "@/components/OwnerRedirect";
 import { isDecimalUnit, qk } from "@/lib/store";
 import { peso } from "@/lib/format";
 
@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_app/reorders")({
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },
   ] }),
-  component: () => <OwnerOnly><Reorders /></OwnerOnly>,
+  component: () => <OwnerRedirect><Reorders /></OwnerRedirect>,
 });
 
 const STATUS: Record<string, string> = { draft: "Draft", sent: "Sent", received: "Received", cancelled: "Cancelled" };

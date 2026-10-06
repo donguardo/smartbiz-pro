@@ -79,6 +79,24 @@ export type Database = {
           },
         ]
       }
+      app_config: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           created_at: string
@@ -1441,6 +1459,7 @@ export type Database = {
           shop_name: string
         }[]
       }
+      get_payments_env: { Args: never; Returns: string }
       get_product_settings: {
         Args: never
         Returns: {
@@ -1452,6 +1471,7 @@ export type Database = {
         Args: { _env: string }
         Returns: {
           cancel_at_period_end: boolean
+          env: string
           has_access: boolean
           is_owner: boolean
           period_end: string
@@ -1496,6 +1516,7 @@ export type Database = {
       is_platform_admin: { Args: never; Returns: boolean }
       is_shop_member: { Args: { _shop_id: string }; Returns: boolean }
       is_shop_owner: { Args: { _shop_id: string }; Returns: boolean }
+      payments_env: { Args: never; Returns: string }
       receive_purchase_order: {
         Args: { _order_id: string }
         Returns: undefined
