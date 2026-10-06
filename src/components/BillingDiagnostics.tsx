@@ -61,14 +61,16 @@ export function BillingEventLog() {
           <li key={key} className="py-2">
             <div className="flex items-start justify-between gap-3">
               <div><p className="font-medium">{final.event_type.replace("subscription.", "Subscription ")}</p>
-                <p className="text-muted-foreground">{final.detail} · {modeName(final.environment)} · {when(final.created_at)}</p></div>
+                <p className="text-muted-foreground">{final.detail} · {modeName(final.environment)} · {when(final.created_at)}</p>
+                {final.sync_status !== "synced" && <FailureInfo reason={final.detail} eventId={final.paddle_event_id} />}</div>
               <span className={badge(final.sync_status)}>Final: {statusName(final.sync_status)}</span>
             </div>
             {attempts.length > 1 && (
               <details className="mt-1">
                 <summary className="cursor-pointer text-xs text-muted-foreground">{attempts.length} delivery attempts</summary>
                 <ol className="mt-1 space-y-1 border-l border-border pl-3 text-xs">{attempts.map((a, i) => (
-                  <li key={a.id} className="flex justify-between gap-2"><span>Attempt {i + 1} · {when(a.created_at)} · {a.detail}</span><span className={badge(a.sync_status)}>{statusName(a.sync_status)}</span></li>
+                  <li key={a.id}><div className="flex justify-between gap-2"><span>Attempt {i + 1} · {when(a.created_at)} · {a.detail}</span><span className={badge(a.sync_status)}>{statusName(a.sync_status)}</span></div>
+                    {a.sync_status !== "synced" && <FailureInfo reason={a.detail} eventId={a.paddle_event_id} />}</li>
                 ))}</ol>
               </details>
             )}
