@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { verifyWebhook, EventName, type PaddleEnv } from "@/lib/paddle.server";
+import { createStripeClient, verifyWebhook, type StripeEnv } from "@/lib/stripe.server";
 
 async function admin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -7,58 +7,52 @@ async function admin() {
 }
 
 type Outcome = { shopId: string | null; userId: string | null; status: "synced" | "failed" | "skipped"; detail: string };
+const iso = (s?: number | null) => (s ? new Date(s * 1000).toISOString() : null);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function onCreated(data: any, env: PaddleEnv): Promise<Outcome> {
-  const userId = data.customData?.userId;
-  if (!userId || typeof userId !== "string") return { shopId: null, userId: null, status: "skipped", detail: "No user linked at checkout" };
-  const item = data.items?.[0];
-  const priceId = item?.price?.importMeta?.externalId;
-  const productId = item?.product?.importMeta?.externalId;
+async function syncSubscription(sub: any, env: StripeEnv, forceStatus?: string): Promise<Outcome> {
   const db = await admin();
-  // The plan covers the shop this user owns; never trust a shop id from the browser.
-  const { data: owner } = await db.from("shop_members").select("shop_id").eq("user_id", userId).eq("role", "owner").order("created_at").limit(1).maybeSingle();
-  const shopId = owner?.shop_id ?? null;
-  if (!priceId || !productId) return { shopId, userId, status: "skipped", detail: "Unknown plan (missing external id)" };
+  const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer?.id;
+  // The shop is resolved from the Stripe customer stored on it server-side at checkout.
+  let shopId: string | null = null;
+  if (customerId) {
+    const { data } = await db.from("shops").select("id").eq("stripe_customer_id", customerId).maybeSingle();
+    shopId = data?.id ?? null;
+  }
+  if (!shopId) return { shopId: null, userId: null, status: "failed", detail: "No shop linked to this customer" };
+  let userId: string | null = sub.metadata?.userId ?? null;
+  if (userId) {
+    const { data } = await db.from("shop_members").select("user_id").eq("shop_id", shopId).eq("user_id", userId).eq("role", "owner").maybeSingle();
+    if (!data) userId = null;
+  }
+  if (!userId) {
+    const { data } = await db.from("shop_members").select("user_id").eq("shop_id", shopId).eq("role", "owner").order("created_at").limit(1).maybeSingle();
+    userId = data?.user_id ?? null;
+  }
+  if (!userId) return { shopId, userId: null, status: "failed", detail: "Shop has no owner" };
+  const item = sub.items?.data?.[0];
+  const priceId = item?.price?.lookup_key || item?.price?.metadata?.lovable_external_id || item?.price?.id || "unknown";
+  const status = forceStatus ?? sub.status;
   const { error } = await db.from("subscriptions").upsert({
     user_id: userId,
     shop_id: shopId,
-    paddle_subscription_id: data.id,
-    paddle_customer_id: data.customerId,
-    product_id: productId,
+    provider: "stripe",
+    paddle_subscription_id: sub.id,
+    paddle_customer_id: customerId,
+    product_id: "bizmanager_plan",
     price_id: priceId,
-    status: data.status,
-    current_period_start: data.currentBillingPeriod?.startsAt ?? null,
-    current_period_end: data.currentBillingPeriod?.endsAt ?? null,
-    cancel_at_period_end: data.scheduledChange?.action === "cancel",
+    status,
+    current_period_start: iso(item?.current_period_start ?? sub.current_period_start),
+    current_period_end: iso(item?.current_period_end ?? sub.current_period_end),
+    cancel_at_period_end: !!sub.cancel_at_period_end,
     environment: env,
     updated_at: new Date().toISOString(),
   }, { onConflict: "paddle_subscription_id" });
   if (error) return { shopId, userId, status: "failed", detail: "Could not save subscription" };
-  return { shopId, userId, status: shopId ? "synced" : "failed", detail: shopId ? `Status ${data.status}` : "Saved, but no owner shop found" };
+  return { shopId, userId, status: "synced", detail: `Status ${status}${sub.cancel_at_period_end ? " (cancels at period end)" : ""}` };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function onUpdated(data: any, env: PaddleEnv): Promise<Outcome> {
-  const db = await admin();
-  const patch: { status: string; cancel_at_period_end: boolean; updated_at: string; current_period_start?: string; current_period_end?: string } = {
-    status: data.status,
-    cancel_at_period_end: data.scheduledChange?.action === "cancel",
-    updated_at: new Date().toISOString(),
-  };
-  // Canceled events have no billing period; keep the paid-through date so access lasts to month end.
-  if (data.currentBillingPeriod) {
-    patch.current_period_start = data.currentBillingPeriod.startsAt;
-    patch.current_period_end = data.currentBillingPeriod.endsAt;
-  }
-  const { data: rows, error } = await db.from("subscriptions").update(patch).eq("paddle_subscription_id", data.id).eq("environment", env).select("shop_id, user_id");
-  const row = rows?.[0];
-  if (error) return { shopId: row?.shop_id ?? null, userId: row?.user_id ?? null, status: "failed", detail: "Could not update subscription" };
-  if (!row) return { shopId: null, userId: null, status: "failed", detail: "Subscription not found for this payment mode" };
-  return { shopId: row.shop_id, userId: row.user_id, status: "synced", detail: `Status ${data.status}${patch.cancel_at_period_end ? " (cancels at period end)" : ""}` };
-}
-
-async function logEvent(env: PaddleEnv, eventId: string | null, type: string, subId: string | null, o: Outcome) {
+async function log(env: StripeEnv, eventId: string, type: string, subId: string | null, o: Outcome) {
   try {
     const db = await admin();
     await db.from("billing_events").insert({ shop_id: o.shopId, user_id: o.userId, paddle_event_id: eventId, event_type: type, paddle_subscription_id: subId, environment: env, sync_status: o.status, detail: o.detail });
@@ -69,28 +63,31 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        // SECURITY: envParam is untrusted until verifyWebhook passes with that env's own secret.
-        const envParam = new URL(request.url).searchParams.get("env");
-        if (envParam !== "sandbox" && envParam !== "live") return new Response("Bad env", { status: 400 });
+        // SECURITY: env is untrusted until verifyWebhook passes with that env's own secret.
+        const rawEnv = new URL(request.url).searchParams.get("env");
+        if (rawEnv !== "sandbox" && rawEnv !== "live") return new Response("Bad env", { status: 400 });
+        const env: StripeEnv = rawEnv;
         let event;
-        try { event = await verifyWebhook(request, envParam); }
+        try { event = await verifyWebhook(request, env); }
         catch (e) { console.error("Webhook verify error:", e); return new Response("Webhook error", { status: 400 }); }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const data = event.data as any;
+        const obj = event.data.object;
         try {
-          let o: Outcome | null = null;
-          switch (event.eventType) {
-            case EventName.SubscriptionCreated: o = await onCreated(data, envParam); break;
-            case EventName.SubscriptionUpdated:
-            case EventName.SubscriptionCanceled: o = await onUpdated(data, envParam); break;
-            default: console.log("Unhandled event:", event.eventType);
+          let sub = null;
+          let forced: string | undefined;
+          if (event.type.startsWith("customer.subscription.")) {
+            sub = obj;
+            if (event.type === "customer.subscription.deleted") forced = "canceled";
+          } else if (event.type === "checkout.session.completed" && obj.subscription && obj.payment_status !== "unpaid") {
+            sub = await createStripeClient(env).subscriptions.retrieve(typeof obj.subscription === "string" ? obj.subscription : obj.subscription.id);
           }
-          if (o) await logEvent(envParam, event.eventId, event.eventType, data?.id ?? null, o);
-          if (o?.status === "failed" && o.detail.startsWith("Could not")) return new Response("Sync failed", { status: 500 });
+          if (!sub) return Response.json({ received: true });
+          const o = await syncSubscription(sub, env, forced);
+          await log(env, event.id, event.type.replace("customer.", ""), sub.id, o);
+          if (o.status === "failed" && o.detail.startsWith("Could not")) return new Response("Sync failed", { status: 500 });
           return Response.json({ received: true });
         } catch (e) {
           console.error("Webhook error:", e);
-          await logEvent(envParam, event.eventId, event.eventType, data?.id ?? null, { shopId: null, userId: null, status: "failed", detail: "Unexpected error" });
+          await log(env, event.id, event.type, null, { shopId: null, userId: null, status: "failed", detail: "Unexpected error" });
           return new Response("Webhook error", { status: 500 });
         }
       },
