@@ -37,7 +37,7 @@ async function onCreated(data: any, env: PaddleEnv) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function onUpdated(data: any, env: PaddleEnv) {
   const db = await admin();
-  const patch: Record<string, unknown> = {
+  const patch: { status: string; cancel_at_period_end: boolean; updated_at: string; current_period_start?: string; current_period_end?: string } = {
     status: data.status,
     cancel_at_period_end: data.scheduledChange?.action === "cancel",
     updated_at: new Date().toISOString(),
