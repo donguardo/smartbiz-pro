@@ -36,6 +36,12 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     try {
       const env = await serverMode(context.supabase, data.environment);
       const shop = await ownedShop(context.supabase);
+      // Already-paying shops must use Manage billing instead of starting a second checkout.
+      const { data: bill } = await context.supabase.rpc("get_shop_billing", { _env: "server" });
+      const billState = bill?.[0]?.state;
+      if (billState === "active" || billState === "trialing" || billState === "past_due") {
+        return { error: "This shop already has an active plan. Use Manage billing to change it." };
+      }
       const stripe = createStripeClient(env);
       const prices = await stripe.prices.list({ lookup_keys: [PRICE_ID] });
       const price = prices.data[0];
