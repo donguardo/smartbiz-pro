@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Banknote, CreditCard, Minus, Plus, Printer, QrCode, ScanLine, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
@@ -9,7 +9,7 @@ import { peso } from "@/lib/format";
 import { useShopProfile } from "@/lib/shop-profile";
 import { useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
-import { enqueueSale, isNetworkError } from "@/lib/offline";
+import { enqueueSale, isNetworkError, useOnline } from "@/lib/offline";
 import { FailedQueuedSales } from "@/components/OfflineStatus";
 import "@/receipt-print.css";
 
@@ -27,12 +27,13 @@ export const Route = createFileRoute("/_app/pos")({
 
 type Line = { p: Product; qty: number };
 type Method = "cash" | "ewallet" | "card";
-type Receipt = { no: string; lines: Line[]; total: number; method: Method; tendered: number; at: Date; pending?: boolean };
+type Receipt = { no: string; lines: Line[]; total: number; method: Method; tendered: number; at: Date; pending?: boolean; clientSaleId?: string; syncedAt?: string | null };
 
 function POS() {
   const qc = useQueryClient();
   const { data: products = [] } = useQuery({ queryKey: qk.products, queryFn: fetchProducts });
-  const { t } = useT();
+  const { t, lang } = useT();
+  const online = useOnline();
   const { data: shop } = useQuery({ queryKey: qk.shop, queryFn: fetchShopContext });
   const { data: business } = useShopProfile(shop?.shop_id);
   const receiptRef = useRef<HTMLDivElement>(null);
@@ -46,6 +47,22 @@ function POS() {
   const [tendered, setTendered] = useState("");
   const [busy, setBusy] = useState(false);
   const [receipt, setReceipt] = useState<Receipt | null>(null);
+  const savedReceipt = useQuery({
+    queryKey: ["receipt-sync", shop?.shop_id, receipt?.clientSaleId],
+    enabled: online && !!shop?.shop_id && !!receipt?.pending && !!receipt?.clientSaleId,
+    refetchInterval: 5000,
+    queryFn: async () => {
+      if (!shop || !receipt?.clientSaleId) return null;
+      const { data, error } = await supabase.from("sales").select("receipt_no, created_at, synced_at, total").eq("shop_id", shop.shop_id).eq("client_sale_id", receipt.clientSaleId).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+  useEffect(() => {
+    const saved = savedReceipt.data;
+    if (!saved) return;
+    setReceipt((previous) => previous?.pending ? { ...previous, no: saved.receipt_no, at: new Date(saved.created_at), total: Number(saved.total), pending: false, syncedAt: saved.synced_at } : previous);
+  }, [savedReceipt.data]);
   const [customerId, setCustomerId] = useState("");
   const [newCustomer, setNewCustomer] = useState({ name: "", mobile: "", consent: false });
   const scanRef = useRef<HTMLInputElement>(null);
@@ -87,7 +104,7 @@ function POS() {
       if (newCustomer.name.trim()) { toast.error(t("offline.noNewCustomer")); return; }
       const q = await enqueueSale({ id: clientSaleId, method, tendered: paid, total, customerId: customerId || null, items: cart.map((l) => ({ product_id: l.p.id, qty: l.qty, name: l.p.name, price: Number(l.p.price) })) });
       qc.setQueryData<Product[]>(qk.products, (ps) => ps?.map((p) => { const l = cart.find((x) => x.p.id === p.id); return l && p.track_stock ? { ...p, stock: p.stock - l.qty } : p; }));
-      setReceipt({ no: `OFFLINE-${q.id.slice(0, 6).toUpperCase()}`, lines: cart, total, method, tendered: paid, at: new Date(q.createdAt), pending: true });
+      setReceipt({ no: `OFFLINE-${q.id.slice(0, 6).toUpperCase()}`, lines: cart, total, method, tendered: paid, at: new Date(q.createdAt), pending: true, clientSaleId: q.id });
       setCart([]); setTendered(""); setCustomerId(""); setPaying(false);
       toast.success(t("offline.queued"));
     };
@@ -234,6 +251,7 @@ function POS() {
               {business?.logoSrc && <img src={business.logoSrc} alt={t("profile.logo")} className="mx-auto mb-3 h-20 w-20 object-contain" />}
               <p className="break-words text-center font-bold">{business?.name ?? shop?.shop_name ?? "Store"}</p>
               <p className="text-center text-xs text-muted-foreground">{receipt.at.toLocaleString("en-PH")}</p>
+              {receipt.syncedAt && <p className="text-center text-xs text-muted-foreground">{t("offline.saleSyncedAt", { at: new Date(receipt.syncedAt).toLocaleString(lang === "tl" ? "fil-PH" : "en-PH") })}</p>}
               <p className="text-center text-xs text-muted-foreground">Receipt {receipt.no}</p>
               {receipt.pending && <p className="text-center text-xs font-semibold text-warning">{t("offline.receiptPending")}</p>}
               <div className="my-3 border-t border-dashed border-border" />

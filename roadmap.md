@@ -1,8 +1,8 @@
 # Roadmap
 ## Offline sale idempotency
-- [ ] Apply exact sale-idempotency SQL and regenerate types without test data writes
-- [ ] Preserve checkout IDs, shop-scope queues, and serialize sync/queue changes across tabs
-- [ ] Display offline sync time on sales and receipts; review code and automatic build only
+- [x] Apply exact sale-idempotency SQL and regenerate types without test data writes
+- [x] Preserve checkout IDs, shop-scope queues, and serialize sync/queue changes across tabs
+- [x] Display offline sync time on sales and receipts; review code and automatic build only
 
 - [x] Landing page with setup walkthrough + live demo dashboard
 - [x] Accounts (email + Google), light/dark theme, installable on phones
