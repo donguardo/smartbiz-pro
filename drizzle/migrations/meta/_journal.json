@@ -239,6 +239,13 @@
       "when": 1791382357836,
       "tag": "0033_anonymize_customer_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1791382514452,
+      "tag": "0034_anonymize_customer_owner_only",
+      "breakpoints": true
     }
   ]
 }
