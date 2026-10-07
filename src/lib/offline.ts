@@ -145,6 +145,10 @@ function readQueueKey(key: string): QueuedSale[] {
   try { const list = JSON.parse(localStorage.getItem(key) ?? "[]"); return Array.isArray(list) ? list : []; } catch { return []; }
 }
 function readQueue(scope: QueueScope) { return readQueueKey(scope.key); }
+function shopContextChanged(event: StorageEvent) {
+  if (!event.key?.startsWith(`${CACHE_PREFIX}:`) || !event.key.endsWith(":fetchShopContext")) return false;
+  try { return JSON.parse(event.oldValue ?? "null")?.data?.shop_id !== JSON.parse(event.newValue ?? "null")?.data?.shop_id; } catch { return true; }
+}
 function writeQueue(scope: QueueScope, q: QueuedSale[]) {
   localStorage.setItem(scope.key, JSON.stringify(q.map((sale) => ({ ...sale, shopName: scope.shopName }))));
   window.dispatchEvent(new Event(QUEUE_EVENT));
@@ -226,7 +230,7 @@ export function useQueuedSales() {
         setList(scope ? readQueue(scope) : []);
       }).catch(() => { /* Keep last visible queue if the shop cannot be read. */ });
     };
-    const onStorage = (event: StorageEvent) => { if (event.key === key || event.key === null || event.key?.startsWith(`${CACHE_PREFIX}:`)) update(); };
+    const onStorage = (event: StorageEvent) => { if (event.key === key || event.key === null || shopContextChanged(event)) update(); };
     const { data: authListener } = supabase.auth.onAuthStateChange(() => { setList([]); setTimeout(update, 0); });
     window.addEventListener(QUEUE_EVENT, update);
     window.addEventListener("storage", onStorage);
@@ -275,7 +279,7 @@ export function useOtherShopQueues() {
         }));
       }).catch(() => { /* Preserve known queues during a transient connection failure. */ });
     };
-    const onStorage = (event: StorageEvent) => { if (event.key === null || event.key?.startsWith(`${QUEUE_PREFIX}:`) || event.key?.startsWith(`${CACHE_PREFIX}:`)) update(); };
+    const onStorage = (event: StorageEvent) => { if (event.key === null || event.key?.startsWith(`${QUEUE_PREFIX}:`) || shopContextChanged(event)) update(); };
     const { data } = supabase.auth.onAuthStateChange(() => { setShops([]); setTimeout(update, 0); });
     window.addEventListener(QUEUE_EVENT, update);
     window.addEventListener("storage", onStorage);
