@@ -17,6 +17,10 @@ const heavyFiles = new Set<string>();
 const precacheOrigins: Plugin = {
   name: "mvp-precache-origins",
   apply: "build",
+  closeBundle() {
+    const { publicDir, environments } = (this as unknown as { environments?: Record<string, { config?: { build?: { copyPublicDir?: boolean } } }> });
+    console.log("DIAG publicDir=", (globalThis as Record<string, unknown>).DIAG_PUBLIC_DIR, "clientCopy=", environments?.client?.config?.build?.copyPublicDir);
+  },
   generateBundle(_options, bundle) {
     for (const output of Object.values(bundle)) {
       if (output.type === "chunk" && Object.keys(output.modules).some((id) => heavySource.test(id.replaceAll("\\", "/")))) {
