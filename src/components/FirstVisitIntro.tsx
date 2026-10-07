@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { SkipForward, Volume2, VolumeX } from "lucide-react";
 import introVideo from "@/assets/bizmanager-intro-ads.mp4.asset.json";
+import introVideoWebm from "@/assets/bizmanager-intro.webm.asset.json";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 
@@ -75,6 +76,7 @@ export function FirstVisitIntro() {
         onEnded={finish}
         onError={finish}
       >
+        <source src={introVideoWebm.url} type="video/webm" />
         <source src={introVideo.url} type="video/mp4" />
       </video>
       <Button
