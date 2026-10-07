@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { PLAN_FEATURES as FEATURES, PLAN_ALL_FEATURES as ALL_FEATURES, type PlanId } from "@/lib/plans";
 import { fetchMyPlan, fetchMyUsage, fetchPlanLimits, qk } from "@/lib/store";
 import { useServerFn } from "@tanstack/react-start";
 import { Check, CreditCard, Download, ExternalLink, X } from "lucide-react";
@@ -31,13 +32,6 @@ export const Route = createFileRoute("/_app/billing")({
 
 const fmt = (d: string | null) => (d ? new Date(d).toLocaleDateString("en-PH", { dateStyle: "medium" }) : "—");
 
-type PlanId = "basic" | "standard" | "pro";
-const FEATURES: Record<string, string[]> = {
-  basic: ["plan.basic.f1", "plan.basic.f2", "plan.basic.f3", "plan.basic.f4"],
-  standard: ["plan.standard.f1", "plan.standard.f2", "plan.standard.f3", "plan.f.bestOrders", "plan.f.noAds"],
-  pro: ["plan.pro.f1", "plan.pro.f2", "plan.pro.f3", "plan.f.bestOrders", "plan.f.noAds"],
-};
-const ALL_FEATURES = ["plan.all.f1", "plan.all.f2", "plan.all.f3"];
 const php = (n: number) => n.toLocaleString("en-PH");
 
 function CheckoutForm({ plan }: { plan: PlanId }) {
@@ -138,7 +132,7 @@ export function BillingPanel() {
               <p className="font-display text-2xl font-bold">₱{php(l.monthly_price_php)}<span className="text-xs font-normal text-muted-foreground">{t("plan.perMonth")}</span></p>
             </div>
             <ul className="flex-1 space-y-1 text-xs">
-              {[...(FEATURES[l.plan] ?? []), ...ALL_FEATURES].map((k) => <li key={k} className="flex gap-1.5"><Check className="mt-0.5 h-3 w-3 shrink-0 text-primary" />{t(k)}</li>)}
+              {[...(FEATURES[l.plan as PlanId] ?? []), ...ALL_FEATURES].map((k) => <li key={k} className="flex gap-1.5"><Check className="mt-0.5 h-3 w-3 shrink-0 text-primary" />{t(k)}</li>)}
             </ul>
             {accountOwner && (paid
               ? <Button size="sm" variant="outline" disabled={busy} onClick={manage}>{t("plan.change")}</Button>
