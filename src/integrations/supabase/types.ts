@@ -144,6 +144,30 @@ export type Database = {
           },
         ]
       }
+      business_accounts: {
+        Row: {
+          created_at: string
+          id: string
+          owner_user_id: string
+          stripe_customer_id: string | null
+          trial_started_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          owner_user_id: string
+          stripe_customer_id?: string | null
+          trial_started_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          owner_user_id?: string
+          stripe_customer_id?: string | null
+          trial_started_at?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           created_at: string
@@ -346,6 +370,60 @@ export type Database = {
           id?: string
           message?: string | null
           status?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      plan_limits: {
+        Row: {
+          ai_menu_builder: boolean
+          ai_menu_runs_per_day: number
+          animated_pages: number | null
+          basic_pdf_max_pages: number | null
+          brand_ads: boolean
+          label: string
+          max_skus: number | null
+          max_stores: number | null
+          ml_smart_reorder: boolean
+          monthly_price_php: number
+          plan: string
+          stripe_lookup_key: string | null
+          stripe_price_id: string | null
+          support_level: string
+          updated_at: string
+        }
+        Insert: {
+          ai_menu_builder?: boolean
+          ai_menu_runs_per_day?: number
+          animated_pages?: number | null
+          basic_pdf_max_pages?: number | null
+          brand_ads?: boolean
+          label: string
+          max_skus?: number | null
+          max_stores?: number | null
+          ml_smart_reorder?: boolean
+          monthly_price_php: number
+          plan: string
+          stripe_lookup_key?: string | null
+          stripe_price_id?: string | null
+          support_level?: string
+          updated_at?: string
+        }
+        Update: {
+          ai_menu_builder?: boolean
+          ai_menu_runs_per_day?: number
+          animated_pages?: number | null
+          basic_pdf_max_pages?: number | null
+          brand_ads?: boolean
+          label?: string
+          max_skus?: number | null
+          max_stores?: number | null
+          ml_smart_reorder?: boolean
+          monthly_price_php?: number
+          plan?: string
+          stripe_lookup_key?: string | null
+          stripe_price_id?: string | null
+          support_level?: string
           updated_at?: string
         }
         Relationships: []
@@ -989,6 +1067,7 @@ export type Database = {
       shops: {
         Row: {
           allow_cashier_products: boolean
+          business_account_id: string | null
           business_categories: string[]
           business_type: string | null
           created_at: string
@@ -1004,6 +1083,7 @@ export type Database = {
         }
         Insert: {
           allow_cashier_products?: boolean
+          business_account_id?: string | null
           business_categories?: string[]
           business_type?: string | null
           created_at?: string
@@ -1019,6 +1099,7 @@ export type Database = {
         }
         Update: {
           allow_cashier_products?: boolean
+          business_account_id?: string | null
           business_categories?: string[]
           business_type?: string | null
           created_at?: string
@@ -1032,7 +1113,15 @@ export type Database = {
           stripe_customer_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "shops_business_account_id_fkey"
+            columns: ["business_account_id"]
+            isOneToOne: false
+            referencedRelation: "business_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       stock_alerts: {
         Row: {
@@ -1147,6 +1236,7 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          account_id: string | null
           cancel_at_period_end: boolean
           created_at: string
           current_period_end: string | null
@@ -1156,6 +1246,9 @@ export type Database = {
           paddle_customer_id: string
           paddle_subscription_id: string
           past_due_since: string | null
+          pending_plan: string | null
+          pending_plan_at: string | null
+          plan: string
           price_id: string
           product_id: string
           provider: string
@@ -1165,6 +1258,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          account_id?: string | null
           cancel_at_period_end?: boolean
           created_at?: string
           current_period_end?: string | null
@@ -1174,6 +1268,9 @@ export type Database = {
           paddle_customer_id: string
           paddle_subscription_id: string
           past_due_since?: string | null
+          pending_plan?: string | null
+          pending_plan_at?: string | null
+          plan?: string
           price_id: string
           product_id: string
           provider?: string
@@ -1183,6 +1280,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          account_id?: string | null
           cancel_at_period_end?: boolean
           created_at?: string
           current_period_end?: string | null
@@ -1192,6 +1290,9 @@ export type Database = {
           paddle_customer_id?: string
           paddle_subscription_id?: string
           past_due_since?: string | null
+          pending_plan?: string | null
+          pending_plan_at?: string | null
+          plan?: string
           price_id?: string
           product_id?: string
           provider?: string
@@ -1201,6 +1302,27 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "subscriptions_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "business_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_pending_plan_fkey"
+            columns: ["pending_plan"]
+            isOneToOne: false
+            referencedRelation: "plan_limits"
+            referencedColumns: ["plan"]
+          },
+          {
+            foreignKeyName: "subscriptions_plan_fkey"
+            columns: ["plan"]
+            isOneToOne: false
+            referencedRelation: "plan_limits"
+            referencedColumns: ["plan"]
+          },
           {
             foreignKeyName: "subscriptions_shop_id_fkey"
             columns: ["shop_id"]
@@ -1389,6 +1511,38 @@ export type Database = {
     }
     Functions: {
       accept_shop_invite: { Args: { _code: string }; Returns: string }
+      account_on_trial: { Args: { _account: string }; Returns: boolean }
+      account_paid_subscription: {
+        Args: { _account: string }
+        Returns: {
+          account_id: string | null
+          cancel_at_period_end: boolean
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          environment: string
+          id: string
+          paddle_customer_id: string
+          paddle_subscription_id: string
+          past_due_since: string | null
+          pending_plan: string | null
+          pending_plan_at: string | null
+          plan: string
+          price_id: string
+          product_id: string
+          provider: string
+          shop_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "subscriptions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       adjust_stock: {
         Args: {
           _kind: string
@@ -1475,6 +1629,10 @@ export type Database = {
           file_path: string
         }[]
       }
+      ensure_business_account: {
+        Args: { _since?: string; _user: string }
+        Returns: string
+      }
       ensure_my_shop: {
         Args: { _business_name?: string }
         Returns: {
@@ -1525,6 +1683,29 @@ export type Database = {
           id: string
           mobile: string
           name: string
+        }[]
+      }
+      get_my_plan: {
+        Args: never
+        Returns: {
+          ai_menu_builder: boolean
+          ai_menu_runs_per_day: number
+          animated_pages: number
+          basic_pdf_max_pages: number
+          brand_ads: boolean
+          is_account_owner: boolean
+          label: string
+          max_skus: number
+          max_stores: number
+          ml_smart_reorder: boolean
+          monthly_price_php: number
+          on_trial: boolean
+          pending_plan: string
+          pending_plan_at: string
+          plan: string
+          shops_in_account: number
+          support_level: string
+          trial_ends_at: string
         }[]
       }
       get_my_shop_context: {
@@ -1593,6 +1774,7 @@ export type Database = {
       is_shop_member: { Args: { _shop_id: string }; Returns: boolean }
       is_shop_owner: { Args: { _shop_id: string }; Returns: boolean }
       payments_env: { Args: never; Returns: string }
+      plan_for_lookup_key: { Args: { _key: string }; Returns: string }
       receive_purchase_order: {
         Args: { _order_id: string }
         Returns: undefined
@@ -1618,6 +1800,12 @@ export type Database = {
       remove_shop_cashier: { Args: { _member_id: string }; Returns: undefined }
       seed_sample_store: { Args: never; Returns: undefined }
       shop_has_access: { Args: { _shop_id: string }; Returns: boolean }
+      shop_has_access_unchecked: {
+        Args: { _shop_id: string }
+        Returns: boolean
+      }
+      shop_plan: { Args: { _shop_id: string }; Returns: string }
+      shop_plan_unchecked: { Args: { _shop_id: string }; Returns: string }
       subscription_is_paid: {
         Args: { _s: Database["public"]["Tables"]["subscriptions"]["Row"] }
         Returns: boolean
