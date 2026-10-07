@@ -12,8 +12,9 @@ export function handleOfflineAuthChange(event: string) {
   if (event === "SIGNED_OUT" && !intentionalSignOut) clearAllOfflineCaches();
 }
 export async function clearCachesIfSignedOut() {
+  const revision = cacheRevision;
   const { data, error } = await supabase.auth.getSession();
-  if (!error && !data.session) clearAllOfflineCaches();
+  if (revision === cacheRevision && !error && !data.session && !intentionalSignOut) clearAllOfflineCaches();
 }
 
 async function userKey() {
@@ -35,8 +36,13 @@ export async function withOfflineCache<T>(name: string, fn: () => Promise<T>): P
   try {
     const data = await fn();
     if (revision === cacheRevision && userId !== "anon") {
+      let previousShop: string | undefined;
+      if (name === "fetchShopContext") {
+        try { previousShop = JSON.parse(localStorage.getItem(key) ?? "null")?.data?.shop_id; } catch { /* no saved shop */ }
+      }
       try { localStorage.setItem(key, JSON.stringify({ at: Date.now(), data })); } catch { /* storage full */ }
       window.dispatchEvent(new Event(CACHE_EVENT));
+      if (name === "fetchShopContext" && previousShop !== (data as { shop_id?: string } | null)?.shop_id) window.dispatchEvent(new Event(QUEUE_EVENT));
     }
     return data;
   } catch (err) {
@@ -223,10 +229,9 @@ export function useQueuedSales() {
     const onStorage = (event: StorageEvent) => { if (event.key === key || event.key === null || event.key?.startsWith(`${CACHE_PREFIX}:`)) update(); };
     const { data: authListener } = supabase.auth.onAuthStateChange(() => { setList([]); setTimeout(update, 0); });
     window.addEventListener(QUEUE_EVENT, update);
-    window.addEventListener(CACHE_EVENT, update);
     window.addEventListener("storage", onStorage);
     update();
-    return () => { active = false; authListener.subscription.unsubscribe(); window.removeEventListener(QUEUE_EVENT, update); window.removeEventListener(CACHE_EVENT, update); window.removeEventListener("storage", onStorage); };
+    return () => { active = false; authListener.subscription.unsubscribe(); window.removeEventListener(QUEUE_EVENT, update); window.removeEventListener("storage", onStorage); };
   }, []);
   return list;
 }
@@ -273,10 +278,9 @@ export function useOtherShopQueues() {
     const onStorage = (event: StorageEvent) => { if (event.key === null || event.key?.startsWith(`${QUEUE_PREFIX}:`) || event.key?.startsWith(`${CACHE_PREFIX}:`)) update(); };
     const { data } = supabase.auth.onAuthStateChange(() => { setShops([]); setTimeout(update, 0); });
     window.addEventListener(QUEUE_EVENT, update);
-    window.addEventListener(CACHE_EVENT, update);
     window.addEventListener("storage", onStorage);
     update();
-    return () => { active = false; data.subscription.unsubscribe(); window.removeEventListener(QUEUE_EVENT, update); window.removeEventListener(CACHE_EVENT, update); window.removeEventListener("storage", onStorage); };
+    return () => { active = false; data.subscription.unsubscribe(); window.removeEventListener(QUEUE_EVENT, update); window.removeEventListener("storage", onStorage); };
   }, []);
   return shops;
 }
