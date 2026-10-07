@@ -18,9 +18,12 @@ async function ownedShop(supabase: any) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function assertServerMode(supabase: any, env: StripeEnv) {
-  const { data } = await supabase.rpc("get_payments_env");
-  if (data !== env) throw new Error("Payments are being set up. Please try again later.");
+async function serverMode(supabase: any, requested: StripeEnv): Promise<StripeEnv> {
+  const { data, error } = await supabase.rpc("get_payments_env");
+  if (error || (data !== "sandbox" && data !== "live") || data !== requested) {
+    throw new Error("Payments are being set up. Please try again later.");
+  }
+  return data as StripeEnv;
 }
 
 type CheckoutResult = { clientSecret: string } | { error: string };
@@ -31,9 +34,9 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     z.object({ environment: envSchema, returnUrl: z.string().url().max(500) }).parse(data))
   .handler(async ({ data, context }): Promise<CheckoutResult> => {
     try {
-      await assertServerMode(context.supabase, data.environment);
+      const env = await serverMode(context.supabase, data.environment);
       const shop = await ownedShop(context.supabase);
-      const stripe = createStripeClient(data.environment);
+      const stripe = createStripeClient(env);
       const prices = await stripe.prices.list({ lookup_keys: [PRICE_ID] });
       const price = prices.data[0];
       if (!price) throw new Error("Plan price not found");
