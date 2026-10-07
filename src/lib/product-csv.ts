@@ -23,29 +23,43 @@ function splitLine(line: string) {
   return out.map((s) => s.trim());
 }
 
+// Same rule as csvCell in @/lib/csv-zip: text that starts like a spreadsheet
+// formula is stored with a leading quote so it can never run when the file is
+// re-opened. Plain numbers (even negative ones) are left alone.
+const FORMULA_START = /^[=+\-@\t\r]/;
+const PLAIN_NUMBER = /^-?\d+(\.\d+)?$/;
+function safeText(s: string): string {
+  return FORMULA_START.test(s) && !PLAIN_NUMBER.test(s) ? "'" + s : s;
+}
+
 export function parseProductCsv(text: string, existingSkus: Set<string>): CsvRow[] {
   const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter((l) => l.trim());
   if (!lines.length) return [];
   const header = splitLine(lines[0]!).map((h) => h.toLowerCase());
+  const known = new Set<string>(CSV_COLUMNS);
+  const unknown = header.find((h) => h !== "" && !known.has(h));
+  if (unknown) return [{ line: 1, errors: [`Unknown column "${unknown}". Use: ${CSV_COLUMNS.join(", ")}`] }];
   const idx = (k: string) => header.indexOf(k);
   if (idx("name") < 0 || idx("price") < 0) return [{ line: 1, errors: ["Header must include at least name and price"] }];
+  // Accept "₱1,250.50", "1,250.50" and "PHP 52" as numbers; a comma must be quoted in the file.
+  const num = (s: string) => Number(s.replace(/^php/i, "").replace(/[₱,\s]/g, ""));
   const seen = new Set<string>();
   return lines.slice(1).map((l, i) => {
     const cells = splitLine(l); const get = (k: string) => (idx(k) >= 0 ? cells[idx(k)] ?? "" : "");
     const errors: string[] = [];
-    const name = get("name"); if (!name) errors.push("Name is required");
-    const price = Number(get("price")); if (get("price") === "" || !Number.isFinite(price) || price < 0) errors.push("Price must be a number ≥ 0");
-    const cost = get("cost") === "" ? null : Number(get("cost")); if (cost != null && (!Number.isFinite(cost) || cost < 0)) errors.push("Cost must be a number ≥ 0");
+    const name = safeText(get("name")); if (!name) errors.push("Name is required");
+    const price = num(get("price")); if (get("price") === "" || !Number.isFinite(price) || price < 0) errors.push("Price must be a number ≥ 0");
+    const cost = get("cost") === "" ? null : num(get("cost")); if (cost != null && (!Number.isFinite(cost) || cost < 0)) errors.push("Cost must be a number ≥ 0");
     const unit = (get("unit") || "pc") as Unit; if (!UNITS.includes(unit)) errors.push(`Unit must be one of ${UNITS.join(", ")}`);
     const ts = get("track_stock").toLowerCase();
     const track = unit === "service" ? false : !["no", "false", "0", "n"].includes(ts);
-    const stock = get("stock") === "" ? 0 : Number(get("stock"));
+    const stock = get("stock") === "" ? 0 : num(get("stock"));
     if (track && (!Number.isFinite(stock) || stock < 0)) errors.push("Stock must be a number ≥ 0");
     if (track && !isDecimalUnit(unit) && !Number.isInteger(stock)) errors.push("Decimals only for kg, g or L");
-    const reorder = get("reorder_at") === "" ? 5 : Number(get("reorder_at")); if (!Number.isFinite(reorder) || reorder < 0) errors.push("reorder_at must be a number ≥ 0");
-    const sku = get("sku"); const key = sku.toLowerCase();
+    const reorder = get("reorder_at") === "" ? 5 : num(get("reorder_at")); if (!Number.isFinite(reorder) || reorder < 0) errors.push("reorder_at must be a number ≥ 0");
+    const sku = safeText(get("sku")); const key = sku.toLowerCase();
     if (sku && (existingSkus.has(key) || seen.has(key))) errors.push(`SKU ${sku} already used`);
     if (sku) seen.add(key);
-    return { line: i + 2, errors, data: errors.length ? undefined : { name, category: get("category") || "General", price, cost, unit, track_stock: track, stock_qty: track ? stock : 0, reorder_level: Math.round(reorder), sku } };
+    return { line: i + 2, errors, data: errors.length ? undefined : { name, category: safeText(get("category")) || "General", price, cost, unit, track_stock: track, stock_qty: track ? stock : 0, reorder_level: Math.round(reorder), sku } };
   });
 }

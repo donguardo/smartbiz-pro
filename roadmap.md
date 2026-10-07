@@ -10,6 +10,12 @@
 - [x] seo() helper adds og:url + canonical (https://mvp.com.ai) to /, /showcase, /showcase/$business, /install, /privacy, /terms, /refund-policy, /delete-account
 - [x] orangeware iframe allow list drops clipboard-read, keeps clipboard-write
 
+## Patch 3b Item 18
+- [x] Shared csvCell() in src/lib/csv-zip.ts guards formula-looking text and keeps numbers (incl. -3) numeric; toCsv() emits one UTF-8 marker
+- [x] Stock-history export reuses csvCell() with its single existing marker; product import reads ₱/PHP/comma amounts, quotes formula-looking names/categories/SKUs, and rejects unknown columns
+- [x] One all-or-nothing insert with the button disabled during import; "{n} products imported" unchanged
+- [x] Checked by sample-value review, type check and production build only — no database writes, payments, secrets, or publishing
+
 
 ## Publishing build repair
 - [x] Inline the startup guard in Nitro configuration to eliminate missing helper imports

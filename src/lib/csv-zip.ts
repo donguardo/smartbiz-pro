@@ -16,21 +16,26 @@ function crc32(data: Uint8Array): number {
   return (crc ^ 0xffffffff) >>> 0;
 }
 
+const FORMULA_START = /^[=+\-@\t\r]/;
+const PLAIN_NUMBER = /^-?\d+(\.\d+)?$/;
+
+// One shared rule for every CSV we write: a leading =, +, -, @, tab or CR would run
+// as a formula when the file is opened in a spreadsheet, so neutralise it with a
+// leading quote. Numbers (including negatives like -3) stay as numbers.
+export function csvCell(v: unknown): string {
+  if (v === null || v === undefined) return "";
+  let s = typeof v === "object" ? JSON.stringify(v) : String(v);
+  if (typeof v !== "number" && FORMULA_START.test(s) && !PLAIN_NUMBER.test(s)) s = "'" + s;
+  return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
 export function toCsv(rows: Record<string, unknown>[]): string {
   if (rows.length === 0) return "";
   const cols = Array.from(rows.reduce((set, r) => { Object.keys(r).forEach((k) => set.add(k)); return set; }, new Set<string>()));
-  const cell = (v: unknown) => {
-    if (v === null || v === undefined) return "";
-    // Strings only: a leading =, +, -, @, tab or CR would run as a formula when the
-    // CSV is opened in a spreadsheet, so neutralise it with a leading quote.
-    const injected = typeof v === "string" && /^[=+\-@\t\r]/.test(v);
-    const s = typeof v === "object" ? JSON.stringify(v) : String(v);
-    const safe = injected ? `'${s}` : s;
-    return /[",\n\r]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
-  };
   const lines = [cols.join(",")];
-  for (const r of rows) lines.push(cols.map((c) => cell(r[c])).join(","));
-  return lines.join("\r\n");
+  for (const r of rows) lines.push(cols.map((c) => csvCell(r[c])).join(","));
+  // UTF-8 marker so Excel reads Ñ and ₱ correctly.
+  return "\uFEFF" + lines.join("\r\n");
 }
 
 export function buildZip(files: { name: string; content: string }[]): Blob {
