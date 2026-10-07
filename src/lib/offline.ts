@@ -207,6 +207,6 @@ export async function syncQueuedSales(): Promise<{ synced: number; failed: numbe
 }
 export async function retryQueuedSale(id: string, acceptPriceChange = false) {
   const scope = await queueScope();
-  if (scope) await updateQueue(scope, (q) => q.map((x) => (x.id === id ? { ...x, error: undefined, acceptPriceChange: acceptPriceChange || x.acceptPriceChange } : x)));
+  if (scope) await updateQueue(scope, (q) => q.map((x) => (x.id === id ? { ...x, error: undefined, acceptPriceChange: acceptPriceChange || !!x.acceptPriceChange } : x)));
   return syncQueuedSales();
 }
