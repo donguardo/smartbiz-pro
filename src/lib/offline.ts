@@ -69,57 +69,144 @@ export type QueuedSale = {
   id: string; createdAt: number; method: string; tendered: number; total: number;
   customerId: string | null; items: { product_id: string; qty: number; name: string; price: number }[];
   error?: string | undefined;
+  acceptPriceChange?: boolean;
 };
-
-async function queueKey() { return `${QUEUE_PREFIX}:${await userKey()}`; }
-async function readQueue(): Promise<QueuedSale[]> {
-  try { return JSON.parse(localStorage.getItem(await queueKey()) ?? "[]"); } catch { return []; }
+type QueueScope = { userId: string; shopId: string; key: string };
+async function queueScope(): Promise<QueueScope | null> {
+  const userId = await userKey();
+  if (userId === "anon") return null;
+  const shop = await withOfflineCache("fetchShopContext", async () => {
+    const { data, error } = await supabase.rpc("get_my_shop_context");
+    if (error) throw error;
+    return data[0] ?? null;
+  });
+  if (!shop) return null;
+  return { userId, shopId: shop.shop_id, key: `${QUEUE_PREFIX}:${userId}:${shop.shop_id}` };
 }
-async function writeQueue(q: QueuedSale[]) {
-  localStorage.setItem(await queueKey(), JSON.stringify(q));
+function readQueue(scope: QueueScope): QueuedSale[] {
+  try { return JSON.parse(localStorage.getItem(scope.key) ?? "[]"); } catch { return []; }
+}
+function writeQueue(scope: QueueScope, q: QueuedSale[]) {
+  localStorage.setItem(scope.key, JSON.stringify(q));
   window.dispatchEvent(new Event(QUEUE_EVENT));
 }
-export async function enqueueSale(s: Omit<QueuedSale, "id" | "createdAt">) {
-  const sale: QueuedSale = { ...s, id: crypto.randomUUID(), createdAt: Date.now() };
-  await writeQueue([...(await readQueue()), sale]);
+const pause = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+type Lease = { tab: string; until: number };
+async function withQueueLock(scope: QueueScope, kind: "sync" | "queue", work: (renew: () => void) => Promise<void>) {
+  const name = `mvp-offline-${kind}:${scope.userId}:${scope.shopId}`;
+  if (navigator.locks) {
+    await navigator.locks.request(name, { ifAvailable: kind === "sync" }, async (lock) => {
+      if (lock) await work(() => undefined);
+    });
+    return;
+  }
+  const key = `offline-${kind}-lease:${scope.userId}:${scope.shopId}`;
+  const tab = crypto.randomUUID();
+  const lease = (): Lease | null => {
+    try { return JSON.parse(localStorage.getItem(key) ?? "null"); } catch { return null; }
+  };
+  while (true) {
+    const current = lease();
+    if (!current || current.until <= Date.now()) {
+      localStorage.setItem(key, JSON.stringify({ tab, until: Date.now() + 30000 }));
+      await pause(50);
+      if (lease()?.tab === tab) break;
+    }
+    if (kind === "sync") return;
+    await pause(50);
+  }
+  let lost = false;
+  const heartbeat = () => {
+    if (lease()?.tab !== tab) { lost = true; return; }
+    localStorage.setItem(key, JSON.stringify({ tab, until: Date.now() + 30000 }));
+  };
+  const renew = () => { heartbeat(); if (lost) throw new Error("Offline queue lock was lost"); };
+  const timer = setInterval(heartbeat, 10000);
+  try { await work(renew); }
+  finally { clearInterval(timer); if (lease()?.tab === tab) localStorage.removeItem(key); }
+}
+// In-tab serialization also protects fallback lease writers from one another.
+let queueWriting: Promise<void> = Promise.resolve();
+function updateQueue(scope: QueueScope, change: (q: QueuedSale[]) => QueuedSale[]) {
+  const next = queueWriting.then(() => withQueueLock(scope, "queue", async (renew) => {
+    renew();
+    writeQueue(scope, change(readQueue(scope)));
+  }));
+  queueWriting = next.catch(() => undefined);
+  return next;
+}
+export async function enqueueSale(s: Omit<QueuedSale, "id" | "createdAt"> & { id?: string }) {
+  const scope = await queueScope();
+  if (!scope) throw new Error("Your shop could not be loaded");
+  const sale: QueuedSale = { ...s, id: s.id ?? crypto.randomUUID(), createdAt: Date.now() };
+  await updateQueue(scope, (q) => q.some((x) => x.id === sale.id) ? q : [...q, sale]);
   return sale;
 }
-export async function discardQueuedSale(id: string) { await writeQueue((await readQueue()).filter((s) => s.id !== id)); }
-
+export async function discardQueuedSale(id: string) {
+  const scope = await queueScope();
+  if (scope) await updateQueue(scope, (q) => q.filter((s) => s.id !== id));
+}
 export function useQueuedSales() {
   const [list, setList] = useState<QueuedSale[]>([]);
   useEffect(() => {
-    const update = () => { void readQueue().then(setList); };
+    let active = true;
+    let key: string | undefined;
+    let revision = 0;
+    const update = () => {
+      const current = ++revision;
+      void queueScope().then((scope) => {
+        if (!active || current !== revision) return;
+        key = scope?.key;
+        setList(scope ? readQueue(scope) : []);
+      }).catch(() => { /* Keep last visible queue if the shop cannot be read. */ });
+    };
+    const onStorage = (event: StorageEvent) => { if (event.key === key || event.key === null) update(); };
+    const { data: authListener } = supabase.auth.onAuthStateChange(() => { setList([]); setTimeout(update, 0); });
     window.addEventListener(QUEUE_EVENT, update);
+    window.addEventListener("storage", onStorage);
     update();
-    return () => window.removeEventListener(QUEUE_EVENT, update);
+    return () => { active = false; authListener.subscription.unsubscribe(); window.removeEventListener(QUEUE_EVENT, update); window.removeEventListener("storage", onStorage); };
   }, []);
   return list;
 }
-
 let syncing = false;
-/** Sends waiting sales one by one. Totals, cost and time are set by the server at sync. */
+/** Stable IDs prevent duplicates; the server checks prices and bounds original sale time. */
 export async function syncQueuedSales(): Promise<{ synced: number; failed: number }> {
   if (syncing || !navigator.onLine) return { synced: 0, failed: 0 };
   syncing = true;
   let synced = 0, failed = 0;
   try {
-    for (const s of await readQueue()) {
-      if (s.error) { failed++; continue; }
-      const { error } = await supabase.rpc("record_sale", {
-        _payment_method: s.method, _amount_tendered: s.tendered, _customer_id: s.customerId as string,
-        _items: s.items.map((i) => ({ product_id: i.product_id, qty: i.qty })),
-      });
-      const q = await readQueue();
-      if (!error) { synced++; await writeQueue(q.filter((x) => x.id !== s.id)); continue; }
-      if (isNetworkError(error)) break;
-      failed++;
-      await writeQueue(q.map((x) => (x.id === s.id ? { ...x, error: error.message } : x)));
-    }
+    const scope = await queueScope();
+    if (!scope) return { synced, failed };
+    await withQueueLock(scope, "sync", async (renew) => {
+      for (const queued of readQueue(scope)) {
+        const s = readQueue(scope).find((x) => x.id === queued.id);
+        if (!s) continue;
+        if (s.error) { failed++; continue; }
+        const current = await queueScope();
+        if (current?.key !== scope.key) break;
+        let error: { message: string } | null;
+        try {
+          ({ error } = await supabase.rpc("record_sale", {
+            _payment_method: s.method, _amount_tendered: s.tendered, _customer_id: s.customerId as string,
+            _items: s.items.map((i) => ({ product_id: i.product_id, qty: i.qty })),
+            _client_sale_id: s.id, _client_created_at: new Date(s.createdAt).toISOString(),
+            _expected_total: s.total, _accept_price_change: !!s.acceptPriceChange,
+          }));
+        } catch (err) { if (isNetworkError(err)) break; throw err; }
+        renew();
+        if (!error) { synced++; await updateQueue(scope, (q) => q.filter((x) => x.id !== s.id)); continue; }
+        if (isNetworkError(error)) break;
+        failed++;
+        const message = error.message;
+        await updateQueue(scope, (q) => q.map((x) => (x.id === s.id ? { ...x, error: message } : x)));
+      }
+    });
   } finally { syncing = false; }
   return { synced, failed };
 }
-export async function retryQueuedSale(id: string) {
-  await writeQueue((await readQueue()).map((x) => (x.id === id ? { ...x, error: undefined } : x)));
+export async function retryQueuedSale(id: string, acceptPriceChange = false) {
+  const scope = await queueScope();
+  if (scope) await updateQueue(scope, (q) => q.map((x) => (x.id === id ? { ...x, error: undefined, acceptPriceChange: acceptPriceChange || x.acceptPriceChange } : x)));
   return syncQueuedSales();
 }

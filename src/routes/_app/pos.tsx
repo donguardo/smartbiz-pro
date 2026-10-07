@@ -81,10 +81,11 @@ function POS() {
 
   const checkout = async () => {
     setBusy(true);
+    const clientSaleId = crypto.randomUUID();
     const paid = method === "cash" ? Number(tendered) : total;
     const queueOffline = async () => {
       if (newCustomer.name.trim()) { toast.error(t("offline.noNewCustomer")); return; }
-      const q = await enqueueSale({ method, tendered: paid, total, customerId: customerId || null, items: cart.map((l) => ({ product_id: l.p.id, qty: l.qty, name: l.p.name, price: Number(l.p.price) })) });
+      const q = await enqueueSale({ id: clientSaleId, method, tendered: paid, total, customerId: customerId || null, items: cart.map((l) => ({ product_id: l.p.id, qty: l.qty, name: l.p.name, price: Number(l.p.price) })) });
       qc.setQueryData<Product[]>(qk.products, (ps) => ps?.map((p) => { const l = cart.find((x) => x.p.id === p.id); return l && p.track_stock ? { ...p, stock: p.stock - l.qty } : p; }));
       setReceipt({ no: `OFFLINE-${q.id.slice(0, 6).toUpperCase()}`, lines: cart, total, method, tendered: paid, at: new Date(q.createdAt), pending: true });
       setCart([]); setTendered(""); setCustomerId(""); setPaying(false);
@@ -98,7 +99,7 @@ function POS() {
         if (error) throw error;
         selectedCustomer = data;
       }
-      const { data, error } = await supabase.rpc("record_sale", { _payment_method: method, _amount_tendered: method === "cash" ? Number(tendered) : total, _customer_id: selectedCustomer as string, _items: cart.map((l) => ({ product_id: l.p.id, qty: l.qty })) });
+      const { data, error } = await supabase.rpc("record_sale", { _client_sale_id: clientSaleId, _payment_method: method, _amount_tendered: method === "cash" ? Number(tendered) : total, _customer_id: selectedCustomer as string, _items: cart.map((l) => ({ product_id: l.p.id, qty: l.qty })) });
       if (error) throw error;
       const sale = data[0];
       if (!sale) throw new Error("Payment could not be recorded");
