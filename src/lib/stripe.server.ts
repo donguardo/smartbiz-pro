@@ -61,6 +61,14 @@ export function getStripeErrorMessage(error: unknown): string {
   return 'Stripe request failed';
 }
 
+// Constant-time-ish comparison: never short-circuits on content, only on length.
+function safeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function verifyWebhook(req: Request, env: StripeEnv): Promise<{ id: string; type: string; data: { object: any } }> {
   const signature = req.headers.get("stripe-signature");
@@ -81,6 +89,6 @@ export async function verifyWebhook(req: Request, env: StripeEnv): Promise<{ id:
   const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const signed = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${timestamp}.${body}`));
   const expected = [...new Uint8Array(signed)].map((b) => b.toString(16).padStart(2, "0")).join("");
-  if (!v1Signatures.includes(expected)) throw new Error("Invalid webhook signature");
+  if (!v1Signatures.some((s) => safeEqual(s, expected))) throw new Error("Invalid webhook signature");
   return JSON.parse(body);
 }
