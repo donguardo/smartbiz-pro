@@ -4,7 +4,16 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createStripeClient, getStripeErrorMessage, type StripeEnv } from "@/lib/stripe.server";
 
 const envSchema = z.enum(["sandbox", "live"]);
-const PRICE_ID = "bizmanager_monthly";
+
+// The caller's own paying account (RLS returns only theirs); must be the account this shop belongs to.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function myAccount(supabase: any, shopId: string) {
+  const { data: acc } = await supabase.from("business_accounts").select("id, stripe_customer_id").maybeSingle();
+  const { data: s } = await supabase.from("shops").select("business_account_id").eq("id", shopId).maybeSingle();
+  if (!acc?.id || !s?.business_account_id || acc.id !== s.business_account_id) throw new Error("Only the account owner can manage billing");
+  return { id: acc.id as string, stripe_customer_id: (acc.stripe_customer_id ?? null) as string | null };
+}
+
 
 // Returns the caller's shop only when they own it; never trusts a shop id from the browser.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -48,26 +57,30 @@ type CheckoutResult = { clientSecret: string } | { error: string };
 
 export const createCheckoutSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { environment: StripeEnv; returnUrl: string }) =>
-    z.object({ environment: envSchema, returnUrl: z.string().url().max(500) }).parse(data))
+  .inputValidator((data: { environment: StripeEnv; returnUrl: string; plan?: "basic" | "standard" | "pro" }) =>
+    z.object({ environment: envSchema, returnUrl: z.string().url().max(500), plan: z.enum(["basic", "standard", "pro"]).default("basic") }).parse(data))
   .handler(async ({ data, context }): Promise<CheckoutResult> => {
     try {
       if (!isAllowedReturnUrl(data.returnUrl)) return { error: "Invalid return address" };
       const env = await serverMode(context.supabase, data.environment);
       const shop = await ownedShop(context.supabase);
+      const account = await myAccount(context.supabase, shop.shopId);
       // Already-paying shops must use Manage billing instead of starting a second checkout.
       const { data: bill } = await context.supabase.rpc("get_shop_billing", { _env: "server" });
       const billState = bill?.[0]?.state;
       if (billState === "active" || billState === "trialing" || billState === "past_due") {
         return { error: "This shop already has an active plan. Use Manage billing to change it." };
       }
+      // The price comes only from the server-side plans table, never from the browser.
+      const { data: pl } = await context.supabase.from("plan_limits").select("stripe_lookup_key").eq("plan", data.plan).maybeSingle();
+      if (!pl?.stripe_lookup_key) throw new Error("Plan price not found");
       const stripe = createStripeClient(env);
-      const prices = await stripe.prices.list({ lookup_keys: [PRICE_ID] });
+      const prices = await stripe.prices.list({ lookup_keys: [pl.stripe_lookup_key] });
       const price = prices.data[0];
       if (!price) throw new Error("Plan price not found");
 
-      // One Stripe customer per shop, created server-side and stored on the shop.
-      let customerId = shop.customerId;
+      // One Stripe customer per account, created server-side and stored on the account.
+      let customerId = account.stripe_customer_id ?? shop.customerId;
       if (customerId) {
         try { const c = await stripe.customers.retrieve(customerId); if ((c as { deleted?: boolean }).deleted) customerId = null; }
         catch { customerId = null; }
@@ -77,14 +90,14 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         const c = await stripe.customers.create({
           ...(email ? { email } : {}),
           name: shop.name,
-          metadata: { userId: context.userId, shop_id: shop.shopId },
+          metadata: { userId: context.userId, account_id: account.id, shop_id: shop.shopId },
         });
         customerId = c.id;
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        await supabaseAdmin.from("shops").update({ stripe_customer_id: customerId }).eq("id", shop.shopId);
+        await supabaseAdmin.from("business_accounts").update({ stripe_customer_id: customerId }).eq("id", account.id);
       }
 
-      const meta = { userId: context.userId, shop_id: shop.shopId, managed_payments: "false" };
+      const meta = { userId: context.userId, account_id: account.id, shop_id: shop.shopId, managed_payments: "false" };
       const { createTaxAwareCheckout } = await import("@/lib/checkout-tax.server");
       const session = await createTaxAwareCheckout((params) => stripe.checkout.sessions.create(params), {
         line_items: [{ price: price.id, quantity: 1 }],
@@ -115,10 +128,14 @@ export const createBillingPortal = createServerFn({ method: "POST" })
       if (!isAllowedReturnUrl(data.returnUrl)) return { error: "Invalid return address" };
       const env = await serverMode(context.supabase, data.environment);
       const shop = await ownedShop(context.supabase);
-      const { data: sub } = await context.supabase.from("subscriptions").select("paddle_customer_id")
-        .eq("shop_id", shop.shopId).eq("environment", env).eq("provider", "stripe")
-        .order("created_at", { ascending: false }).limit(1).maybeSingle();
-      const customer = sub?.paddle_customer_id ?? shop.customerId;
+      const account = await myAccount(context.supabase, shop.shopId);
+      let customer: string | null = account.stripe_customer_id;
+      if (!customer) {
+        const { data: sub } = await context.supabase.from("subscriptions").select("paddle_customer_id")
+          .eq("account_id", account.id).eq("environment", env).eq("provider", "stripe")
+          .order("created_at", { ascending: false }).limit(1).maybeSingle();
+        customer = sub?.paddle_customer_id ?? shop.customerId;
+      }
       if (!customer) return { error: "No subscription found yet" };
       const portal = await createStripeClient(env).billingPortal.sessions.create({ customer, return_url: data.returnUrl });
       return { url: portal.url };
