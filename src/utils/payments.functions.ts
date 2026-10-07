@@ -26,6 +26,24 @@ async function serverMode(supabase: any, requested: StripeEnv): Promise<StripeEn
   return data as StripeEnv;
 }
 
+// The return address is handed to the payer by Stripe, so only our own hosts are accepted.
+// Exact host matches only — no suffix or wildcard matching, or any Lovable app would pass.
+const RETURN_HOSTS = new Set([
+  "mvp.com.ai",
+  "www.mvp.com.ai",
+  "smartbiz-pro.lovable.app",
+  "id-preview--7743ade6-55a2-4176-8349-318ea4c04396.lovable.app",
+]);
+
+function isAllowedReturnUrl(returnUrl: string): boolean {
+  try {
+    const u = new URL(returnUrl);
+    return u.protocol === "https:" && u.pathname.startsWith("/billing") && RETURN_HOSTS.has(u.hostname);
+  } catch {
+    return false;
+  }
+}
+
 type CheckoutResult = { clientSecret: string } | { error: string };
 
 export const createCheckoutSession = createServerFn({ method: "POST" })
@@ -34,6 +52,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     z.object({ environment: envSchema, returnUrl: z.string().url().max(500) }).parse(data))
   .handler(async ({ data, context }): Promise<CheckoutResult> => {
     try {
+      if (!isAllowedReturnUrl(data.returnUrl)) return { error: "Invalid return address" };
       const env = await serverMode(context.supabase, data.environment);
       const shop = await ownedShop(context.supabase);
       // Already-paying shops must use Manage billing instead of starting a second checkout.
@@ -93,6 +112,7 @@ export const createBillingPortal = createServerFn({ method: "POST" })
     z.object({ environment: envSchema, returnUrl: z.string().url().max(500) }).parse(data))
   .handler(async ({ data, context }): Promise<PortalResult> => {
     try {
+      if (!isAllowedReturnUrl(data.returnUrl)) return { error: "Invalid return address" };
       const env = await serverMode(context.supabase, data.environment);
       const shop = await ownedShop(context.supabase);
       const { data: sub } = await context.supabase.from("subscriptions").select("paddle_customer_id")
