@@ -12,6 +12,8 @@ import { BillingFailureAlert } from "@/components/BillingDiagnostics";
 import { useShopProfile } from "@/lib/shop-profile";
 import { fetchProfile, fetchShopContext, qk } from "@/lib/store";
 import { Button } from "@/components/ui/button";
+import { OfflineStatus } from "@/components/OfflineStatus";
+import { clearOfflineData, useQueuedSales } from "@/lib/offline";
 import { openInstallPrompt } from "@/lib/install";
 import { useBilling } from "@/lib/billing";
 import { BillingPanel } from "./billing";
@@ -53,6 +55,12 @@ function AppLayout() {
   const businessName = business?.name ?? shop?.shop_name ?? profile?.business_name ?? "…";
   const { data: billing } = useBilling(!!session && !!shop);
   const locked = !!billing && !billing.has_access && !path.startsWith("/billing") && !path.startsWith("/settings");
+  const queued = useQueuedSales().length;
+  const signOut = async () => {
+    if (queued && !confirm(t("offline.signOutWarn"))) return;
+    clearOfflineData();
+    await supabase.auth.signOut();
+  };
   const visibleNav = shop?.member_role === "owner" ? [...NAV, ...OWNER_NAV, SETTINGS_NAV] : [...NAV, SETTINGS_NAV];
 
   if (loading || !session) {
@@ -86,7 +94,7 @@ function AppLayout() {
           <div className="flex items-center gap-2">
             {shop?.member_role === "owner" && <StockAlertsBell />}
             <ThemeToggle />
-            <button onClick={() => supabase.auth.signOut()} className="flex h-9 flex-1 items-center justify-center gap-2 rounded-lg border border-border text-sm hover:bg-muted">
+            <button onClick={signOut} className="flex h-9 flex-1 items-center justify-center gap-2 rounded-lg border border-border text-sm hover:bg-muted">
               <LogOut className="h-4 w-4" /> {t("app.signOut")}
             </button>
           </div>
@@ -103,11 +111,12 @@ function AppLayout() {
           <Link to="/settings" aria-label={t("app.nav.settings")} className="hidden h-9 w-9 items-center justify-center rounded-lg border border-border min-[390px]:flex"><Settings className="h-4 w-4" /></Link>
           <LanguageToggle />
           <ThemeToggle />
-          <button aria-label="Sign out" onClick={() => supabase.auth.signOut()} className="flex h-9 w-9 items-center justify-center rounded-lg border border-border"><LogOut className="h-4 w-4" /></button>
+          <button aria-label="Sign out" onClick={signOut} className="flex h-9 w-9 items-center justify-center rounded-lg border border-border"><LogOut className="h-4 w-4" /></button>
         </div>
       </header>
 
       <main className="min-w-0 pb-32 md:pb-24">
+        <OfflineStatus />
         {shop?.member_role === "owner" && <BillingFailureAlert />}
         {locked ? (
           <div><PaymentTestModeBanner /><div className="mx-auto max-w-xl space-y-4 p-4 md:p-6">
