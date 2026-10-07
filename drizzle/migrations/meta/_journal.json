@@ -232,6 +232,13 @@
       "when": 1791381111299,
       "tag": "0032_patch3b_billing",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1791382357836,
+      "tag": "0033_anonymize_customer_grants",
+      "breakpoints": true
     }
   ]
 }
