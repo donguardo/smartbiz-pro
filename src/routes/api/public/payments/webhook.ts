@@ -117,6 +117,9 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
             }
           } else if (event.type === "checkout.session.completed" && obj.subscription && obj.payment_status !== "unpaid") {
             sub = await createStripeClient(env).subscriptions.retrieve(typeof obj.subscription === "string" ? obj.subscription : obj.subscription.id);
+          } else if (event.type === "subscription_schedule.updated" && obj.subscription) {
+            // A booked plan change: re-read the live subscription, same as customer.subscription.updated.
+            sub = await createStripeClient(env).subscriptions.retrieve(typeof obj.subscription === "string" ? obj.subscription : obj.subscription.id);
           }
           if (!sub) return Response.json({ received: true });
           const o = await syncSubscription(sub, env, forced);
