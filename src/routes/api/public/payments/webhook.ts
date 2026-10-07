@@ -26,9 +26,9 @@ async function syncSubscription(sub: any, env: StripeEnv, forceStatus?: string):
     if (!account) { // test and live customers differ: use the ids our server stamped on the customer at checkout
       const c = await createStripeClient(env).customers.retrieve(customerId);
       const meta = (c as { metadata?: Record<string, string> }).metadata ?? {};
-      if (meta.account_id) ({ data: account } = await db.from("business_accounts").select(accCols).eq("id", meta.account_id).maybeSingle());
-      if (!account && meta.shop_id) {
-        const { data: s } = await db.from("shops").select("business_account_id").eq("id", meta.shop_id).maybeSingle();
+      if (meta["account_id"]) ({ data: account } = await db.from("business_accounts").select(accCols).eq("id", meta["account_id"]).maybeSingle());
+      if (!account && meta["shop_id"]) {
+        const { data: s } = await db.from("shops").select("business_account_id").eq("id", meta["shop_id"]).maybeSingle();
         if (s?.business_account_id) ({ data: account } = await db.from("business_accounts").select(accCols).eq("id", s.business_account_id).maybeSingle());
       }
     }
