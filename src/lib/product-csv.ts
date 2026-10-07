@@ -23,6 +23,15 @@ function splitLine(line: string) {
   return out.map((s) => s.trim());
 }
 
+// Same rule as csvCell in @/lib/csv-zip: text that starts like a spreadsheet
+// formula is stored with a leading quote so it can never run when the file is
+// re-opened. Plain numbers (even negative ones) are left alone.
+const FORMULA_START = /^[=+\-@\t\r]/;
+const PLAIN_NUMBER = /^-?\d+(\.\d+)?$/;
+function safeText(s: string): string {
+  return FORMULA_START.test(s) && !PLAIN_NUMBER.test(s) ? "'" + s : s;
+}
+
 export function parseProductCsv(text: string, existingSkus: Set<string>): CsvRow[] {
   const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter((l) => l.trim());
   if (!lines.length) return [];
