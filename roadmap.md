@@ -1,4 +1,9 @@
 # Roadmap
+## Patch 3b Item 10
+- [ ] Normalize and trim the generated precache using the Vite manifest; exclude authentication pages
+- [ ] Preserve preview guards and register after load or immediately when already loaded
+- [ ] Inspect generated sw.js URLs/count; automatic checks only, no publishing or data/payment changes
+
 ## Publishing build repair
 - [x] Inline the startup guard in Nitro configuration to eliminate missing helper imports
 - [x] Confirm automatic build passes after deployment diagnostics; no publishing or payments/secrets changes
