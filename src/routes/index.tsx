@@ -43,7 +43,11 @@ function Landing() {
     <div className="min-h-screen overflow-x-hidden pb-24">
       <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur-md">
         <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-3 py-2 sm:px-4 sm:py-3">
-          <Logo />
+          <div className="flex min-w-0 items-center gap-2">
+            <Logo />
+            <ThemeToggle className="shrink-0 sm:hidden" />
+          </div>
+
           <nav className="hidden gap-6 text-sm text-muted-foreground md:flex">
             <a href="#demo" className="hover:text-foreground">{t("nav.demo")}</a>
              <Link to="/showcase" className="hover:text-foreground">{t("nav.showcase")}</Link>
@@ -63,7 +67,7 @@ function Landing() {
               <Button className="sm:hidden" variant="outline" size="icon" aria-label="Open menu"><Menu className="h-4 w-4" /></Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 p-2">
-              <div className="flex items-center justify-between gap-2 p-1"><LanguageToggle /><ThemeToggle /></div>
+              <div className="flex items-center justify-between gap-2 p-1"><LanguageToggle /></div>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={openInstallPrompt}><Download className="h-4 w-4" />{t("install.open")}</DropdownMenuItem>
                <DropdownMenuItem asChild><Link to="/showcase">{t("nav.showcase")}</Link></DropdownMenuItem>
