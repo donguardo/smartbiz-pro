@@ -1,8 +1,8 @@
 # Roadmap
 ## Offline plan and price handling
-- [ ] Cache billing and apply offline expiry rules without blocking unknown plans
-- [ ] Explain changed prices, preserve original sale time and label aged receipts
-- [ ] Show last price-sync time; verify by code review and automatic checks only
+- [x] Cache billing and apply offline expiry rules without blocking unknown plans
+- [x] Explain changed prices, preserve original sale time and label aged receipts
+- [x] Show last price-sync time; verify by code review and automatic checks only
 
 ## Offline sale idempotency
 - [x] Apply exact sale-idempotency SQL and regenerate types without test data writes

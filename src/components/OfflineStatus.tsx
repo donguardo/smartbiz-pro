@@ -9,7 +9,7 @@ import { discardQueuedSale, parsePriceChange, retryQueuedSale, syncQueuedSales, 
 
 /** App-wide offline banner and automatic sync of sales recorded without internet. */
 export function OfflineStatus() {
-  const { t, lang } = useT();
+  const { t } = useT();
   const online = useOnline();
   const queue = useQueuedSales();
   const qc = useQueryClient();

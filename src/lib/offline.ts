@@ -40,12 +40,20 @@ const offlineUsed = new Map<string, number>();
 export function useCachedAt(name?: string) {
   const [at, setAt] = useState<number | null>(null);
   useEffect(() => {
-    const update = () => setAt(name ? offlineUsed.get(name) ?? null : offlineUsed.size ? Math.min(...offlineUsed.values()) : null);
+    let active = true;
+    const update = () => {
+      setAt(name ? offlineUsed.get(name) ?? null : offlineUsed.size ? Math.min(...offlineUsed.values()) : null);
+      if (name && !navigator.onLine) void userKey().then((id) => {
+        if (!active || navigator.onLine) return;
+        try { const saved = JSON.parse(localStorage.getItem(`${CACHE_PREFIX}:${id}:${name}`) ?? "null") as { at: number } | null; setAt(saved?.at ?? null); } catch { setAt(null); }
+      });
+    };
     const onOnline = () => { offlineUsed.clear(); update(); };
     window.addEventListener(CACHE_EVENT, update);
     window.addEventListener("online", onOnline);
+    window.addEventListener("offline", update);
     update();
-    return () => { window.removeEventListener(CACHE_EVENT, update); window.removeEventListener("online", onOnline); };
+    return () => { active = false; window.removeEventListener(CACHE_EVENT, update); window.removeEventListener("online", onOnline); window.removeEventListener("offline", update); };
   }, [name]);
   return at;
 }
