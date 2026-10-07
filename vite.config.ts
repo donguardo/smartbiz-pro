@@ -8,10 +8,23 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { VitePWA } from "vite-plugin-pwa";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import type { Manifest } from "vite";
+import type { Manifest, Plugin } from "vite";
 
 const privatePage = /^\/(~oauth|api\/|auth|app-|reset-password|admin)/;
 const heavySource = /(?:^|\/)node_modules\/(?:shiki|@shikijs|mermaid|@mermaid-js|katex|cytoscape)(?:\/|$)/;
+// Shared chunks have no `src` in Vite's manifest; inspect their module origins too.
+const heavyFiles = new Set<string>();
+const precacheOrigins: Plugin = {
+  name: "mvp-precache-origins",
+  apply: "build",
+  generateBundle(_options, bundle) {
+    for (const output of Object.values(bundle)) {
+      if (output.type === "chunk" && Object.keys(output.modules).some((id) => heavySource.test(id.replaceAll("\\", "/")))) {
+        heavyFiles.add(output.fileName);
+      }
+    }
+  },
+};
 
 async function precacheFiles() {
   const manifest: Manifest = JSON.parse(await readFile(resolve("dist/client/.vite/manifest.json"), "utf8"));
@@ -19,7 +32,8 @@ async function precacheFiles() {
   const visited = new Set<string>();
   const excluded = (key: string) => {
     const source = (manifest[key]?.src ?? key).replaceAll("\\", "/");
-    return heavySource.test(source) || (source.startsWith("src/routes/") && privatePage.test("/" + source.slice("src/routes/".length)));
+    return heavySource.test(source) || heavyFiles.has(manifest[key]?.file ?? "")
+      || (source.startsWith("src/routes/") && privatePage.test("/" + source.slice("src/routes/".length)));
   };
   const visit = (key: string) => {
     if (visited.has(key) || excluded(key)) return;
@@ -54,6 +68,7 @@ export default defineConfig({
   vite: {
     build: { manifest: true },
     plugins: [
+      precacheOrigins,
       VitePWA({
         strategies: "generateSW",
         registerType: "autoUpdate",
@@ -76,12 +91,16 @@ export default defineConfig({
               return true;
             });
             if (manifest.length >= 150) throw new Error(`Precache exceeds Item 10 budget: ${manifest.length} entries`);
+            for (const required of ["offline.html", "manifest.webmanifest"]) {
+              if (!seen.has(required)) throw new Error(`Required precache file missing: ${required}`);
+            }
+            console.info(`Item 10 precache: ${manifest.length} entries; no client/ URL prefixes`);
             return { manifest, warnings: [] };
           }],
           navigateFallback: null,
           cleanupOutdatedCaches: true,
           clientsClaim: true,
-          globPatterns: ["**/*.{js,css,woff2,png,svg,ico,webmanifest}", "offline.html"],
+          globPatterns: ["**/*.{js,css,woff2,png,svg,ico,webmanifest}", "**/offline.html"],
           maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
           runtimeCaching: [
             {
