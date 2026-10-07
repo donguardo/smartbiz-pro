@@ -24,14 +24,14 @@ There is no connected-account marketplace, split-payment system, commission dist
 | Product | MVP BizManager plan |
 | Product reference | `bizmanager_plan` |
 | Price reference | `bizmanager_monthly` |
-| Base subscription | ₱499 PHP per month, per shop |
+| Base subscription | ₱499/month |
 | Checkout quantity | 1 |
 | Free app trial | 14 days from shop creation |
 | Plans | One monthly plan; no yearly, upgrade, or downgrade flow |
 | Subscriber | Shop owner; the shop's cashiers share its entitlement |
 | Product classification | SaaS / electronic services; configured tax code `txcd_10103001` |
 
-Older project wording may say “per user.” Current checkout and access rules are **per shop**, not a separate charge for each cashier.
+The price is shown as ₱499/month. Checkout is quantity 1; the shop's cashiers are not charged separately.
 
 The current checkout requests automatic tax calculation. Applicable tax can increase the total above ₱499. Do not treat ₱499 as a verified tax-inclusive final price for every buyer.
 

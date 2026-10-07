@@ -7,7 +7,7 @@ import { ThemeToggle } from "@/lib/theme";
 import { LanguageToggle, useT } from "@/lib/i18n";
 import { DemoDashboard } from "@/components/DemoDashboard";
 import { ShowcaseCarousel } from "@/components/ShowcaseCarousel";
-import { PRICE_PER_USER } from "@/lib/format";
+import { PRICE_MONTHLY } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { openInstallPrompt } from "@/lib/install";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -16,8 +16,8 @@ export const Route = createFileRoute("/")({
   head: () => ({
     ...seo("/"),
     meta: [
-      { title: "MVP BizManager | ₱499/user" },
-      { name: "description", content: "Run your store with a fast POS register, live dashboards and an AI copilot that flags reorders and dead stock. ₱499 per user per month." },
+      { title: "MVP BizManager | ₱499/month" },
+      { name: "description", content: "Run your store with a fast POS register, live dashboards and an AI copilot that flags reorders and dead stock. ₱499/month." },
       { property: "og:title", content: "MVP BizManager" },
       { property: "og:description", content: "POS checkout, inventory insights and an AI business copilot. Try the live demo, no login." },
       { property: "og:type", content: "website" },
@@ -94,7 +94,7 @@ function Landing() {
             </p>
             <div className="mt-8 flex flex-col items-stretch gap-3 min-[420px]:flex-row min-[420px]:items-center">
               <Link to="/auth" className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 font-semibold text-primary-foreground hover:opacity-90">
-                {t("hero.start")} ₱{PRICE_PER_USER}/user <ArrowRight className="h-4 w-4" />
+                {t("hero.start")} ₱{PRICE_MONTHLY}{t("price.per")} <ArrowRight className="h-4 w-4" />
               </Link>
               <a href="#demo" className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-5 py-3 font-semibold hover:bg-muted">{t("hero.tryDemo")}</a>
             </div>
@@ -207,7 +207,7 @@ function Landing() {
         <div className="grid items-center gap-8 overflow-hidden rounded-lg border border-border bg-card p-8 text-foreground md:grid-cols-2 md:p-12">
           <div>
             <p className="font-mono text-xs uppercase tracking-widest opacity-70">{t("price.kicker")}</p>
-            <p className="mt-3 font-display text-6xl font-bold">₱{PRICE_PER_USER}<span className="text-xl font-medium opacity-70">{t("price.per")}</span></p>
+            <p className="mt-3 font-display text-6xl font-bold">₱{PRICE_MONTHLY}<span className="text-xl font-medium opacity-70">{t("price.per")}</span></p>
             <p className="mt-3 opacity-80">{t("price.sub")}</p>
             <Link to="/auth" className="mt-6 inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 font-semibold text-primary-foreground">{t("price.cta")} <ArrowRight className="h-4 w-4" /></Link>
           </div>

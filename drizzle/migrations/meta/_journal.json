@@ -253,6 +253,13 @@
       "when": 1791382741191,
       "tag": "0035_0032_offline_sale_idempotency",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1791390979871,
+      "tag": "0036_0036_price_month_wording",
+      "breakpoints": true
     }
   ]
 }
