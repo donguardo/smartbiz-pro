@@ -116,6 +116,7 @@ function POS() {
   return (
     <div className="grid gap-4 p-4 md:p-6 lg:grid-cols-[1fr_380px]">
       <div className="min-w-0 space-y-4">
+        <FailedQueuedSales />
         <form onSubmit={onScan} className="flex items-center gap-2 rounded-2xl border border-border bg-card p-2">
           <ScanLine className="ml-2 h-5 w-5 text-primary" />
           <input ref={scanRef} autoFocus value={scan} onChange={(e) => setScan(e.target.value)} placeholder="Scan barcode or search item, then press Enter"
