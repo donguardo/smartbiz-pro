@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage } from "@/components/LegalPage";
+import { seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/terms")({
-  head: () => ({ meta: [
+  head: () => ({ ...seo("/terms"), meta: [
     { title: "Terms of Service — MVP BizManager" },
     { name: "description", content: "Terms governing use of MVP BizManager." },
     { property: "og:title", content: "Terms of Service — MVP BizManager" },

@@ -1,4 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { seo } from "@/lib/seo";
 import { ArrowRight } from "lucide-react";
 import { ShowcaseDashboard } from "@/components/ShowcaseDashboard";
 import { ShowcaseHeader } from "@/components/ShowcaseHeader";
@@ -11,10 +12,10 @@ export const Route = createFileRoute("/showcase/$business")({
     if (!scenario) throw notFound();
     return scenario.slug;
   },
-  head: ({ loaderData }) => {
+  head: ({ loaderData, params }) => {
     const scenario = loaderData ? getShowcaseScenario(loaderData) : undefined;
     if (!scenario) return { meta: [{ title: "Dashboard unavailable — MVP BizManager" }, { name: "robots", content: "noindex" }] };
-    return { meta: [
+    return { ...seo(`/showcase/${params.business}`), meta: [
       { title: `${scenario.sampleName} ${scenario.name.en} Dashboard — MVP BizManager` },
       { name: "description", content: `${scenario.story.en} Explore its interactive sales, profit, category, and operations dashboard.` },
       { property: "og:title", content: `${scenario.name.en} Dashboard Preview — MVP BizManager` },

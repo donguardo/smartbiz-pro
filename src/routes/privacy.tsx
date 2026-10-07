@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage } from "@/components/LegalPage";
+import { seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/privacy")({
-  head: () => ({ meta: [
+  head: () => ({ ...seo("/privacy"), meta: [
     { title: "Privacy Notice — MVP BizManager" },
     { name: "description", content: "Privacy Notice for MVP BizManager under the Philippine Data Privacy Act." },
     { property: "og:title", content: "Privacy Notice — MVP BizManager" },

@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { seo } from "@/lib/seo";
 import { useEffect, useState } from "react";
 import { ArrowRight, Bot, Check, CreditCard, Download, Menu, PackageSearch, QrCode, ScanLine, Smartphone, UserPlus, Store, Receipt } from "lucide-react";
 import { Logo } from "@/components/Logo";
@@ -13,6 +14,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 
 export const Route = createFileRoute("/")({
   head: () => ({
+    ...seo("/"),
     meta: [
       { title: "MVP BizManager | ₱499/user" },
       { name: "description", content: "Run your store with a fast POS register, live dashboards and an AI copilot that flags reorders and dead stock. ₱499 per user per month." },

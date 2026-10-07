@@ -58,7 +58,7 @@ function OrangeWare() {
           title={t("orange.title")}
           src={ORANGE_OS_URL}
           onLoad={() => setLoaded(true)}
-          allow="fullscreen; clipboard-read; clipboard-write; autoplay; web-share; encrypted-media; picture-in-picture"
+          allow="fullscreen; clipboard-write; autoplay; web-share; encrypted-media; picture-in-picture"
           className="h-full w-full flex-1 border-0 bg-background"
         />
       </div>

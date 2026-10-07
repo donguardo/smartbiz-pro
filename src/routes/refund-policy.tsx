@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage } from "@/components/LegalPage";
+import { seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/refund-policy")({
-  head: () => ({ meta: [
+  head: () => ({ ...seo("/refund-policy"), meta: [
     { title: "Refund Policy — MVP BizManager" },
     { name: "description", content: "30-day money-back guarantee for MVP BizManager subscriptions and how to request a refund." },
     { property: "og:title", content: "Refund Policy — MVP BizManager" },

@@ -2,7 +2,14 @@
 ## Patch 3b Item 10
 - [x] Normalize and trim the generated precache using the Vite manifest; exclude authentication pages
 - [x] Preserve preview guards and register after load or immediately when already loaded
-- [ ] Inspect generated sw.js URLs/count — blocked: automatic build exposes no generated files/full logs in sandbox; hosted preview worker requires editor access
+- [x] Inspect generated sw.js URLs/count — 98 entries, none starting with `client/`; offline.html included
+- [x] Fix build blocker: copy public/ into dist/client in the precache plugin's closeBundle (Vite's public copy is disabled in this stack; nitro copies it after the Vite build, so workbox never saw offline.html)
+
+## Patch 3b Item 14
+- [x] /pricing 301-redirects to /#pricing; public/sitemap.xml lists the 12 public URLs; robots.txt gains the Sitemap directive
+- [x] seo() helper adds og:url + canonical (https://mvp.com.ai) to /, /showcase, /showcase/$business, /install, /privacy, /terms, /refund-policy, /delete-account
+- [x] orangeware iframe allow list drops clipboard-read, keeps clipboard-write
+
 
 ## Publishing build repair
 - [x] Inline the startup guard in Nitro configuration to eliminate missing helper imports

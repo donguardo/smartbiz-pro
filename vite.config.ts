@@ -7,6 +7,7 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { VitePWA } from "vite-plugin-pwa";
 import { readFile } from "node:fs/promises";
+import { cpSync } from "node:fs";
 import { resolve } from "node:path";
 import type { Manifest, Plugin } from "vite";
 
@@ -17,6 +18,13 @@ const heavyFiles = new Set<string>();
 const precacheOrigins: Plugin = {
   name: "mvp-precache-origins",
   apply: "build",
+  closeBundle() {
+    // Vite's public-dir copy is disabled in this stack (nitro copies public/ into
+    // dist/client after the Vite build), so the PWA's closeBundle glob never sees
+    // offline.html/manifest.webmanifest/icons. Copy public/ into the client outDir
+    // before VitePWA's closeBundle runs (this plugin registers first).
+    cpSync(resolve("public"), resolve("dist/client"), { recursive: true });
+  },
   generateBundle(_options, bundle) {
     for (const output of Object.values(bundle)) {
       if (output.type === "chunk" && Object.keys(output.modules).some((id) => heavySource.test(id.replaceAll("\\", "/")))) {

@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { seo } from "@/lib/seo";
 import { ArrowRight, FolderOpen } from "lucide-react";
 import { ShowcaseHeader } from "@/components/ShowcaseHeader";
 import { SHOWCASE_SCENARIOS } from "@/lib/showcase-scenarios";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/showcase/")({
-  head: () => ({ meta: [
+  head: () => ({ ...seo("/showcase"), meta: [
     { title: "Business Dashboard Showcase — MVP BizManager" },
     { name: "description", content: "Preview interactive MVP BizManager dashboards for coffee shops, laundries, beauty parlors, cafés, and restaurants." },
     { property: "og:title", content: "Business Dashboard Showcase — MVP BizManager" },
