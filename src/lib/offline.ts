@@ -68,7 +68,7 @@ const QUEUE_EVENT = "offline-sales-change";
 export type QueuedSale = {
   id: string; createdAt: number; method: string; tendered: number; total: number;
   customerId: string | null; items: { product_id: string; qty: number; name: string; price: number }[];
-  error?: string;
+  error?: string | undefined;
 };
 
 async function queueKey() { return `${QUEUE_PREFIX}:${await userKey()}`; }
