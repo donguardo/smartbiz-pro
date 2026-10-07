@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { withOfflineCache } from "@/lib/offline";
 import type { Database } from "@/integrations/supabase/types";
 
 export type Unit = "pc" | "pack" | "kg" | "g" | "L" | "service";
@@ -13,7 +14,8 @@ export type CustomerChoice = Database["public"]["Functions"]["get_masked_custome
 export const qk = { products: ["products"], sales: ["sales"], items: ["sale_items"], profile: ["profile"], shop: ["shop-context"], customers: ["customers-masked"], goals: ["sales-goals"], forecasts: ["sales-forecasts"], tip: ["daily-tip"], cashierToday: ["cashier-today"], productSettings: ["product-settings"] };
 
 /** All shop products A→Z, including archived ones (filter with activeProducts). */
-export async function fetchAllProducts() {
+export function fetchAllProducts() { return withOfflineCache("fetchAllProducts", fetchAllProductsLive); }
+async function fetchAllProductsLive() {
   const { data, error } = await supabase.rpc("get_shop_products_v2");
   if (error) throw error;
   return data.map((p) => ({ ...p, stock: Number(p.stock ?? 0), price: Number(p.price), cost: p.cost == null ? null : Number(p.cost), user_id: "" })) as Product[];
@@ -22,18 +24,21 @@ export async function fetchAllProducts() {
 export async function fetchProducts() {
   return (await fetchAllProducts()).filter((p) => !p.archived_at);
 }
-export async function fetchProductSettings() {
+export function fetchProductSettings() { return withOfflineCache("fetchProductSettings", fetchProductSettingsLive); }
+async function fetchProductSettingsLive() {
   const { data, error } = await supabase.rpc("get_product_settings");
   if (error) throw error;
   return data[0] ?? { allow_cashier_products: false, can_edit: false };
 }
-export async function fetchSales() {
+export function fetchSales() { return withOfflineCache("fetchSales", fetchSalesLive); }
+async function fetchSalesLive() {
   const since = new Date(Date.now() - 60 * 86400000).toISOString();
   const { data, error } = await supabase.from("sales").select("*").gte("created_at", since).order("created_at", { ascending: false });
   if (error) throw error;
   return data;
 }
-export async function fetchItems() {
+export function fetchItems() { return withOfflineCache("fetchItems", fetchItemsLive); }
+async function fetchItemsLive() {
   const since = new Date(Date.now() - 60 * 86400000).toISOString();
   const { data, error } = await supabase.from("sale_items").select("*").gte("created_at", since);
   if (error) throw error;
@@ -50,7 +55,8 @@ export async function fetchProfile() {
   return created;
 }
 
-export async function fetchShopContext() {
+export function fetchShopContext() { return withOfflineCache("fetchShopContext", fetchShopContextLive); }
+async function fetchShopContextLive() {
   const { data, error } = await supabase.rpc("get_my_shop_context");
   if (error) throw error;
   if (data[0]) return data[0];
@@ -62,11 +68,16 @@ export async function fetchShopContext() {
   if (!again[0]) throw new Error("Your shop could not be loaded");
   return again[0];
 }
-export async function fetchCustomers() { const { data, error } = await supabase.rpc("get_masked_customers"); if (error) throw error; return data; }
-export async function fetchGoals() { const { data, error } = await supabase.from("sales_goals").select("*").order("period"); if (error) throw error; return data; }
-export async function fetchForecasts() { const { data, error } = await supabase.from("sales_forecasts").select("*").gte("forecast_date", new Date().toISOString().slice(0, 10)).order("forecast_date"); if (error) throw error; return data; }
-export async function fetchDailyTip() { const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila" }).format(new Date()); const { data, error } = await supabase.from("daily_tips").select("*").eq("tip_date", today).maybeSingle(); if (error) throw error; return data; }
-export async function fetchCashierToday() { const { data, error } = await supabase.rpc("get_cashier_today_summary"); if (error) throw error; return data[0] ?? { today_total: 0, sale_count: 0 }; }
+export function fetchCustomers() { return withOfflineCache("fetchCustomers", fetchCustomersLive); }
+async function fetchCustomersLive() { const { data, error } = await supabase.rpc("get_masked_customers"); if (error) throw error; return data; }
+export function fetchGoals() { return withOfflineCache("fetchGoals", fetchGoalsLive); }
+async function fetchGoalsLive() { const { data, error } = await supabase.from("sales_goals").select("*").order("period"); if (error) throw error; return data; }
+export function fetchForecasts() { return withOfflineCache("fetchForecasts", fetchForecastsLive); }
+async function fetchForecastsLive() { const { data, error } = await supabase.from("sales_forecasts").select("*").gte("forecast_date", new Date().toISOString().slice(0, 10)).order("forecast_date"); if (error) throw error; return data; }
+export function fetchDailyTip() { return withOfflineCache("fetchDailyTip", fetchDailyTipLive); }
+async function fetchDailyTipLive() { const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila" }).format(new Date()); const { data, error } = await supabase.from("daily_tips").select("*").eq("tip_date", today).maybeSingle(); if (error) throw error; return data; }
+export function fetchCashierToday() { return withOfflineCache("fetchCashierToday", fetchCashierTodayLive); }
+async function fetchCashierTodayLive() { const { data, error } = await supabase.rpc("get_cashier_today_summary"); if (error) throw error; return data[0] ?? { today_total: 0, sale_count: 0 }; }
 
 export async function loadSampleData() {
   const { error } = await supabase.rpc("seed_sample_store");
