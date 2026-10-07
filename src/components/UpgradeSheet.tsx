@@ -5,7 +5,7 @@ import { useT } from "@/lib/i18n";
 import { fetchMyPlan, fetchPlanLimits, qk } from "@/lib/store";
 
 /** True when a Supabase/Postgres error was raised by a plan limit (HINT = 'upgrade'). */
-export function isUpgradeError(e: unknown): e is { message: string; hint: string } {
+export function isUpgradeError(e: unknown): boolean {
   return !!e && typeof e === "object" && (e as { hint?: unknown }).hint === "upgrade";
 }
 
