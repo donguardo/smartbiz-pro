@@ -18,9 +18,12 @@ async function ownedShop(supabase: any) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function assertServerMode(supabase: any, env: StripeEnv) {
-  const { data } = await supabase.rpc("get_payments_env");
-  if (data !== env) throw new Error("Payments are being set up. Please try again later.");
+async function serverMode(supabase: any, requested: StripeEnv): Promise<StripeEnv> {
+  const { data, error } = await supabase.rpc("get_payments_env");
+  if (error || (data !== "sandbox" && data !== "live") || data !== requested) {
+    throw new Error("Payments are being set up. Please try again later.");
+  }
+  return data as StripeEnv;
 }
 
 type CheckoutResult = { clientSecret: string } | { error: string };
@@ -31,9 +34,9 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     z.object({ environment: envSchema, returnUrl: z.string().url().max(500) }).parse(data))
   .handler(async ({ data, context }): Promise<CheckoutResult> => {
     try {
-      await assertServerMode(context.supabase, data.environment);
+      const env = await serverMode(context.supabase, data.environment);
       const shop = await ownedShop(context.supabase);
-      const stripe = createStripeClient(data.environment);
+      const stripe = createStripeClient(env);
       const prices = await stripe.prices.list({ lookup_keys: [PRICE_ID] });
       const price = prices.data[0];
       if (!price) throw new Error("Plan price not found");
@@ -69,7 +72,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         client_reference_id: shop.shopId,
         metadata: meta,
         subscription_data: { metadata: meta },
-      }, data.environment);
+      }, env);
       return { clientSecret: session.client_secret ?? "" };
     } catch (error) {
       return { error: getStripeErrorMessage(error) };
@@ -84,13 +87,14 @@ export const createBillingPortal = createServerFn({ method: "POST" })
     z.object({ environment: envSchema, returnUrl: z.string().url().max(500) }).parse(data))
   .handler(async ({ data, context }): Promise<PortalResult> => {
     try {
+      const env = await serverMode(context.supabase, data.environment);
       const shop = await ownedShop(context.supabase);
       const { data: sub } = await context.supabase.from("subscriptions").select("paddle_customer_id")
-        .eq("shop_id", shop.shopId).eq("environment", data.environment).eq("provider", "stripe")
+        .eq("shop_id", shop.shopId).eq("environment", env).eq("provider", "stripe")
         .order("created_at", { ascending: false }).limit(1).maybeSingle();
       const customer = sub?.paddle_customer_id ?? shop.customerId;
       if (!customer) return { error: "No subscription found yet" };
-      const portal = await createStripeClient(data.environment).billingPortal.sessions.create({ customer, return_url: data.returnUrl });
+      const portal = await createStripeClient(env).billingPortal.sessions.create({ customer, return_url: data.returnUrl });
       return { url: portal.url };
     } catch (error) {
       return { error: getStripeErrorMessage(error) };
