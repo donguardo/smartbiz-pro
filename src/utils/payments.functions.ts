@@ -112,6 +112,7 @@ export const createBillingPortal = createServerFn({ method: "POST" })
     z.object({ environment: envSchema, returnUrl: z.string().url().max(500) }).parse(data))
   .handler(async ({ data, context }): Promise<PortalResult> => {
     try {
+      if (!isAllowedReturnUrl(data.returnUrl)) return { error: "Invalid return address" };
       const env = await serverMode(context.supabase, data.environment);
       const shop = await ownedShop(context.supabase);
       const { data: sub } = await context.supabase.from("subscriptions").select("paddle_customer_id")
