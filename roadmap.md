@@ -16,6 +16,11 @@
 - [x] One all-or-nothing insert with the button disabled during import; "{n} products imported" unchanged
 - [x] Checked by sample-value review, type check and production build only — no database writes, payments, secrets, or publishing
 
+## Patch 3b Item 15
+- [x] Nine new icons saved to public/ with the exact names (favicon.ico, favicon-16x16.png, favicon-32x32.png, favicon.png, apple-touch-icon.png, icon-192.png, icon-512.png, icon-maskable-192.png, icon-maskable-512.png)
+- [x] Root head serves favicon.ico + 32x32 + 16x16 favicons and an 180x180 apple-touch-icon, all with ?v=2; manifest icon srcs gain ?v=2
+- [x] Verified every icon loads and the head renders the new links; type check and build pass — vite.config.ts, offline.html, pwa-register.ts, service worker and nitro.config.ts untouched; nothing published
+
 
 ## Publishing build repair
 - [x] Inline the startup guard in Nitro configuration to eliminate missing helper imports
