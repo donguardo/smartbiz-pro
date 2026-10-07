@@ -225,6 +225,13 @@
       "when": 1791380892113,
       "tag": "0031_0034_shops_protected_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1791381111299,
+      "tag": "0032_patch3b_billing",
+      "breakpoints": true
     }
   ]
 }

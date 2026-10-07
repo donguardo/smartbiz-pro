@@ -87,13 +87,14 @@ export const createBillingPortal = createServerFn({ method: "POST" })
     z.object({ environment: envSchema, returnUrl: z.string().url().max(500) }).parse(data))
   .handler(async ({ data, context }): Promise<PortalResult> => {
     try {
+      const env = await serverMode(context.supabase, data.environment);
       const shop = await ownedShop(context.supabase);
       const { data: sub } = await context.supabase.from("subscriptions").select("paddle_customer_id")
-        .eq("shop_id", shop.shopId).eq("environment", data.environment).eq("provider", "stripe")
+        .eq("shop_id", shop.shopId).eq("environment", env).eq("provider", "stripe")
         .order("created_at", { ascending: false }).limit(1).maybeSingle();
       const customer = sub?.paddle_customer_id ?? shop.customerId;
       if (!customer) return { error: "No subscription found yet" };
-      const portal = await createStripeClient(data.environment).billingPortal.sessions.create({ customer, return_url: data.returnUrl });
+      const portal = await createStripeClient(env).billingPortal.sessions.create({ customer, return_url: data.returnUrl });
       return { url: portal.url };
     } catch (error) {
       return { error: getStripeErrorMessage(error) };
