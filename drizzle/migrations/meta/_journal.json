@@ -267,6 +267,13 @@
       "when": 1791414888039,
       "tag": "0037_plan_accounts_and_limits",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1791415586165,
+      "tag": "0038_sku_limit",
+      "breakpoints": true
     }
   ]
 }
