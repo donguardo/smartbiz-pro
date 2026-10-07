@@ -1,4 +1,8 @@
 # Roadmap
+## Blockhole live page
+- [x] Verify the embedded game loads in preview and identify the live startup error
+- [ ] Resolve the published startup failure and verify the live Blockhole page
+
 ## Offline plan and price handling
 - [x] Cache billing and apply offline expiry rules without blocking unknown plans
 - [x] Explain changed prices, preserve original sale time and label aged receipts
