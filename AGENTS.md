@@ -31,4 +31,4 @@
 - Billing uses built-in Stripe (src/lib/stripe.server.ts gateway client, embedded checkout); one Stripe customer per shop (shops.stripe_customer_id); only the signature-verified /api/public/payments/webhook writes subscriptions, resolving the shop from that customer (legacy paddle_* columns hold provider ids). shop_has_access (trial or paid-through, current payments_env) gates current_shop_id() and RLS on shop-data tables; current_shop_id_raw() serves billing/onboarding — unpaid shops are blocked in the database.
 - Retry stripe_tax_inactive without tax only in sandbox with metadata; live failures block checkout.
 - Offline queues are user/shop-scoped with locks and stable IDs/times; deliberate logout clears only that user's data, unexpected logout clears read caches but retains queues — prevents lost sales and account leaks.
-- Guard minified createRequire(import.meta.url) in Nitro output — prevents Worker startup failures.
+- Keep Nitro's createRequire guard in scripts/, not ignored build/ — prevents startup/build failures.

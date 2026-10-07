@@ -3,7 +3,7 @@ export function guardWorkerRequire(code: string): string {
   const bindings = new Set<string>(["createRequire"]);
   // Minification can rename createRequire before Nitro's literal-string guard runs.
   for (const match of code.matchAll(/import\s*\{([^}]+)\}\s*from\s*["'](?:node:)?module["']/g)) {
-    for (const specifier of match[1].split(",")) {
+    for (const specifier of (match[1] ?? "").split(",")) {
       const binding = specifier.trim().match(/^createRequire(?:\s+as\s+([\w$]+))?$/);
       if (binding) bindings.add(binding[1] ?? "createRequire");
     }

@@ -1,5 +1,5 @@
 import { defineConfig } from "nitro/config";
-import { guardWorkerRequire } from "./build/worker-runtime-guard.ts";
+import { guardWorkerRequire } from "./scripts/worker-runtime-guard.ts";
 
 export default defineConfig({
   rollupConfig: {
