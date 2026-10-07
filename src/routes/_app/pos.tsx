@@ -9,6 +9,8 @@ import { peso } from "@/lib/format";
 import { useShopProfile } from "@/lib/shop-profile";
 import { useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
+import { enqueueSale, isNetworkError } from "@/lib/offline";
+import { FailedQueuedSales } from "@/components/OfflineStatus";
 import "@/receipt-print.css";
 
 export const Route = createFileRoute("/_app/pos")({
@@ -25,7 +27,7 @@ export const Route = createFileRoute("/_app/pos")({
 
 type Line = { p: Product; qty: number };
 type Method = "cash" | "ewallet" | "card";
-type Receipt = { no: string; lines: Line[]; total: number; method: Method; tendered: number; at: Date };
+type Receipt = { no: string; lines: Line[]; total: number; method: Method; tendered: number; at: Date; pending?: boolean };
 
 function POS() {
   const qc = useQueryClient();
@@ -79,6 +81,16 @@ function POS() {
 
   const checkout = async () => {
     setBusy(true);
+    const paid = method === "cash" ? Number(tendered) : total;
+    const queueOffline = async () => {
+      if (newCustomer.name.trim()) { toast.error(t("offline.noNewCustomer")); return; }
+      const q = await enqueueSale({ method, tendered: paid, total, customerId: customerId || null, items: cart.map((l) => ({ product_id: l.p.id, qty: l.qty, name: l.p.name, price: Number(l.p.price) })) });
+      qc.setQueryData<Product[]>(qk.products, (ps) => ps?.map((p) => { const l = cart.find((x) => x.p.id === p.id); return l && p.track_stock ? { ...p, stock: p.stock - l.qty } : p; }));
+      setReceipt({ no: `OFFLINE-${q.id.slice(0, 6).toUpperCase()}`, lines: cart, total, method, tendered: paid, at: new Date(q.createdAt), pending: true });
+      setCart([]); setTendered(""); setCustomerId(""); setPaying(false);
+      toast.success(t("offline.queued"));
+    };
+    if (!navigator.onLine) { try { await queueOffline(); } finally { setBusy(false); } return; }
     try {
       let selectedCustomer = customerId || null;
       if (newCustomer.name.trim()) {
@@ -94,6 +106,7 @@ function POS() {
       setCart([]); setTendered(""); setCustomerId(""); setNewCustomer({ name: "", mobile: "", consent: false }); setPaying(false);
       qc.invalidateQueries();
     } catch (err) {
+      if (isNetworkError(err)) { await queueOffline(); return; }
       const msg = err && typeof err === "object" && "message" in err ? String((err as { message: unknown }).message) : "Payment failed"; toast.error(msg); void qc.invalidateQueries({ queryKey: qk.products });
     } finally { setBusy(false); }
   };
@@ -103,6 +116,7 @@ function POS() {
   return (
     <div className="grid gap-4 p-4 md:p-6 lg:grid-cols-[1fr_380px]">
       <div className="min-w-0 space-y-4">
+        <FailedQueuedSales />
         <form onSubmit={onScan} className="flex items-center gap-2 rounded-2xl border border-border bg-card p-2">
           <ScanLine className="ml-2 h-5 w-5 text-primary" />
           <input ref={scanRef} autoFocus value={scan} onChange={(e) => setScan(e.target.value)} placeholder="Scan barcode or search item, then press Enter"
@@ -220,6 +234,7 @@ function POS() {
               <p className="break-words text-center font-bold">{business?.name ?? shop?.shop_name ?? "Store"}</p>
               <p className="text-center text-xs text-muted-foreground">{receipt.at.toLocaleString("en-PH")}</p>
               <p className="text-center text-xs text-muted-foreground">Receipt {receipt.no}</p>
+              {receipt.pending && <p className="text-center text-xs font-semibold text-warning">{t("offline.receiptPending")}</p>}
               <div className="my-3 border-t border-dashed border-border" />
               {receipt.lines.map((l) => (
                 <div key={l.p.id} className="flex justify-between py-0.5"><span className="truncate pr-2">{l.p.name} ×{l.qty}{isDecimalUnit(l.p.unit) ? ` ${l.p.unit}` : ""}</span><span>{lineTotal(l).toFixed(2)}</span></div>
