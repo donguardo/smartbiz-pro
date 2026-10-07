@@ -1,7 +1,7 @@
 # Roadmap
 ## Publishing build repair
-- [x] Move the required startup helper out of the ignored build directory and update its import
-- [x] Confirm automatic build passes; no publishing or payments/secrets changes
+- [x] Inline the startup guard in Nitro configuration to eliminate missing helper imports
+- [ ] Confirm automatic build passes after deployment diagnostics; no publishing or payments/secrets changes
 
 ## Offline account and shop safety
 - [x] Keep queues shop-scoped, migrate legacy queues, and show other-shop/account counts
