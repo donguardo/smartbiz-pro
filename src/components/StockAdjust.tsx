@@ -4,6 +4,7 @@ import { Download, History, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { isDecimalUnit, qk, type Product } from "@/lib/store";
+import { csvCell } from "@/lib/csv-zip";
 
 type Kind = "restock" | "loss" | "correction";
 const KINDS: { k: Kind; label: string; hint: string }[] = [
@@ -66,7 +67,6 @@ export function StockAdjustDialog({ product, onClose }: { product: Product; onCl
   );
 }
 
-const toCsvCell = (v: unknown) => { const t = String(v ?? ""); return /[",\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t; };
 const manila = (iso: string) => new Date(iso).toLocaleString("en-PH", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false });
 
 export function StockHistoryPanel({ products }: { products: Product[] }) {
@@ -93,7 +93,7 @@ export function StockHistoryPanel({ products }: { products: Product[] }) {
     if (error) { toast.error(error.message); return; }
     if (!data.length) { toast.info("No stock movements match these filters"); return; }
     const header = ["Date (Manila)", "Product", "Type", "Change", "Stock before", "Stock after", "Reason", "By"];
-    const lines = data.map((r) => [manila(r.created_at), r.product_name, r.kind, Number(r.qty_change), Number(r.stock_before), Number(r.stock_after), r.reason, r.actor_name].map(toCsvCell).join(","));
+    const lines = data.map((r) => [manila(r.created_at), r.product_name, r.kind, Number(r.qty_change), Number(r.stock_before), Number(r.stock_after), r.reason, r.actor_name].map(csvCell).join(","));
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob(["\uFEFF" + [header.join(","), ...lines].join("\r\n")], { type: "text/csv;charset=utf-8" }));
     const name = productId ? products.find((p) => p.id === productId)?.name.replace(/[^\w-]+/g, "-") ?? "product" : "all";
