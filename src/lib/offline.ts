@@ -138,8 +138,8 @@ async function queueScope(): Promise<QueueScope | null> {
   if (await userKey() !== userId) return null;
   const scope = { userId, shopId: shop.shop_id, shopName: shop.shop_name, key: queueKey(userId, shop.shop_id) };
   // Serialize the one-time migration with all other queue writers in this shop.
-  if (localStorage.getItem(`${QUEUE_PREFIX}:${userId}`) !== null) await updateQueue(scope, (q) => q);
-  return scope;
+  if (localStorage.getItem(`${QUEUE_PREFIX}:${userId}`) !== null || readQueue(scope).some((sale) => sale.shopName !== scope.shopName)) await updateQueue(scope, (q) => q);
+  return await userKey() === userId && !intentionalSignOut ? scope : null;
 }
 function readQueueKey(key: string): QueuedSale[] {
   try { const list = JSON.parse(localStorage.getItem(key) ?? "[]"); return Array.isArray(list) ? list : []; } catch { return []; }
@@ -231,7 +231,7 @@ export function useQueuedSales() {
       }).catch(() => { /* Keep last visible queue if the shop cannot be read. */ });
     };
     const onStorage = (event: StorageEvent) => { if (event.key === key || event.key === null || shopContextChanged(event)) update(); };
-    const { data: authListener } = supabase.auth.onAuthStateChange(() => { setList([]); setTimeout(update, 0); });
+    const { data: authListener } = supabase.auth.onAuthStateChange(() => { revision++; key = undefined; setList([]); setTimeout(update, 0); });
     window.addEventListener(QUEUE_EVENT, update);
     window.addEventListener("storage", onStorage);
     update();
@@ -280,7 +280,7 @@ export function useOtherShopQueues() {
       }).catch(() => { /* Preserve known queues during a transient connection failure. */ });
     };
     const onStorage = (event: StorageEvent) => { if (event.key === null || event.key?.startsWith(`${QUEUE_PREFIX}:`) || shopContextChanged(event)) update(); };
-    const { data } = supabase.auth.onAuthStateChange(() => { setShops([]); setTimeout(update, 0); });
+    const { data } = supabase.auth.onAuthStateChange(() => { revision++; setShops([]); setTimeout(update, 0); });
     window.addEventListener(QUEUE_EVENT, update);
     window.addEventListener("storage", onStorage);
     update();
