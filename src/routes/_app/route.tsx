@@ -51,6 +51,8 @@ function AppLayout() {
   useEffect(() => { if (userId) void syncThemeFromAccount(); }, [userId]);
   const { data: profile } = useQuery({ queryKey: qk.profile, queryFn: fetchProfile, enabled: !!session });
   const { data: shop } = useQuery({ queryKey: qk.shop, queryFn: fetchShopContext, enabled: !!session, retry: 1 });
+  const { data: myPlan } = useQuery({ queryKey: qk.plan, queryFn: fetchMyPlan, enabled: !!session, retry: 1 });
+  const trialDays = myPlan?.on_trial && myPlan.trial_ends_at ? Math.max(0, Math.ceil((new Date(myPlan.trial_ends_at).getTime() - Date.now()) / 86400000)) : null;
   const { data: business } = useShopProfile(shop?.shop_id);
   const businessName = business?.name ?? shop?.shop_name ?? profile?.business_name ?? "…";
   const { data: billing } = useBilling(!!session && !!shop);
@@ -93,7 +95,7 @@ function AppLayout() {
           </Button>
           <LanguageToggle className="w-full justify-center" />
           <div className="rounded-xl border border-sidebar-border p-3 text-xs text-muted-foreground">
-            {t("app.plan")}: <span className="font-semibold text-foreground">₱499/month</span>
+            {t("app.plan")}: <span className="font-semibold text-foreground">{!myPlan ? "…" : trialDays !== null ? t("plan.trialSidebar", { label: myPlan.label, n: String(trialDays) }) : t("plan.sidebar", { label: myPlan.label, price: myPlan.monthly_price_php.toLocaleString("en-PH") })}</span>
           </div>
           <div className="flex items-center gap-2">
             {shop?.member_role === "owner" && <StockAlertsBell />}
