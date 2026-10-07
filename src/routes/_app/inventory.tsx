@@ -1,14 +1,16 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Archive, ArrowUpDown, Download, ImagePlus, Pencil, Plus, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { UNITS, computeInsights, fetchAllProducts, fetchItems, fetchProductSettings, fetchShopContext, isDecimalUnit, qk, type Product, type Unit } from "@/lib/store";
+import { UNITS, computeInsights, fetchAllProducts, fetchItems, fetchProductSettings, fetchShopContext, fetchMyPlan, fetchMyUsage, isDecimalUnit, qk, type Product, type Unit } from "@/lib/store";
 import { LowStockSettings } from "@/components/StockAlerts";
 import { StockAdjustDialog, StockHistoryPanel } from "@/components/StockAdjust";
 import { SAMPLE_CSV, parseProductCsv, type CsvRow } from "@/lib/product-csv";
 import { peso } from "@/lib/format";
+import { useT } from "@/lib/i18n";
+import { BrandAdSlot, UpgradeSheet, isUpgradeError } from "@/components/UpgradeSheet";
 
 export const Route = createFileRoute("/_app/inventory")({
   head: () => ({ meta: [
@@ -41,6 +43,10 @@ function Inventory() {
   const { data: settings } = useQuery({ queryKey: qk.productSettings, queryFn: fetchProductSettings });
   const photoPaths = all.map((p) => p.photo_path).filter((p): p is string => !!p);
   const { data: photos = {} } = useQuery({ queryKey: ["product-photos", photoPaths], queryFn: () => signPhotos(photoPaths), enabled: photoPaths.length > 0, staleTime: 30 * 60000 });
+  const { t } = useT();
+  const { data: usage } = useQuery({ queryKey: qk.usage, queryFn: fetchMyUsage });
+  const { data: plan } = useQuery({ queryKey: qk.plan, queryFn: fetchMyPlan });
+  const [upgradeMsg, setUpgradeMsg] = useState<string | null>(null);
   const [form, setForm] = useState<Form | null>(null);
   const [adjusting, setAdjusting] = useState<Product | null>(null);
   const [busy, setBusy] = useState(false);
@@ -58,7 +64,7 @@ function Inventory() {
   const noCost = products.filter((p) => p.cost == null).length;
   const [extraCats, setExtraCats] = useState<string[]>([]);
   const categories = [...new Set([...all.map((p) => p.category), ...extraCats])].sort((a, b) => a.localeCompare(b));
-  const refresh = () => qc.refetchQueries({ queryKey: qk.products });
+  const refresh = () => { qc.invalidateQueries({ queryKey: qk.usage }); qc.invalidateQueries({ queryKey: qk.plan }); return qc.refetchQueries({ queryKey: qk.products }); };
 
   const toggleCashiers = async () => {
     if (!shop) return;
@@ -86,6 +92,7 @@ function Inventory() {
       const { error } = form.id
         ? await supabase.rpc("update_product", { _id: form.id, _data: row })
         : await supabase.from("products").insert({ ...row, cost: owner ? (form.cost.trim() === "" ? null : Number(form.cost)) : null });
+      if (error && isUpgradeError(error)) { setForm(null); setUpgradeMsg(error.message); return; }
       if (error) throw new Error(error.message.includes("products_shop_sku_unique") ? "That SKU/barcode is already used in your shop" : error.message);
       toast.success(form.id ? "Product updated" : "Product added");
       await refresh(); setExtraCats((c) => (c.includes(category) ? c : [...c, category])); setForm(null);
@@ -95,11 +102,13 @@ function Inventory() {
     if (!confirm(`Delete ${p.name}? If it already has sales it will be archived instead.`)) return;
     const { data, error } = await supabase.rpc("remove_product", { _id: p.id });
     if (error) { toast.error(error.message); return; }
+    if (data === "archived") qc.invalidateQueries({ queryKey: qk.usage });
     toast.success(data === "archived" ? `${p.name} archived — hidden from Register, kept in reports` : `${p.name} deleted`);
     refresh();
   };
   const restore = async (p: Product) => {
     const { error } = await supabase.from("products").update({ archived_at: null }).eq("id", p.id);
+    if (error && isUpgradeError(error)) { setUpgradeMsg(error.message); return; }
     if (error) { toast.error(error.message); return; }
     refresh();
   };
@@ -111,6 +120,7 @@ function Inventory() {
     setBusy(true);
     const { error } = await supabase.from("products").insert(rows.map((r) => ({ ...r, cost: owner ? r.cost : null })));
     setBusy(false);
+    if (error && isUpgradeError(error)) { setCsv(null); setUpgradeMsg(error.message); return; }
     if (error) { toast.error(error.message); return; }
     toast.success(`${rows.length} products imported`); setCsv(null); refresh();
   };
@@ -125,6 +135,10 @@ function Inventory() {
     .filter((p) => filter === "low" ? flag(p.id).includes("reorder") : filter === "overstock" ? flag(p.id).includes("overstock") : true)
     .sort((a, b) => sort === "price" ? a.price - b.price : sort === "stock" ? (a.track_stock ? a.stock : Infinity) - (b.track_stock ? b.stock : Infinity) : a.name.localeCompare(b.name));
 
+  const importRows = csv?.filter((r) => r.data).length ?? 0;
+  const importTotal = (usage?.active_products ?? 0) + importRows;
+  const overCap = usage?.max_skus != null && importTotal > usage.max_skus;
+
   const input = "mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground";
   const set = (patch: Partial<Form>) => setForm((f) => f && { ...f, ...patch });
 
@@ -137,10 +151,12 @@ function Inventory() {
         </div>
         {canEdit && <div className="flex flex-wrap gap-2">
           <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm"><Upload className="h-4 w-4" /> Import CSV<input type="file" accept=".csv,text/csv" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) onCsv(f); e.target.value = ""; }} /></label>
-          <button onClick={() => setForm(empty)} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"><Plus className="h-4 w-4" /> Add product</button>
+          <button onClick={() => (usage?.at_limit ? setUpgradeMsg(t("upgrade.nearLimit")) : setForm(empty))} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"><Plus className="h-4 w-4" /> Add product</button>
         </div>}
       </div>
 
+      {usage?.near_limit && <div role="status" className="flex items-center justify-between gap-3 rounded-xl border border-warning/50 bg-warning/15 px-4 py-2 text-sm"><span>{t("upgrade.nearLimit")}</span><Link to="/billing" className="font-semibold text-primary underline">{t("upgrade.link")}</Link></div>}
+      <BrandAdSlot />
       {owner && <label className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 text-sm">
         <span><span className="font-medium">Let cashiers add products</span><span className="block text-xs text-muted-foreground">Cashiers can add and edit, but never delete.</span></span>
         <input type="checkbox" role="switch" className="h-5 w-5 accent-primary" checked={!!settings?.allow_cashier_products} onChange={toggleCashiers} />
@@ -238,6 +254,7 @@ function Inventory() {
       )}
 
       {owner && <StockHistoryPanel products={all} />}
+      <UpgradeSheet message={upgradeMsg} onClose={() => setUpgradeMsg(null)} />
       {adjusting && <StockAdjustDialog product={adjusting} onClose={() => setAdjusting(null)} />}
       {csv && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 sm:items-center sm:p-4" onClick={() => setCsv(null)}>
@@ -250,7 +267,8 @@ function Inventory() {
               <tbody className="divide-y divide-border">{csv.map((r) => <tr key={r.line}><td className="p-2">{r.line}</td><td className="p-2">{r.data?.name ?? "—"}</td><td className="p-2">{r.data ? peso(r.data.price) : ""}</td><td className="p-2">{r.data?.unit}</td><td className="p-2">{r.data ? (r.data.track_stock ? r.data.stock_qty : "no tracking") : ""}</td>
                 <td className={`p-2 ${r.errors.length ? "text-destructive" : "text-success"}`}>{r.errors.length ? r.errors.join("; ") : "OK"}</td></tr>)}</tbody>
             </table></div>
-            <button disabled={busy || !csv.some((r) => r.data)} onClick={importCsv} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-semibold text-primary-foreground disabled:opacity-50"><Archive className="h-4 w-4" /> Import {csv.filter((r) => r.data).length} products</button>
+            {overCap && <p role="alert" className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">{t("upgrade.importTooMany", { n: String(importTotal), plan: plan?.label ?? usage?.plan ?? "", max: String(usage?.max_skus ?? ""), x: String(importTotal - (usage?.max_skus ?? 0)) })} <Link to="/billing" className="font-semibold underline">{t("upgrade.link")}</Link></p>}
+            <button disabled={busy || overCap || !csv.some((r) => r.data)} onClick={importCsv} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-semibold text-primary-foreground disabled:opacity-50"><Archive className="h-4 w-4" /> Import {csv.filter((r) => r.data).length} products</button>
           </div>
         </div>
       )}
