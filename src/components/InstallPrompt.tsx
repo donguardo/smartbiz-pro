@@ -77,6 +77,7 @@ export function InstallPrompt() {
         </div>
       </div>
       <div className="mt-3 flex justify-end gap-2">
+        {!installed && <Button asChild variant="ghost"><a href="/install" onClick={close}>{t("install.guide")}</a></Button>}
         <Button onClick={close} variant="outline">{installed ? t("install.done") : t("install.later")}</Button>
         {!installed && (
           <Button onClick={install}>

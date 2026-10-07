@@ -5,11 +5,50 @@
 //     React/TanStack dedupe, error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
+  },
+  vite: {
+    plugins: [
+      VitePWA({
+        strategies: "generateSW",
+        registerType: "autoUpdate",
+        injectRegister: null,
+        manifest: false,
+        filename: "sw.js",
+        devOptions: { enabled: false },
+        includeAssets: ["offline.html", "favicon.png", "icon-192.png", "icon-512.png", "apple-touch-icon.png"],
+        workbox: {
+          navigateFallback: null,
+          cleanupOutdatedCaches: true,
+          clientsClaim: true,
+          globPatterns: ["**/*.{js,css,woff2,png,svg,ico,webmanifest}", "offline.html"],
+          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+          runtimeCaching: [
+            {
+              urlPattern: ({ request, url }) =>
+                request.mode === "navigate" && !url.pathname.startsWith("/~oauth") && !url.pathname.startsWith("/api/"),
+              handler: "NetworkFirst",
+              options: {
+                cacheName: "pages",
+                networkTimeoutSeconds: 4,
+                expiration: { maxEntries: 30 },
+                precacheFallback: { fallbackURL: "/offline.html" },
+              },
+            },
+            {
+              urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith("/assets/"),
+              handler: "CacheFirst",
+              options: { cacheName: "assets", expiration: { maxEntries: 200 } },
+            },
+          ],
+        },
+      }),
+    ],
   },
 });

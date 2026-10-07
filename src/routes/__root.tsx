@@ -19,6 +19,7 @@ import { I18nProvider } from "@/lib/i18n";
 import { FloatingBizBot } from "@/components/FloatingBizBot";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { FirstVisitIntro } from "@/components/FirstVisitIntro";
+import { registerAppServiceWorker } from "@/lib/pwa-register";
 
 function NotFoundComponent() {
   return (
@@ -137,6 +138,8 @@ function BizBotOutsideAuth() {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useEffect(() => { registerAppServiceWorker(); }, []);
+
 
   return (
     <QueryClientProvider client={queryClient}>
