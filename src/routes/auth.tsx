@@ -6,7 +6,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { useSession } from "@/lib/auth";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/lib/theme";
-import { PRICE_MONTHLY } from "@/lib/format";
+import { PLAN_PRICES } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useOtherAccountSalesCount } from "@/lib/offline";
@@ -134,7 +134,7 @@ function AuthPage() {
         <div className="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-xl backdrop-blur-xl sm:p-8">
           <h1 className="text-2xl font-bold">{mode === "signup" ? "Create your MVP BizManager account" : mode === "forgot" ? "Reset your password" : "Welcome back to MVP BizManager"}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {mode === "signup" ? `One plan: ₱${PRICE_MONTHLY}/month.` : mode === "forgot" ? "Enter your email and we'll send a secure reset link." : "Sign in to your register and dashboard."}
+            {mode === "signup" ? `${t("price.from")} ₱${PLAN_PRICES.basic}${t("price.per")} · ${t("plan.price_note")} ${t("plan.trial")}` : mode === "forgot" ? "Enter your email and we'll send a secure reset link." : "Sign in to your register and dashboard."}
           </p>
           {otherAccountSales > 0 && <p role="status" className="mt-3 border-l-2 border-warning pl-3 text-sm text-muted-foreground">{t("offline.otherAccount", { n: String(otherAccountSales) })}</p>}
           {mode !== "forgot" && <Button type="button" onClick={google} variant="outline" className="mt-6 w-full">

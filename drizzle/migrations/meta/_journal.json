@@ -281,6 +281,13 @@
       "when": 1791415607882,
       "tag": "0039_feature_gates",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1791416376416,
+      "tag": "0040_price_wording_tiers",
+      "breakpoints": true
     }
   ]
 }

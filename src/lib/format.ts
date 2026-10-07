@@ -4,4 +4,4 @@ export const peso = (n: number) =>
 export const pesoShort = (n: number) =>
   n >= 1_000_000 ? `₱${(n / 1_000_000).toFixed(1)}M` : n >= 1000 ? `₱${(n / 1000).toFixed(1)}k` : `₱${Math.round(n)}`;
 
-export const PRICE_MONTHLY = 499;
+export const PLAN_PRICES = { basic: 499, standard: 999, pro: 1499 } as const;

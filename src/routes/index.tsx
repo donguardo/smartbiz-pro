@@ -7,7 +7,8 @@ import { ThemeToggle } from "@/lib/theme";
 import { LanguageToggle, useT } from "@/lib/i18n";
 import { DemoDashboard } from "@/components/DemoDashboard";
 import { ShowcaseCarousel } from "@/components/ShowcaseCarousel";
-import { PRICE_MONTHLY } from "@/lib/format";
+import { PLAN_PRICES } from "@/lib/format";
+import { PLAN_ALL_FEATURES, PLAN_FEATURES, PLAN_IDS } from "@/lib/plans";
 import { Button } from "@/components/ui/button";
 import { openInstallPrompt } from "@/lib/install";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -16,8 +17,8 @@ export const Route = createFileRoute("/")({
   head: () => ({
     ...seo("/"),
     meta: [
-      { title: "MVP BizManager | ₱499/month" },
-      { name: "description", content: "Run your store with a fast POS register, live dashboards and an AI copilot that flags reorders and dead stock. ₱499/month." },
+      { title: "MVP BizManager | Plans from ₱499/month" },
+      { name: "description", content: "Run your store with a fast POS register, live dashboards and an AI copilot that flags reorders and dead stock. Plans from ₱499/month." },
       { property: "og:title", content: "MVP BizManager" },
       { property: "og:description", content: "POS checkout, inventory insights and an AI business copilot. Try the live demo, no login." },
       { property: "og:type", content: "website" },
@@ -94,7 +95,7 @@ function Landing() {
             </p>
             <div className="mt-8 flex flex-col items-stretch gap-3 min-[420px]:flex-row min-[420px]:items-center">
               <Link to="/auth" className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 font-semibold text-primary-foreground hover:opacity-90">
-                {t("hero.start")} ₱{PRICE_MONTHLY}{t("price.per")} <ArrowRight className="h-4 w-4" />
+                {t("hero.start")} ₱{PLAN_PRICES.basic}{t("price.per")} <ArrowRight className="h-4 w-4" />
               </Link>
               <a href="#demo" className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-5 py-3 font-semibold hover:bg-muted">{t("hero.tryDemo")}</a>
             </div>
@@ -204,19 +205,25 @@ function Landing() {
       </section>
 
       <section id="pricing" className="mx-auto max-w-6xl px-4 pb-20">
-        <div className="grid items-center gap-8 overflow-hidden rounded-lg border border-border bg-card p-8 text-foreground md:grid-cols-2 md:p-12">
-          <div>
-            <p className="font-mono text-xs uppercase tracking-widest opacity-70">{t("price.kicker")}</p>
-            <p className="mt-3 font-display text-6xl font-bold">₱{PRICE_MONTHLY}<span className="text-xl font-medium opacity-70">{t("price.per")}</span></p>
-            <p className="mt-3 opacity-80">{t("price.sub")}</p>
-            <Link to="/auth" className="mt-6 inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 font-semibold text-primary-foreground">{t("price.cta")} <ArrowRight className="h-4 w-4" /></Link>
-          </div>
-          <ul className="space-y-3">
-            {["price.f1", "price.f2", "price.f3", "price.f4", "price.f5", "price.f6"].map((f) => (
-              <li key={f} className="flex items-center gap-3"><Check className="h-5 w-5 text-primary" />{t(f)}</li>
-            ))}
-          </ul>
+        <div className="text-center">
+          <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">{t("price.kicker")}</p>
+          <p className="mt-2 text-muted-foreground">{t("plan.price_note")}</p>
         </div>
+        <div className="mt-8 grid gap-4 md:grid-cols-3">
+          {PLAN_IDS.map((id) => (
+            <div key={id} className={`flex flex-col gap-4 rounded-lg border bg-card p-6 ${id === "standard" ? "border-primary" : "border-border"}`}>
+              <div>
+                <p className="text-lg font-bold">{t(`plan.${id}.name`)}</p>
+                <p className="mt-1 font-display text-4xl font-bold">₱{PLAN_PRICES[id].toLocaleString("en-PH")}<span className="text-base font-medium text-muted-foreground">{t("price.per")}</span></p>
+              </div>
+              <ul className="flex-1 space-y-2 text-sm">
+                {[...PLAN_FEATURES[id], ...PLAN_ALL_FEATURES].map((f) => <li key={f} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{t(f)}</li>)}
+              </ul>
+              <Link to="/auth" className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 font-semibold text-primary-foreground">{t("price.cta")} <ArrowRight className="h-4 w-4" /></Link>
+            </div>
+          ))}
+        </div>
+        <p className="mt-4 text-center text-sm text-muted-foreground">{t("plan.trial")}</p>
       </section>
 
       <footer className="border-t border-border px-4 py-8 text-center text-sm text-muted-foreground">
