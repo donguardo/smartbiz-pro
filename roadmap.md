@@ -1,7 +1,7 @@
 # Roadmap
 ## Publishing build repair
 - [x] Move the required startup helper out of the ignored build directory and update its import
-- [ ] Confirm automatic build passes; do not publish or change payments/secrets
+- [x] Confirm automatic build passes; no publishing or payments/secrets changes
 
 ## Offline account and shop safety
 - [x] Keep queues shop-scoped, migrate legacy queues, and show other-shop/account counts
