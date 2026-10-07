@@ -1,7 +1,8 @@
 # Roadmap
 ## Blockhole live page
 - [x] Verify the embedded game loads in preview and identify the live startup error
-- [ ] Resolve the published startup failure and verify the live Blockhole page
+- [x] Add and validate the final-output startup guard; automatic build passed and preview game renders
+- [ ] Verify the live Blockhole page after publishing — blocked: changes have not been published
 
 ## Offline plan and price handling
 - [x] Cache billing and apply offline expiry rules without blocking unknown plans
