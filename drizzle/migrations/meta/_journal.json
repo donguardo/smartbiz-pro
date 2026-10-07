@@ -218,6 +218,13 @@
       "when": 1791293178221,
       "tag": "0030_past_due_grace",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1791380892113,
+      "tag": "0031_0034_shops_protected_columns",
+      "breakpoints": true
     }
   ]
 }
