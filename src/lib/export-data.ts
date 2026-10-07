@@ -16,7 +16,7 @@ export async function downloadShopData(): Promise<void> {
   for (const table of TABLES) {
     const rows: Record<string, unknown>[] = [];
     for (let from = 0; ; from += PAGE) {
-      const { data, error } = await supabase.from(table).select("*").eq("shop_id", shopId).range(from, from + PAGE - 1);
+      const { data, error } = await supabase.from(table).select("*").eq("shop_id", shopId).order("id", { ascending: true }).range(from, from + PAGE - 1);
       if (error) throw error;
       rows.push(...(data as Record<string, unknown>[]));
       if (!data || data.length < PAGE) break;
@@ -29,5 +29,6 @@ export async function downloadShopData(): Promise<void> {
   a.href = url;
   a.download = `mvp-bizmanager-data-${new Date().toISOString().slice(0, 10)}.zip`;
   a.click();
-  URL.revokeObjectURL(url);
+  // Give the browser time to start the download before the address is released.
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
