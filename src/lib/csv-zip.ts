@@ -21,8 +21,12 @@ export function toCsv(rows: Record<string, unknown>[]): string {
   const cols = Array.from(rows.reduce((set, r) => { Object.keys(r).forEach((k) => set.add(k)); return set; }, new Set<string>()));
   const cell = (v: unknown) => {
     if (v === null || v === undefined) return "";
+    // Strings only: a leading =, +, -, @, tab or CR would run as a formula when the
+    // CSV is opened in a spreadsheet, so neutralise it with a leading quote.
+    const injected = typeof v === "string" && /^[=+\-@\t\r]/.test(v);
     const s = typeof v === "object" ? JSON.stringify(v) : String(v);
-    return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    const safe = injected ? `'${s}` : s;
+    return /[",\n\r]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
   };
   const lines = [cols.join(",")];
   for (const r of rows) lines.push(cols.map((c) => cell(r[c])).join(","));
