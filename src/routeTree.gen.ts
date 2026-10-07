@@ -16,6 +16,7 @@ import { Route as AppCallbackRouteImport } from './routes/app-callback'
 import { Route as AppLoginRouteImport } from './routes/app-login'
 import { Route as AppReturnRouteImport } from './routes/app-return'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BlockholeRouteImport } from './routes/blockhole'
 import { Route as DeleteAccountRouteImport } from './routes/delete-account'
 import { Route as InstallRouteImport } from './routes/install'
 import { Route as InviteRouteImport } from './routes/invite'
@@ -72,6 +73,11 @@ const AppReturnRoute = AppReturnRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlockholeRoute = BlockholeRouteImport.update({
+  id: '/blockhole',
+  path: '/blockhole',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DeleteAccountRoute = DeleteAccountRouteImport.update({
@@ -199,6 +205,7 @@ export interface FileRoutesByFullPath {
   '/app-login': typeof AppLoginRoute
   '/app-return': typeof AppReturnRoute
   '/auth': typeof AuthRoute
+  '/blockhole': typeof BlockholeRoute
   '/delete-account': typeof DeleteAccountRoute
   '/install': typeof InstallRoute
   '/invite': typeof InviteRoute
@@ -230,6 +237,7 @@ export interface FileRoutesByTo {
   '/app-login': typeof AppLoginRoute
   '/app-return': typeof AppReturnRoute
   '/auth': typeof AuthRoute
+  '/blockhole': typeof BlockholeRoute
   '/delete-account': typeof DeleteAccountRoute
   '/install': typeof InstallRoute
   '/invite': typeof InviteRoute
@@ -263,6 +271,7 @@ export interface FileRoutesById {
   '/app-login': typeof AppLoginRoute
   '/app-return': typeof AppReturnRoute
   '/auth': typeof AuthRoute
+  '/blockhole': typeof BlockholeRoute
   '/delete-account': typeof DeleteAccountRoute
   '/install': typeof InstallRoute
   '/invite': typeof InviteRoute
@@ -296,6 +305,7 @@ export interface FileRouteTypes {
     | '/app-login'
     | '/app-return'
     | '/auth'
+    | '/blockhole'
     | '/delete-account'
     | '/install'
     | '/invite'
@@ -327,6 +337,7 @@ export interface FileRouteTypes {
     | '/app-login'
     | '/app-return'
     | '/auth'
+    | '/blockhole'
     | '/delete-account'
     | '/install'
     | '/invite'
@@ -359,6 +370,7 @@ export interface FileRouteTypes {
     | '/app-login'
     | '/app-return'
     | '/auth'
+    | '/blockhole'
     | '/delete-account'
     | '/install'
     | '/invite'
@@ -392,6 +404,7 @@ export interface RootRouteChildren {
   AppLoginRoute: typeof AppLoginRoute
   AppReturnRoute: typeof AppReturnRoute
   AuthRoute: typeof AuthRoute
+  BlockholeRoute: typeof BlockholeRoute
   DeleteAccountRoute: typeof DeleteAccountRoute
   InstallRoute: typeof InstallRoute
   InviteRoute: typeof InviteRoute
@@ -457,6 +470,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blockhole': {
+      id: '/blockhole'
+      path: '/blockhole'
+      fullPath: '/blockhole'
+      preLoaderRoute: typeof BlockholeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/delete-account': {
@@ -659,6 +679,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppLoginRoute: AppLoginRoute,
   AppReturnRoute: AppReturnRoute,
   AuthRoute: AuthRoute,
+  BlockholeRoute: BlockholeRoute,
   DeleteAccountRoute: DeleteAccountRoute,
   InstallRoute: InstallRoute,
   InviteRoute: InviteRoute,
