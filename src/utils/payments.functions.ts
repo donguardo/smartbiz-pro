@@ -72,7 +72,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         client_reference_id: shop.shopId,
         metadata: meta,
         subscription_data: { metadata: meta },
-      }, data.environment);
+      }, env);
       return { clientSecret: session.client_secret ?? "" };
     } catch (error) {
       return { error: getStripeErrorMessage(error) };
