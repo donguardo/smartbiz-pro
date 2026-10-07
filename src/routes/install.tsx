@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { seo } from "@/lib/seo";
 import { useEffect, useState } from "react";
 import { ArrowLeft, CheckCircle2, Download, MoreVertical, PlusSquare, Share, Smartphone, WifiOff } from "lucide-react";
 import { useT } from "@/lib/i18n";
@@ -7,6 +8,7 @@ import { isInstalledApp } from "@/lib/install";
 
 export const Route = createFileRoute("/install")({
   head: () => ({
+    ...seo("/install"),
     meta: [
       { title: "Install MVP BizManager on iPhone & Android" },
       { name: "description", content: "Step-by-step guide to add MVP BizManager to your iPhone or Android home screen." },

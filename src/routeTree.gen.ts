@@ -21,6 +21,7 @@ import { Route as DeleteAccountRouteImport } from './routes/delete-account'
 import { Route as InstallRouteImport } from './routes/install'
 import { Route as InviteRouteImport } from './routes/invite'
 import { Route as OrangewareRouteImport } from './routes/orangeware'
+import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RefundPolicyRouteImport } from './routes/refund-policy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -98,6 +99,11 @@ const InviteRoute = InviteRouteImport.update({
 const OrangewareRoute = OrangewareRouteImport.update({
   id: '/orangeware',
   path: '/orangeware',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -210,6 +216,7 @@ export interface FileRoutesByFullPath {
   '/install': typeof InstallRoute
   '/invite': typeof InviteRoute
   '/orangeware': typeof OrangewareRoute
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -242,6 +249,7 @@ export interface FileRoutesByTo {
   '/install': typeof InstallRoute
   '/invite': typeof InviteRoute
   '/orangeware': typeof OrangewareRoute
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -276,6 +284,7 @@ export interface FileRoutesById {
   '/install': typeof InstallRoute
   '/invite': typeof InviteRoute
   '/orangeware': typeof OrangewareRoute
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -310,6 +319,7 @@ export interface FileRouteTypes {
     | '/install'
     | '/invite'
     | '/orangeware'
+    | '/pricing'
     | '/privacy'
     | '/refund-policy'
     | '/reset-password'
@@ -342,6 +352,7 @@ export interface FileRouteTypes {
     | '/install'
     | '/invite'
     | '/orangeware'
+    | '/pricing'
     | '/privacy'
     | '/refund-policy'
     | '/reset-password'
@@ -375,6 +386,7 @@ export interface FileRouteTypes {
     | '/install'
     | '/invite'
     | '/orangeware'
+    | '/pricing'
     | '/privacy'
     | '/refund-policy'
     | '/reset-password'
@@ -409,6 +421,7 @@ export interface RootRouteChildren {
   InstallRoute: typeof InstallRoute
   InviteRoute: typeof InviteRoute
   OrangewareRoute: typeof OrangewareRoute
+  PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   RefundPolicyRoute: typeof RefundPolicyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -505,6 +518,13 @@ declare module '@tanstack/react-router' {
       path: '/orangeware'
       fullPath: '/orangeware'
       preLoaderRoute: typeof OrangewareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -684,6 +704,7 @@ const rootRouteChildren: RootRouteChildren = {
   InstallRoute: InstallRoute,
   InviteRoute: InviteRoute,
   OrangewareRoute: OrangewareRoute,
+  PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   RefundPolicyRoute: RefundPolicyRoute,
   ResetPasswordRoute: ResetPasswordRoute,

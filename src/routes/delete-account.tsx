@@ -2,11 +2,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/lib/theme";
 import { LanguageToggle, useT } from "@/lib/i18n";
+import { seo } from "@/lib/seo";
 
 export const SUPPORT_EMAIL = "orangewareph@gmail.com";
 
 export const Route = createFileRoute("/delete-account")({
-  head: () => ({ meta: [
+  head: () => ({ ...seo("/delete-account"), meta: [
     { title: "Delete your account — MVP BizManager" },
     { name: "description", content: "How to delete your MVP BizManager account and data, in the app or by email." },
     { property: "og:title", content: "Delete your account — MVP BizManager" },
