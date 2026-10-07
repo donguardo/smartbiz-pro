@@ -20,6 +20,8 @@ import { FloatingBizBot } from "@/components/FloatingBizBot";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { FirstVisitIntro } from "@/components/FirstVisitIntro";
 import { registerAppServiceWorker } from "@/lib/pwa-register";
+import { supabase } from "@/integrations/supabase/client";
+import { clearCachesIfSignedOut, handleOfflineAuthChange } from "@/lib/offline";
 
 function NotFoundComponent() {
   return (
@@ -139,7 +141,11 @@ function BizBotOutsideAuth() {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   useEffect(() => { registerAppServiceWorker(); }, []);
-
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((event) => handleOfflineAuthChange(event));
+    void clearCachesIfSignedOut();
+    return () => data.subscription.unsubscribe();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
