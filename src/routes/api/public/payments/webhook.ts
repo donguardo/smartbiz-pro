@@ -84,8 +84,14 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
           let sub = null;
           let forced: string | undefined;
           if (event.type.startsWith("customer.subscription.")) {
-            sub = obj;
-            if (event.type === "customer.subscription.deleted") forced = "canceled";
+            if (event.type === "customer.subscription.deleted") {
+              sub = obj;
+              forced = "canceled";
+            } else {
+              // created/updated payloads can be stale or replayed: re-read the live object
+              // from Stripe and store that instead of the event body.
+              sub = await createStripeClient(env).subscriptions.retrieve(obj.id);
+            }
           } else if (event.type === "checkout.session.completed" && obj.subscription && obj.payment_status !== "unpaid") {
             sub = await createStripeClient(env).subscriptions.retrieve(typeof obj.subscription === "string" ? obj.subscription : obj.subscription.id);
           }
