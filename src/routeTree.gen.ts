@@ -17,6 +17,7 @@ import { Route as AppLoginRouteImport } from './routes/app-login'
 import { Route as AppReturnRouteImport } from './routes/app-return'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DeleteAccountRouteImport } from './routes/delete-account'
+import { Route as InstallRouteImport } from './routes/install'
 import { Route as InviteRouteImport } from './routes/invite'
 import { Route as OrangewareRouteImport } from './routes/orangeware'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -76,6 +77,11 @@ const AuthRoute = AuthRouteImport.update({
 const DeleteAccountRoute = DeleteAccountRouteImport.update({
   id: '/delete-account',
   path: '/delete-account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InstallRoute = InstallRouteImport.update({
+  id: '/install',
+  path: '/install',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InviteRoute = InviteRouteImport.update({
@@ -194,6 +200,7 @@ export interface FileRoutesByFullPath {
   '/app-return': typeof AppReturnRoute
   '/auth': typeof AuthRoute
   '/delete-account': typeof DeleteAccountRoute
+  '/install': typeof InstallRoute
   '/invite': typeof InviteRoute
   '/orangeware': typeof OrangewareRoute
   '/privacy': typeof PrivacyRoute
@@ -224,6 +231,7 @@ export interface FileRoutesByTo {
   '/app-return': typeof AppReturnRoute
   '/auth': typeof AuthRoute
   '/delete-account': typeof DeleteAccountRoute
+  '/install': typeof InstallRoute
   '/invite': typeof InviteRoute
   '/orangeware': typeof OrangewareRoute
   '/privacy': typeof PrivacyRoute
@@ -256,6 +264,7 @@ export interface FileRoutesById {
   '/app-return': typeof AppReturnRoute
   '/auth': typeof AuthRoute
   '/delete-account': typeof DeleteAccountRoute
+  '/install': typeof InstallRoute
   '/invite': typeof InviteRoute
   '/orangeware': typeof OrangewareRoute
   '/privacy': typeof PrivacyRoute
@@ -288,6 +297,7 @@ export interface FileRouteTypes {
     | '/app-return'
     | '/auth'
     | '/delete-account'
+    | '/install'
     | '/invite'
     | '/orangeware'
     | '/privacy'
@@ -318,6 +328,7 @@ export interface FileRouteTypes {
     | '/app-return'
     | '/auth'
     | '/delete-account'
+    | '/install'
     | '/invite'
     | '/orangeware'
     | '/privacy'
@@ -349,6 +360,7 @@ export interface FileRouteTypes {
     | '/app-return'
     | '/auth'
     | '/delete-account'
+    | '/install'
     | '/invite'
     | '/orangeware'
     | '/privacy'
@@ -381,6 +393,7 @@ export interface RootRouteChildren {
   AppReturnRoute: typeof AppReturnRoute
   AuthRoute: typeof AuthRoute
   DeleteAccountRoute: typeof DeleteAccountRoute
+  InstallRoute: typeof InstallRoute
   InviteRoute: typeof InviteRoute
   OrangewareRoute: typeof OrangewareRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -451,6 +464,13 @@ declare module '@tanstack/react-router' {
       path: '/delete-account'
       fullPath: '/delete-account'
       preLoaderRoute: typeof DeleteAccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/install': {
+      id: '/install'
+      path: '/install'
+      fullPath: '/install'
+      preLoaderRoute: typeof InstallRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/invite': {
@@ -640,6 +660,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppReturnRoute: AppReturnRoute,
   AuthRoute: AuthRoute,
   DeleteAccountRoute: DeleteAccountRoute,
+  InstallRoute: InstallRoute,
   InviteRoute: InviteRoute,
   OrangewareRoute: OrangewareRoute,
   PrivacyRoute: PrivacyRoute,
