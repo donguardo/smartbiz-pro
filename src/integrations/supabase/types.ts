@@ -1716,6 +1716,16 @@ export type Database = {
           shop_name: string
         }[]
       }
+      get_my_usage: {
+        Args: never
+        Returns: {
+          active_products: number
+          at_limit: boolean
+          max_skus: number
+          near_limit: boolean
+          plan: string
+        }[]
+      }
       get_payments_env: { Args: never; Returns: string }
       get_product_settings: {
         Args: never
@@ -1804,8 +1814,10 @@ export type Database = {
         Args: { _shop_id: string }
         Returns: boolean
       }
+      shop_has_smart_reorder: { Args: { _shop_id: string }; Returns: boolean }
       shop_plan: { Args: { _shop_id: string }; Returns: string }
       shop_plan_unchecked: { Args: { _shop_id: string }; Returns: string }
+      shop_shows_brand_ads: { Args: { _shop_id: string }; Returns: boolean }
       subscription_is_paid: {
         Args: { _s: Database["public"]["Tables"]["subscriptions"]["Row"] }
         Returns: boolean
