@@ -288,6 +288,10 @@ export const DICT: Record<string, { en: string; tl: string }> = {
   "orange.open": { en: "Open in new tab", tl: "Buksan sa bagong tab" },
   "orange.loading": { en: "Loading Orange AI OS…", tl: "Ini-load ang Orange AI OS…" },
   "orange.fallback": { en: "Can't see it here? Open Orange AI OS in its own tab.", tl: "Hindi makita dito? Buksan ang Orange AI OS sa sarili nitong tab." },
+  "blockhole.title": { en: "Blockhole", tl: "Blockhole" },
+  "blockhole.back": { en: "Back to MVP BizManager", tl: "Bumalik sa MVP BizManager" },
+  "blockhole.open": { en: "Open in new tab", tl: "Buksan sa bagong tab" },
+  "blockhole.loading": { en: "Loading Blockhole…", tl: "Ini-load ang Blockhole…" },
 };
 
 export function fallback(lang: Lang): Record<string, string> {
