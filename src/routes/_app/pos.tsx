@@ -9,7 +9,7 @@ import { peso } from "@/lib/format";
 import { useShopProfile } from "@/lib/shop-profile";
 import { useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
-import { enqueueSale, isNetworkError, useOnline } from "@/lib/offline";
+import { enqueueSale, isNetworkError, useCachedAt, useOnline } from "@/lib/offline";
 import { FailedQueuedSales } from "@/components/OfflineStatus";
 import "@/receipt-print.css";
 
@@ -25,15 +25,17 @@ export const Route = createFileRoute("/_app/pos")({
   component: POS,
 });
 
-type Line = { p: Product; qty: number };
+type Line = { p: Product; qty: number; recordedPrice?: number };
 type Method = "cash" | "ewallet" | "card";
-type Receipt = { no: string; lines: Line[]; total: number; method: Method; tendered: number; at: Date; pending?: boolean; clientSaleId?: string; syncedAt?: string | null };
+type Receipt = { no: string; lines: Line[]; total: number; method: Method; tendered: number; at: Date; pending?: boolean; clientSaleId?: string; syncedAt?: string | null; recordedAt?: string; usedSyncTime?: boolean };
 
 function POS() {
   const qc = useQueryClient();
   const { data: products = [] } = useQuery({ queryKey: qk.products, queryFn: fetchProducts });
   const { t, lang } = useT();
   const online = useOnline();
+  const cachedAt = useCachedAt("fetchAllProducts");
+  const priceNote = !online ? t("offline.priceSyncTime", { time: cachedAt ? new Date(cachedAt).toLocaleString(lang === "tl" ? "fil-PH" : "en-PH") : t("offline.timeUnavailable") }) : null;
   const { data: shop } = useQuery({ queryKey: qk.shop, queryFn: fetchShopContext });
   const { data: business } = useShopProfile(shop?.shop_id);
   const receiptRef = useRef<HTMLDivElement>(null);
@@ -53,22 +55,30 @@ function POS() {
     refetchInterval: 5000,
     queryFn: async () => {
       if (!shop || !receipt?.clientSaleId) return null;
-      const { data, error } = await supabase.from("sales").select("receipt_no, created_at, synced_at, total").eq("shop_id", shop.shop_id).eq("client_sale_id", receipt.clientSaleId).maybeSingle();
+      const { data, error } = await supabase.from("sales").select("id, receipt_no, created_at, synced_at, total").eq("shop_id", shop.shop_id).eq("client_sale_id", receipt.clientSaleId).maybeSingle();
       if (error) throw error;
-      return data;
+      if (!data) return null;
+      const { data: items, error: itemsError } = await supabase.from("sale_items").select("product_id, price").eq("shop_id", shop.shop_id).eq("sale_id", data.id);
+      if (itemsError) throw itemsError;
+      return { ...data, items, clientSaleId: receipt.clientSaleId };
     },
   });
   useEffect(() => {
     const saved = savedReceipt.data;
     if (!saved) return;
-    setReceipt((previous) => previous?.pending ? { ...previous, no: saved.receipt_no, at: new Date(saved.created_at), total: Number(saved.total), pending: false, syncedAt: saved.synced_at } : previous);
+    setReceipt((previous) => previous?.pending && previous.clientSaleId === saved.clientSaleId ? {
+      ...previous, no: saved.receipt_no, total: Number(saved.total), pending: false, syncedAt: saved.synced_at,
+      recordedAt: saved.created_at,
+      usedSyncTime: !!saved.synced_at && new Date(saved.synced_at).getTime() - previous.at.getTime() > 72 * 3600000 && new Date(saved.created_at).getTime() > previous.at.getTime(),
+      lines: previous.lines.map((line) => { const item = saved.items.find((i) => i.product_id === line.p.id); return item ? { ...line, recordedPrice: Number(item.price) } : line; }),
+    } : previous);
   }, [savedReceipt.data]);
   const [customerId, setCustomerId] = useState("");
   const [newCustomer, setNewCustomer] = useState({ name: "", mobile: "", consent: false });
   const scanRef = useRef<HTMLInputElement>(null);
 
   const cats = ["All", ...[...new Set(products.map((p) => p.category))].sort((a, b) => a.localeCompare(b))];
-  const lineTotal = (l: Line) => Math.round(Number(l.p.price) * l.qty * 100) / 100;
+  const lineTotal = (l: Line) => Math.round((l.recordedPrice ?? Number(l.p.price)) * l.qty * 100) / 100;
   const shown = products.filter((p) => (cat === "All" || p.category === cat) && (!scan || p.name.toLowerCase().includes(scan.toLowerCase()) || p.sku.includes(scan)));
   const total = useMemo(() => cart.reduce((s, l) => s + lineTotal(l), 0), [cart]);
   const count = cart.length;
@@ -186,6 +196,7 @@ function POS() {
         <div className="space-y-3 border-t border-border p-4">
           <div className="flex justify-between text-sm text-muted-foreground"><span>{count} items</span><span>VAT incl.</span></div>
           <div className="flex items-baseline justify-between"><span className="font-medium">Total</span><span className="font-display text-3xl font-bold">{peso(total)}</span></div>
+          {priceNote && <p className="text-xs text-muted-foreground">{priceNote}</p>}
           {shortages.map((m) => <p key={m} role="alert" className="rounded-lg bg-destructive/10 p-2 text-sm text-destructive">{m}</p>)}
           <button disabled={!cart.length || shortages.length > 0} onClick={() => setPaying(true)} className="w-full rounded-xl bg-primary py-3.5 font-semibold text-primary-foreground disabled:opacity-40">Charge {peso(total)}</button>
         </div>
@@ -196,6 +207,7 @@ function POS() {
           <div className="w-full max-w-md rounded-t-3xl bg-card p-6 sm:rounded-3xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between"><h3 className="text-xl font-bold">Record payment</h3><button aria-label="Close" onClick={() => setPaying(false)}><X className="h-5 w-5" /></button></div>
             <p className="mt-1 font-display text-4xl font-bold">{peso(total)}</p>
+            {priceNote && <p className="mt-1 text-xs text-muted-foreground">{priceNote}</p>}
             <div className="mt-4 space-y-2">
               <label className="text-sm font-medium" htmlFor="customer">Customer (optional)</label>
               <select id="customer" value={customerId} onChange={(e) => setCustomerId(e.target.value)} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm">
@@ -251,6 +263,7 @@ function POS() {
               {business?.logoSrc && <img src={business.logoSrc} alt={t("profile.logo")} className="mx-auto mb-3 h-20 w-20 object-contain" />}
               <p className="break-words text-center font-bold">{business?.name ?? shop?.shop_name ?? "Store"}</p>
               <p className="text-center text-xs text-muted-foreground">{receipt.at.toLocaleString("en-PH")}</p>
+              {receipt.usedSyncTime && <><p className="text-center text-xs text-muted-foreground">{t("offline.originalTime", { time: receipt.at.toLocaleString(lang === "tl" ? "fil-PH" : "en-PH") })}</p><p className="text-center text-xs text-warning">{t("offline.oldSaleTime")}</p><p className="text-center text-xs text-muted-foreground">{receipt.recordedAt && new Date(receipt.recordedAt).toLocaleString(lang === "tl" ? "fil-PH" : "en-PH")}</p></>}
               {receipt.syncedAt && <p className="text-center text-xs text-muted-foreground">{t("offline.saleSyncedAt", { at: new Date(receipt.syncedAt).toLocaleString(lang === "tl" ? "fil-PH" : "en-PH") })}</p>}
               <p className="text-center text-xs text-muted-foreground">Receipt {receipt.no}</p>
               {receipt.pending && <p className="text-center text-xs font-semibold text-warning">{t("offline.receiptPending")}</p>}

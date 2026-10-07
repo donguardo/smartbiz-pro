@@ -13,9 +13,9 @@ import { useShopProfile } from "@/lib/shop-profile";
 import { fetchProfile, fetchShopContext, qk } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { OfflineStatus } from "@/components/OfflineStatus";
-import { clearOfflineData, useQueuedSales } from "@/lib/offline";
+import { clearOfflineData, useOnline, useQueuedSales } from "@/lib/offline";
 import { openInstallPrompt } from "@/lib/install";
-import { useBilling } from "@/lib/billing";
+import { offlineLocked, useBilling } from "@/lib/billing";
 import { BillingPanel } from "./billing";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
@@ -54,7 +54,8 @@ function AppLayout() {
   const { data: business } = useShopProfile(shop?.shop_id);
   const businessName = business?.name ?? shop?.shop_name ?? profile?.business_name ?? "…";
   const { data: billing } = useBilling(!!session && !!shop);
-  const locked = !!billing && !billing.has_access && !path.startsWith("/billing") && !path.startsWith("/settings");
+  const online = useOnline();
+  const locked = !!billing && (navigator.onLine ? !billing.has_access : offlineLocked(billing)) && !path.startsWith("/billing") && !path.startsWith("/settings");
   const queued = useQueuedSales().length;
   const signOut = async () => {
     if (queued && !confirm(t("offline.signOutWarn"))) return;
@@ -117,6 +118,7 @@ function AppLayout() {
 
       <main className="min-w-0 pb-32 md:pb-24">
         <OfflineStatus />
+        {!online && !billing && <div role="status" className="border-b border-warning/50 bg-warning/15 px-4 py-2 text-sm">{t("offline.planUnknown")}</div>}
         {shop?.member_role === "owner" && <BillingFailureAlert />}
         {locked ? (
           <div><PaymentTestModeBanner /><div className="mx-auto max-w-xl space-y-4 p-4 md:p-6">

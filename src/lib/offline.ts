@@ -37,16 +37,24 @@ export async function withOfflineCache<T>(name: string, fn: () => Promise<T>): P
 }
 const offlineUsed = new Map<string, number>();
 /** Oldest saved time among caches served while offline (null when everything is live). */
-export function useCachedAt() {
+export function useCachedAt(name?: string) {
   const [at, setAt] = useState<number | null>(null);
   useEffect(() => {
-    const update = () => setAt(offlineUsed.size ? Math.min(...offlineUsed.values()) : null);
+    let active = true;
+    const update = () => {
+      setAt(name ? offlineUsed.get(name) ?? null : offlineUsed.size ? Math.min(...offlineUsed.values()) : null);
+      if (name && !navigator.onLine) void userKey().then((id) => {
+        if (!active || navigator.onLine) return;
+        try { const saved = JSON.parse(localStorage.getItem(`${CACHE_PREFIX}:${id}:${name}`) ?? "null") as { at: number } | null; setAt(saved?.at ?? null); } catch { setAt(null); }
+      });
+    };
     const onOnline = () => { offlineUsed.clear(); update(); };
     window.addEventListener(CACHE_EVENT, update);
     window.addEventListener("online", onOnline);
+    window.addEventListener("offline", update);
     update();
-    return () => { window.removeEventListener(CACHE_EVENT, update); window.removeEventListener("online", onOnline); };
-  }, []);
+    return () => { active = false; window.removeEventListener(CACHE_EVENT, update); window.removeEventListener("online", onOnline); window.removeEventListener("offline", update); };
+  }, [name]);
   return at;
 }
 
@@ -70,7 +78,14 @@ export type QueuedSale = {
   customerId: string | null; items: { product_id: string; qty: number; name: string; price: number }[];
   error?: string | undefined;
   acceptPriceChange?: boolean;
+  priceChange?: { old: number; new: number };
 };
+export function parsePriceChange(message: string) {
+  const match = /^PRICE_CHANGED:([^:]+):([^:]+)$/.exec(message);
+  if (!match) return null;
+  const old = Number(match[1]), updated = Number(match[2]);
+  return Number.isFinite(old) && Number.isFinite(updated) ? { old, new: updated } : null;
+}
 type QueueScope = { userId: string; shopId: string; key: string };
 async function queueScope(): Promise<QueueScope | null> {
   const userId = await userKey();
@@ -198,8 +213,9 @@ export async function syncQueuedSales(): Promise<{ synced: number; failed: numbe
         if (!error) { synced++; await updateQueue(scope, (q) => q.filter((x) => x.id !== s.id)); continue; }
         if (isNetworkError(error)) break;
         failed++;
-        const message = error.message;
-        await updateQueue(scope, (q) => q.map((x) => (x.id === s.id ? { ...x, error: message } : x)));
+        const priceChange = parsePriceChange(error.message);
+        const message = priceChange ? `Prices changed since this sale: was ₱${priceChange.old.toFixed(2)}, now ₱${priceChange.new.toFixed(2)}.` : error.message;
+        await updateQueue(scope, (q) => q.map((x) => (x.id === s.id ? { ...x, error: message, ...(priceChange ? { priceChange } : {}) } : x)));
       }
     });
   } finally { syncing = false; }
