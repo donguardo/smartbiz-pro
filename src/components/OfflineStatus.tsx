@@ -4,6 +4,7 @@ import { CloudUpload, RefreshCw, Trash2, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
 import { peso } from "@/lib/format";
+import { Button } from "@/components/ui/button";
 import { discardQueuedSale, retryQueuedSale, syncQueuedSales, useOnline, useQueuedSales, type QueuedSale } from "@/lib/offline";
 
 /** App-wide offline banner and automatic sync of sales recorded without internet. */
@@ -45,8 +46,9 @@ export function FailedQueuedSales() {
           <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
             <span>{new Date(s.createdAt).toLocaleString("en-PH")} · {peso(s.total)} · <span className="text-destructive">{s.error}</span></span>
             <span className="flex gap-2">
-              <button onClick={() => void retryQueuedSale(s.id)} className="flex items-center gap-1 rounded-md border border-border px-2 py-1"><RefreshCw className="h-3 w-3" />{t("offline.retry")}</button>
-              <button onClick={() => { if (confirm(t("offline.discardConfirm"))) void discardQueuedSale(s.id); }} className="flex items-center gap-1 rounded-md border border-border px-2 py-1"><Trash2 className="h-3 w-3" />{t("offline.discard")}</button>
+              {s.error.startsWith("PRICE_CHANGED:") && <Button variant="outline" size="sm" onClick={() => { if (confirm(t("offline.acceptPriceConfirm"))) void retryQueuedSale(s.id, true); }}>{t("offline.acceptPrice")}</Button>}
+              <Button variant="outline" size="sm" onClick={() => void retryQueuedSale(s.id)}><RefreshCw className="h-3 w-3" />{t("offline.retry")}</Button>
+              <Button variant="outline" size="sm" onClick={() => { if (confirm(t("offline.discardConfirm"))) void discardQueuedSale(s.id); }}><Trash2 className="h-3 w-3" />{t("offline.discard")}</Button>
             </span>
           </li>
         ))}

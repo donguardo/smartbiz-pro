@@ -681,6 +681,7 @@ export type Database = {
         Row: {
           amount_tendered: number | null
           cashier_id: string | null
+          client_sale_id: string | null
           cost_total: number
           created_at: string
           customer_id: string | null
@@ -689,6 +690,7 @@ export type Database = {
           receipt_no: string
           shop_id: string | null
           status: Database["public"]["Enums"]["sale_status"]
+          synced_at: string | null
           total: number
           user_id: string
           voided_at: string | null
@@ -697,6 +699,7 @@ export type Database = {
         Insert: {
           amount_tendered?: number | null
           cashier_id?: string | null
+          client_sale_id?: string | null
           cost_total?: number
           created_at?: string
           customer_id?: string | null
@@ -705,6 +708,7 @@ export type Database = {
           receipt_no: string
           shop_id?: string | null
           status?: Database["public"]["Enums"]["sale_status"]
+          synced_at?: string | null
           total: number
           user_id?: string
           voided_at?: string | null
@@ -713,6 +717,7 @@ export type Database = {
         Update: {
           amount_tendered?: number | null
           cashier_id?: string | null
+          client_sale_id?: string | null
           cost_total?: number
           created_at?: string
           customer_id?: string | null
@@ -721,6 +726,7 @@ export type Database = {
           receipt_no?: string
           shop_id?: string | null
           status?: Database["public"]["Enums"]["sale_status"]
+          synced_at?: string | null
           total?: number
           user_id?: string
           voided_at?: string | null
@@ -1593,8 +1599,12 @@ export type Database = {
       }
       record_sale: {
         Args: {
+          _accept_price_change?: boolean
           _amount_tendered: number
+          _client_created_at?: string
+          _client_sale_id?: string
           _customer_id: string
+          _expected_total?: number
           _items: Json
           _payment_method: string
         }
