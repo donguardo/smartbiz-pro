@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { SkipForward, Volume2, VolumeX } from "lucide-react";
-import introVideo from "@/assets/bizmanager-intro.mp4.asset.json";
+import introVideo from "@/assets/bizmanager-intro-ads.mp4.asset.json";
 import introVideoWebm from "@/assets/bizmanager-intro.webm.asset.json";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 
-export const INTRO_SEEN_KEY = "bizmanager-intro-seen-v1";
+// Bumped to v2 when the intro video was replaced: visitors who already saw the
+// old intro get the new one once.
+export const INTRO_SEEN_KEY = "bizmanager-intro-seen-v2";
 export const INTRO_COMPLETE_EVENT = "bizmanager-intro-complete";
 
 export function FirstVisitIntro() {
