@@ -20,7 +20,7 @@ async function unregisterOurs() {
 export function registerAppServiceWorker() {
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
   if (refused()) { void unregisterOurs(); return; }
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register(SW_URL, { scope: "/" }).catch(() => {});
-  }, { once: true });
+  const go = () => navigator.serviceWorker.register(SW_URL, { scope: "/" }).catch((e) => console.warn("SW register failed", e));
+  if (document.readyState === "complete") go();
+  else window.addEventListener("load", go, { once: true });
 }
