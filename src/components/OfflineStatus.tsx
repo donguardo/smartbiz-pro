@@ -5,13 +5,14 @@ import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
 import { peso } from "@/lib/format";
 import { Button } from "@/components/ui/button";
-import { discardQueuedSale, parsePriceChange, retryQueuedSale, syncQueuedSales, useOnline, useQueuedSales, type QueuedSale } from "@/lib/offline";
+import { discardQueuedSale, parsePriceChange, retryQueuedSale, syncQueuedSales, useOnline, useOtherShopQueues, useQueuedSales, type QueuedSale } from "@/lib/offline";
 
 /** App-wide offline banner and automatic sync of sales recorded without internet. */
 export function OfflineStatus() {
   const { t } = useT();
   const online = useOnline();
   const queue = useQueuedSales();
+  const otherShops = useOtherShopQueues();
   const qc = useQueryClient();
   const waiting = queue.filter((s) => !s.error).length;
 
@@ -23,13 +24,18 @@ export function OfflineStatus() {
     });
   }, [online, waiting, qc, t]);
 
-  if (online && queue.length === 0) return null;
+  if (online && queue.length === 0 && otherShops.length === 0) return null;
   return (
+    <>
+    {(!online || queue.length > 0) && (
     <div className={`flex flex-wrap items-center gap-2 border-b px-4 py-2 text-sm ${online ? "border-primary/40 bg-primary/10" : "border-warning/50 bg-warning/15"}`}>
       {online ? <CloudUpload className="h-4 w-4" /> : <WifiOff className="h-4 w-4 text-warning" />}
       <span className="font-semibold">{online ? t("offline.syncing") : t("offline.banner")}</span>
       {waiting > 0 && <span className="opacity-80">· {t("offline.waiting").replace("{n}", String(waiting))}</span>}
     </div>
+    )}
+    {otherShops.map((shop) => <div key={shop.shopId} role="status" className="border-b border-warning/50 bg-warning/15 px-4 py-2 text-sm">{t("offline.otherShop", { n: String(shop.count), shop: shop.shopName ?? t("offline.unknownShop") })}</div>)}
+    </>
   );
 }
 

@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { clearCachesIfSignedOut, handleOfflineAuthChange } from "@/lib/offline";
 
 export function useSession() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange((_e, s) => {
+    const { data } = supabase.auth.onAuthStateChange((event, s) => {
+      handleOfflineAuthChange(event);
       setSession(s);
       setLoading(false);
     });
+    void clearCachesIfSignedOut();
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setLoading(false);

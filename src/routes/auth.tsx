@@ -9,6 +9,8 @@ import { ThemeToggle } from "@/lib/theme";
 import { PRICE_PER_USER } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useOtherAccountSalesCount } from "@/lib/offline";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -27,6 +29,8 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const navigate = useNavigate();
   const { session } = useSession();
+  const { t } = useT();
+  const otherAccountSales = useOtherAccountSalesCount(session?.user.id);
   const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signup");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -132,6 +136,7 @@ function AuthPage() {
           <p className="mt-1 text-sm text-muted-foreground">
             {mode === "signup" ? `One plan: ₱${PRICE_PER_USER} per user / month.` : mode === "forgot" ? "Enter your email and we'll send a secure reset link." : "Sign in to your register and dashboard."}
           </p>
+          {otherAccountSales > 0 && <p role="status" className="mt-3 border-l-2 border-warning pl-3 text-sm text-muted-foreground">{t("offline.otherAccount", { n: String(otherAccountSales) })}</p>}
           {mode !== "forgot" && <Button type="button" onClick={google} variant="outline" className="mt-6 w-full">
             <svg viewBox="0 0 24 24" className="h-4 w-4"><path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.4-1.7 4.1-5.5 4.1-3.3 0-6-2.7-6-6.1s2.7-6.1 6-6.1c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.8 3.4 14.6 2.4 12 2.4 6.7 2.4 2.4 6.7 2.4 12s4.3 9.6 9.6 9.6c5.5 0 9.2-3.9 9.2-9.4 0-.6-.1-1.1-.2-1.6H12z"/></svg>
             Continue with Google

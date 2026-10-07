@@ -4,6 +4,18 @@ import { supabase } from "@/integrations/supabase/client";
 // ---------- Device-local cache of the last good server reads (per signed-in user) ----------
 const CACHE_PREFIX = "offline-cache-v1";
 const CACHE_EVENT = "offline-cache-change";
+let cacheRevision = 0;
+let intentionalSignOut = false;
+
+export function setIntentionalSignOut(value: boolean) { intentionalSignOut = value; }
+export function handleOfflineAuthChange(event: string) {
+  if (event === "SIGNED_OUT" && !intentionalSignOut) clearAllOfflineCaches();
+}
+export async function clearCachesIfSignedOut() {
+  const revision = cacheRevision;
+  const { data, error } = await supabase.auth.getSession();
+  if (revision === cacheRevision && !error && !data.session && !intentionalSignOut) clearAllOfflineCaches();
+}
 
 async function userKey() {
   const { data } = await supabase.auth.getSession();
@@ -18,14 +30,23 @@ export function isNetworkError(err: unknown) {
 
 /** Runs a server read; saves the result on success, returns the saved copy when offline. */
 export async function withOfflineCache<T>(name: string, fn: () => Promise<T>): Promise<T> {
-  const key = `${CACHE_PREFIX}:${await userKey()}:${name}`;
+  const revision = cacheRevision;
+  const userId = await userKey();
+  const key = `${CACHE_PREFIX}:${userId}:${name}`;
   try {
     const data = await fn();
-    try { localStorage.setItem(key, JSON.stringify({ at: Date.now(), data })); } catch { /* storage full */ }
-    window.dispatchEvent(new Event(CACHE_EVENT));
+    if (revision === cacheRevision && userId !== "anon") {
+      let previousShop: string | undefined;
+      if (name === "fetchShopContext") {
+        try { previousShop = JSON.parse(localStorage.getItem(key) ?? "null")?.data?.shop_id; } catch { /* no saved shop */ }
+      }
+      try { localStorage.setItem(key, JSON.stringify({ at: Date.now(), data })); } catch { /* storage full */ }
+      window.dispatchEvent(new Event(CACHE_EVENT));
+      if (name === "fetchShopContext" && previousShop !== (data as { shop_id?: string } | null)?.shop_id) window.dispatchEvent(new Event(QUEUE_EVENT));
+    }
     return data;
   } catch (err) {
-    const raw = isNetworkError(err) ? localStorage.getItem(key) : null;
+    const raw = revision === cacheRevision && userId !== "anon" && isNetworkError(err) ? localStorage.getItem(key) : null;
     if (raw) {
       const parsed = JSON.parse(raw) as { at: number; data: T };
       offlineUsed.set(name, parsed.at);
@@ -58,8 +79,24 @@ export function useCachedAt(name?: string) {
   return at;
 }
 
-export function clearOfflineData() {
-  for (const k of Object.keys(localStorage)) if (k.startsWith(CACHE_PREFIX) || k.startsWith(QUEUE_PREFIX)) localStorage.removeItem(k);
+export function clearOfflineDataFor(userId: string, { includeQueue }: { includeQueue: boolean }) {
+  cacheRevision++;
+  for (const key of Object.keys(localStorage)) {
+    if (key.startsWith(`${CACHE_PREFIX}:${userId}:`) || key.startsWith(`offline-sync-lease:${userId}:`) ||
+      (includeQueue && (key === `${QUEUE_PREFIX}:${userId}` || key.startsWith(`${QUEUE_PREFIX}:${userId}:`)))) {
+      localStorage.removeItem(key);
+    }
+  }
+  offlineUsed.clear();
+  window.dispatchEvent(new Event(CACHE_EVENT));
+  window.dispatchEvent(new Event(QUEUE_EVENT));
+}
+
+export function clearAllOfflineCaches() {
+  cacheRevision++;
+  for (const key of Object.keys(localStorage)) if (key.startsWith(`${CACHE_PREFIX}:`)) localStorage.removeItem(key);
+  offlineUsed.clear();
+  window.dispatchEvent(new Event(CACHE_EVENT));
 }
 
 export function useOnline() {
@@ -79,6 +116,7 @@ export type QueuedSale = {
   error?: string | undefined;
   acceptPriceChange?: boolean;
   priceChange?: { old: number; new: number };
+  shopName?: string;
 };
 export function parsePriceChange(message: string) {
   const match = /^PRICE_CHANGED:([^:]+):([^:]+)$/.exec(message);
@@ -86,7 +124,8 @@ export function parsePriceChange(message: string) {
   const old = Number(match[1]), updated = Number(match[2]);
   return Number.isFinite(old) && Number.isFinite(updated) ? { old, new: updated } : null;
 }
-type QueueScope = { userId: string; shopId: string; key: string };
+type QueueScope = { userId: string; shopId: string; shopName: string; key: string };
+function queueKey(userId: string, shopId: string) { return `${QUEUE_PREFIX}:${userId}:${shopId}`; }
 async function queueScope(): Promise<QueueScope | null> {
   const userId = await userKey();
   if (userId === "anon") return null;
@@ -96,13 +135,22 @@ async function queueScope(): Promise<QueueScope | null> {
     return data[0] ?? null;
   });
   if (!shop) return null;
-  return { userId, shopId: shop.shop_id, key: `${QUEUE_PREFIX}:${userId}:${shop.shop_id}` };
+  if (await userKey() !== userId) return null;
+  const scope = { userId, shopId: shop.shop_id, shopName: shop.shop_name, key: queueKey(userId, shop.shop_id) };
+  // Serialize the one-time migration with all other queue writers in this shop.
+  if (localStorage.getItem(`${QUEUE_PREFIX}:${userId}`) !== null || readQueue(scope).some((sale) => sale.shopName !== scope.shopName)) await updateQueue(scope, (q) => q);
+  return await userKey() === userId && !intentionalSignOut ? scope : null;
 }
-function readQueue(scope: QueueScope): QueuedSale[] {
-  try { return JSON.parse(localStorage.getItem(scope.key) ?? "[]"); } catch { return []; }
+function readQueueKey(key: string): QueuedSale[] {
+  try { const list = JSON.parse(localStorage.getItem(key) ?? "[]"); return Array.isArray(list) ? list : []; } catch { return []; }
+}
+function readQueue(scope: QueueScope) { return readQueueKey(scope.key); }
+function shopContextChanged(event: StorageEvent) {
+  if (!event.key?.startsWith(`${CACHE_PREFIX}:`) || !event.key.endsWith(":fetchShopContext")) return false;
+  try { return JSON.parse(event.oldValue ?? "null")?.data?.shop_id !== JSON.parse(event.newValue ?? "null")?.data?.shop_id; } catch { return true; }
 }
 function writeQueue(scope: QueueScope, q: QueuedSale[]) {
-  localStorage.setItem(scope.key, JSON.stringify(q));
+  localStorage.setItem(scope.key, JSON.stringify(q.map((sale) => ({ ...sale, shopName: scope.shopName }))));
   window.dispatchEvent(new Event(QUEUE_EVENT));
 }
 const pause = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -145,7 +193,14 @@ let queueWriting: Promise<void> = Promise.resolve();
 function updateQueue(scope: QueueScope, change: (q: QueuedSale[]) => QueuedSale[]) {
   const next = queueWriting.then(() => withQueueLock(scope, "queue", async (renew) => {
     renew();
-    writeQueue(scope, change(readQueue(scope)));
+    if (await userKey() !== scope.userId || intentionalSignOut) return;
+    const legacyKey = `${QUEUE_PREFIX}:${scope.userId}`;
+    const current = readQueue(scope);
+    const ids = new Set(current.map((sale) => sale.id));
+    const legacy = readQueueKey(legacyKey).filter((sale) => !ids.has(sale.id));
+    writeQueue(scope, change([...current, ...legacy]));
+    // Remove only after the destination write succeeds, so storage errors lose no sales.
+    localStorage.removeItem(legacyKey);
   }));
   queueWriting = next.catch(() => undefined);
   return next;
@@ -175,14 +230,63 @@ export function useQueuedSales() {
         setList(scope ? readQueue(scope) : []);
       }).catch(() => { /* Keep last visible queue if the shop cannot be read. */ });
     };
-    const onStorage = (event: StorageEvent) => { if (event.key === key || event.key === null) update(); };
-    const { data: authListener } = supabase.auth.onAuthStateChange(() => { setList([]); setTimeout(update, 0); });
+    const onStorage = (event: StorageEvent) => { if (event.key === key || event.key === null || shopContextChanged(event)) update(); };
+    const { data: authListener } = supabase.auth.onAuthStateChange(() => { revision++; key = undefined; setList([]); setTimeout(update, 0); });
     window.addEventListener(QUEUE_EVENT, update);
     window.addEventListener("storage", onStorage);
     update();
     return () => { active = false; authListener.subscription.unsubscribe(); window.removeEventListener(QUEUE_EVENT, update); window.removeEventListener("storage", onStorage); };
   }, []);
   return list;
+}
+
+export function countOfflineSalesFor(userId: string) {
+  return Object.keys(localStorage)
+    .filter((key) => key === `${QUEUE_PREFIX}:${userId}` || key.startsWith(`${QUEUE_PREFIX}:${userId}:`))
+    .reduce((count, key) => count + readQueueKey(key).length, 0);
+}
+
+/** Only a count is exposed for queues belonging to a different account. */
+export function useOtherAccountSalesCount(userId?: string) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    const update = () => setCount(Object.keys(localStorage)
+      .filter((key) => key.startsWith(`${QUEUE_PREFIX}:`) &&
+        (!userId || (key !== `${QUEUE_PREFIX}:${userId}` && !key.startsWith(`${QUEUE_PREFIX}:${userId}:`))))
+      .reduce((total, key) => total + readQueueKey(key).length, 0));
+    const onStorage = (event: StorageEvent) => { if (event.key === null || event.key?.startsWith(`${QUEUE_PREFIX}:`)) update(); };
+    window.addEventListener(QUEUE_EVENT, update);
+    window.addEventListener("storage", onStorage);
+    update();
+    return () => { window.removeEventListener(QUEUE_EVENT, update); window.removeEventListener("storage", onStorage); };
+  }, [userId]);
+  return count;
+}
+
+export function useOtherShopQueues() {
+  const [shops, setShops] = useState<{ shopId: string; shopName: string | null; count: number }[]>([]);
+  useEffect(() => {
+    let active = true, revision = 0;
+    const update = () => {
+      const version = ++revision;
+      void queueScope().then((scope) => {
+        if (!active || version !== revision) return;
+        if (!scope) { setShops([]); return; }
+        const prefix = `${QUEUE_PREFIX}:${scope.userId}:`;
+        setShops(Object.keys(localStorage).filter((key) => key.startsWith(prefix) && key !== scope.key).flatMap((key) => {
+          const sales = readQueueKey(key);
+          return sales.length ? [{ shopId: key.slice(prefix.length), shopName: sales[0]?.shopName ?? null, count: sales.length }] : [];
+        }));
+      }).catch(() => { /* Preserve known queues during a transient connection failure. */ });
+    };
+    const onStorage = (event: StorageEvent) => { if (event.key === null || event.key?.startsWith(`${QUEUE_PREFIX}:`) || shopContextChanged(event)) update(); };
+    const { data } = supabase.auth.onAuthStateChange(() => { revision++; setShops([]); setTimeout(update, 0); });
+    window.addEventListener(QUEUE_EVENT, update);
+    window.addEventListener("storage", onStorage);
+    update();
+    return () => { active = false; data.subscription.unsubscribe(); window.removeEventListener(QUEUE_EVENT, update); window.removeEventListener("storage", onStorage); };
+  }, []);
+  return shops;
 }
 let syncing = false;
 /** Stable IDs prevent duplicates; the server checks prices and bounds original sale time. */
@@ -199,7 +303,7 @@ export async function syncQueuedSales(): Promise<{ synced: number; failed: numbe
         if (!s) continue;
         if (s.error) { failed++; continue; }
         const current = await queueScope();
-        if (current?.key !== scope.key) break;
+        if (current?.key !== scope.key || intentionalSignOut) break;
         let error: { message: string } | null;
         try {
           ({ error } = await supabase.rpc("record_sale", {

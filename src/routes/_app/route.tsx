@@ -13,7 +13,7 @@ import { useShopProfile } from "@/lib/shop-profile";
 import { fetchProfile, fetchShopContext, qk } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { OfflineStatus } from "@/components/OfflineStatus";
-import { clearOfflineData, useOnline, useQueuedSales } from "@/lib/offline";
+import { clearOfflineDataFor, countOfflineSalesFor, setIntentionalSignOut, useOnline } from "@/lib/offline";
 import { openInstallPrompt } from "@/lib/install";
 import { offlineLocked, useBilling } from "@/lib/billing";
 import { BillingPanel } from "./billing";
@@ -56,11 +56,14 @@ function AppLayout() {
   const { data: billing } = useBilling(!!session && !!shop);
   const online = useOnline();
   const locked = !!billing && (navigator.onLine ? !billing.has_access : offlineLocked(billing)) && !path.startsWith("/billing") && !path.startsWith("/settings");
-  const queued = useQueuedSales().length;
   const signOut = async () => {
-    if (queued && !confirm(t("offline.signOutWarn"))) return;
-    clearOfflineData();
-    await supabase.auth.signOut();
+    if (!session) return;
+    if (countOfflineSalesFor(session.user.id) && !confirm(t("offline.signOutWarn"))) return;
+    setIntentionalSignOut(true);
+    try {
+      clearOfflineDataFor(session.user.id, { includeQueue: true });
+      await supabase.auth.signOut();
+    } finally { setIntentionalSignOut(false); }
   };
   const visibleNav = shop?.member_role === "owner" ? [...NAV, ...OWNER_NAV, SETTINGS_NAV] : [...NAV, SETTINGS_NAV];
 

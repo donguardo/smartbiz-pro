@@ -1,4 +1,9 @@
 # Roadmap
+## Offline account and shop safety
+- [x] Keep queues shop-scoped, migrate legacy queues, and show other-shop/account counts
+- [x] Scope deliberate sign-out cleanup; preserve queues after unexpected sign-out and clear read caches
+- [x] Review code and automatic checks only; no database test writes, payments, secrets, or publishing
+
 ## Blockhole live page
 - [x] Verify the embedded game loads in preview and identify the live startup error
 - [x] Add and validate the final-output startup guard; automatic build passed and preview game renders
