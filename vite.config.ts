@@ -7,6 +7,7 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { VitePWA } from "vite-plugin-pwa";
 import { readFile } from "node:fs/promises";
+import { cpSync } from "node:fs";
 import { resolve } from "node:path";
 import type { Manifest, Plugin } from "vite";
 
@@ -14,20 +15,15 @@ const privatePage = /^\/(~oauth|api\/|auth|app-|reset-password|admin)/;
 const heavySource = /(?:^|\/)node_modules\/(?:shiki|@shikijs|mermaid|@mermaid-js|katex|cytoscape)(?:\/|$)/;
 // Shared chunks have no `src` in Vite's manifest; inspect their module origins too.
 const heavyFiles = new Set<string>();
-const diag: { publicDir?: string; copy?: boolean; outDir?: string } = {};
 const precacheOrigins: Plugin = {
   name: "mvp-precache-origins",
   apply: "build",
-  configResolved(config) {
-    diag.publicDir = config.publicDir;
-    diag.copy = config.environments?.client?.build?.copyPublicDir;
-    diag.outDir = config.environments?.client?.build?.outDir;
-  },
   closeBundle() {
-    const { existsSync, readdirSync } = require("node:fs") as typeof import("node:fs");
-    const out = resolve(diag.outDir ?? "dist/client");
-    console.log("DIAG publicDir=", diag.publicDir, "copy=", diag.copy, "outDir=", diag.outDir, "outExists=", existsSync(out), "outList=", existsSync(out) ? readdirSync(out).slice(0, 10) : []);
-    console.log("DIAG publicList=", existsSync("public") ? readdirSync("public") : []);
+    // Vite's public-dir copy is disabled in this stack (nitro copies public/ into
+    // dist/client after the Vite build), so the PWA's closeBundle glob never sees
+    // offline.html/manifest.webmanifest/icons. Copy public/ into the client outDir
+    // before VitePWA's closeBundle runs (this plugin registers first).
+    cpSync(resolve("public"), resolve("dist/client"), { recursive: true });
   },
   generateBundle(_options, bundle) {
     for (const output of Object.values(bundle)) {
