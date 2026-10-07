@@ -130,7 +130,9 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function BizBotOutsideAuth() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  return pathname.startsWith("/auth") ? null : <FloatingBizBot />;
+  // /orangeware is a full-screen embed of another app: the floating bot would sit on top of it.
+  if (pathname.startsWith("/auth") || pathname.startsWith("/orangeware")) return null;
+  return <FloatingBizBot />;
 }
 
 function RootComponent() {
