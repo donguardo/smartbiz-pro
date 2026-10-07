@@ -254,6 +254,11 @@ export const DICT: Record<string, { en: string; tl: string }> = {
   "carousel.previous": { en: "Previous business", tl: "Nakaraang negosyo" },
   "carousel.nextBusiness": { en: "Next business", tl: "Susunod na negosyo" },
   "carousel.slideOf": { en: "Slide {n} of {total}: {name}", tl: "Slide {n} ng {total}: {name}" },
+  "orange.title": { en: "Orange AI OS", tl: "Orange AI OS" },
+  "orange.back": { en: "Back to MVP BizManager", tl: "Bumalik sa MVP BizManager" },
+  "orange.open": { en: "Open in new tab", tl: "Buksan sa bagong tab" },
+  "orange.loading": { en: "Loading Orange AI OS…", tl: "Ini-load ang Orange AI OS…" },
+  "orange.fallback": { en: "Can't see it here? Open Orange AI OS in its own tab.", tl: "Hindi makita dito? Buksan ang Orange AI OS sa sarili nitong tab." },
 };
 
 export function fallback(lang: Lang): Record<string, string> {
