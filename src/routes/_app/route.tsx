@@ -10,7 +10,7 @@ import { StoreIdentity } from "@/components/StoreIdentity";
 import { StockAlertsBell } from "@/components/StockAlerts";
 import { BillingFailureAlert } from "@/components/BillingDiagnostics";
 import { useShopProfile } from "@/lib/shop-profile";
-import { fetchProfile, fetchShopContext, qk } from "@/lib/store";
+import { fetchMyPlan, fetchProfile, fetchShopContext, qk } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { OfflineStatus } from "@/components/OfflineStatus";
 import { clearOfflineDataFor, countOfflineSalesFor, setIntentionalSignOut, useOnline } from "@/lib/offline";

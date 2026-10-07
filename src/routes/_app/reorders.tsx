@@ -6,7 +6,9 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { OwnerRedirect } from "@/components/OwnerRedirect";
-import { isDecimalUnit, qk } from "@/lib/store";
+import { fetchMyPlan, isDecimalUnit, qk } from "@/lib/store";
+import { useT } from "@/lib/i18n";
+import { Lock } from "lucide-react";
 import { peso } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/reorders")({
@@ -25,6 +27,21 @@ export const Route = createFileRoute("/_app/reorders")({
 const STATUS: Record<string, string> = { draft: "Draft", sent: "Sent", received: "Received", cancelled: "Cancelled" };
 const when = (iso: string) => new Date(iso).toLocaleString("en-PH", { timeZone: "Asia/Manila", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
+// Any future smart-reorder server code must first call
+// supabase.rpc("shop_has_smart_reorder", { _shop_id }) and refuse when it returns false.
+function SmartReorderCard() {
+  const { t } = useT();
+  const { data: plan } = useQuery({ queryKey: qk.plan, queryFn: fetchMyPlan });
+  if (!plan) return null;
+  if (plan.ml_smart_reorder) return <p className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">{t("reorder.smartSoon")}</p>;
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4">
+      <span className="flex items-center gap-2 font-medium"><Lock className="h-4 w-4 text-muted-foreground" />{t("reorder.smartLocked")}</span>
+      <Link to="/billing" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">{t("upgrade.link")}</Link>
+    </div>
+  );
+}
+
 function Reorders() {
   const { id } = Route.useSearch();
   const navigate = useNavigate();
@@ -39,6 +56,7 @@ function Reorders() {
   return (
     <div className="space-y-5 p-4 md:p-8">
       <div><h1 className="text-3xl font-bold">Supplier reorders</h1><p className="text-muted-foreground">Turn low-stock alerts into draft orders from the bell, then edit, copy and mark them received.</p></div>
+      <SmartReorderCard />
       {id ? <OrderEditor id={id} onClose={() => navigate({ to: "/reorders", search: {} })} /> : null}
       <section className="rounded-2xl border border-border bg-card">
         {orders.length === 0 ? <p className="p-8 text-center text-muted-foreground">No reorders yet. Open the bell and tap “Reorder” on a low-stock alert.</p> : (
