@@ -18,6 +18,7 @@ import { Route as AppReturnRouteImport } from './routes/app-return'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DeleteAccountRouteImport } from './routes/delete-account'
 import { Route as InviteRouteImport } from './routes/invite'
+import { Route as OrangewareRouteImport } from './routes/orangeware'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RefundPolicyRouteImport } from './routes/refund-policy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -80,6 +81,11 @@ const DeleteAccountRoute = DeleteAccountRouteImport.update({
 const InviteRoute = InviteRouteImport.update({
   id: '/invite',
   path: '/invite',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrangewareRoute = OrangewareRouteImport.update({
+  id: '/orangeware',
+  path: '/orangeware',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -189,6 +195,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/delete-account': typeof DeleteAccountRoute
   '/invite': typeof InviteRoute
+  '/orangeware': typeof OrangewareRoute
   '/privacy': typeof PrivacyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -218,6 +225,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/delete-account': typeof DeleteAccountRoute
   '/invite': typeof InviteRoute
+  '/orangeware': typeof OrangewareRoute
   '/privacy': typeof PrivacyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -249,6 +257,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/delete-account': typeof DeleteAccountRoute
   '/invite': typeof InviteRoute
+  '/orangeware': typeof OrangewareRoute
   '/privacy': typeof PrivacyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -280,6 +289,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/delete-account'
     | '/invite'
+    | '/orangeware'
     | '/privacy'
     | '/refund-policy'
     | '/reset-password'
@@ -309,6 +319,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/delete-account'
     | '/invite'
+    | '/orangeware'
     | '/privacy'
     | '/refund-policy'
     | '/reset-password'
@@ -339,6 +350,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/delete-account'
     | '/invite'
+    | '/orangeware'
     | '/privacy'
     | '/refund-policy'
     | '/reset-password'
@@ -370,6 +382,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   DeleteAccountRoute: typeof DeleteAccountRoute
   InviteRoute: typeof InviteRoute
+  OrangewareRoute: typeof OrangewareRoute
   PrivacyRoute: typeof PrivacyRoute
   RefundPolicyRoute: typeof RefundPolicyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -445,6 +458,13 @@ declare module '@tanstack/react-router' {
       path: '/invite'
       fullPath: '/invite'
       preLoaderRoute: typeof InviteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/orangeware': {
+      id: '/orangeware'
+      path: '/orangeware'
+      fullPath: '/orangeware'
+      preLoaderRoute: typeof OrangewareRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -621,6 +641,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   DeleteAccountRoute: DeleteAccountRoute,
   InviteRoute: InviteRoute,
+  OrangewareRoute: OrangewareRoute,
   PrivacyRoute: PrivacyRoute,
   RefundPolicyRoute: RefundPolicyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
