@@ -116,7 +116,7 @@
 - [x] Show saved business name and private store logo in app navigation, digital receipts, and receipt-only printing — signed-in name checked; logo/receipt rendering checked with isolated sample responses, without creating real sales.
 
 ## Payments
-- [x] Create ₱499/user/month plan in payment provider
+- [x] Create ₱499/month plan in payment provider
 - [x] Checkout + subscription sync + access control (awaiting business rules)
 - [x] Customer billing portal
 

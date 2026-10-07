@@ -43,7 +43,7 @@ export const DICT: Record<string, { en: string; tl: string }> = {
   "feat.3.t": { en: "AI copilot", tl: "AI copilot" },
   "feat.3.b": { en: "Ask in plain words. Get answers from your own sales and stock data.", tl: "Magtanong sa simpleng salita. Makakuha ng sagot mula sa sarili mong benta at stock." },
   "price.kicker": { en: "One simple plan", tl: "Isang simpleng plano" },
-  "price.per": { en: "/user/month", tl: "/user/buwan" },
+  "price.per": { en: "/month", tl: "/buwan" },
   "price.sub": { en: "Everything included. Add cashiers as you grow.", tl: "Kasama na lahat. Magdagdag ng kahera habang lumalaki ka." },
   "price.cta": { en: "Create my account", tl: "Gumawa ng account ko" },
   "price.f1": { en: "Record Cash, GCash or Card payments", tl: "I-record ang Cash, GCash o Card payments" },

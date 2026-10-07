@@ -93,7 +93,7 @@ function AppLayout() {
           </Button>
           <LanguageToggle className="w-full justify-center" />
           <div className="rounded-xl border border-sidebar-border p-3 text-xs text-muted-foreground">
-            {t("app.plan")}: <span className="font-semibold text-foreground">₱499/user/mo</span>
+            {t("app.plan")}: <span className="font-semibold text-foreground">₱499/month</span>
           </div>
           <div className="flex items-center gap-2">
             {shop?.member_role === "owner" && <StockAlertsBell />}
