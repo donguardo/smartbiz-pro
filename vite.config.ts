@@ -14,12 +14,20 @@ const privatePage = /^\/(~oauth|api\/|auth|app-|reset-password|admin)/;
 const heavySource = /(?:^|\/)node_modules\/(?:shiki|@shikijs|mermaid|@mermaid-js|katex|cytoscape)(?:\/|$)/;
 // Shared chunks have no `src` in Vite's manifest; inspect their module origins too.
 const heavyFiles = new Set<string>();
+const diag: { publicDir?: string; copy?: boolean; outDir?: string } = {};
 const precacheOrigins: Plugin = {
   name: "mvp-precache-origins",
   apply: "build",
+  configResolved(config) {
+    diag.publicDir = config.publicDir;
+    diag.copy = config.environments?.client?.build?.copyPublicDir;
+    diag.outDir = config.environments?.client?.build?.outDir;
+  },
   closeBundle() {
-    const { publicDir, environments } = (this as unknown as { environments?: Record<string, { config?: { build?: { copyPublicDir?: boolean } } }> });
-    console.log("DIAG publicDir=", (globalThis as Record<string, unknown>).DIAG_PUBLIC_DIR, "clientCopy=", environments?.client?.config?.build?.copyPublicDir);
+    const { existsSync, readdirSync } = require("node:fs") as typeof import("node:fs");
+    const out = resolve(diag.outDir ?? "dist/client");
+    console.log("DIAG publicDir=", diag.publicDir, "copy=", diag.copy, "outDir=", diag.outDir, "outExists=", existsSync(out), "outList=", existsSync(out) ? readdirSync(out).slice(0, 10) : []);
+    console.log("DIAG publicList=", existsSync("public") ? readdirSync("public") : []);
   },
   generateBundle(_options, bundle) {
     for (const output of Object.values(bundle)) {
