@@ -22,11 +22,11 @@ export const Route = createFileRoute("/orangeware")({
 function OrangeWare() {
   const { t } = useT();
   const [loaded, setLoaded] = useState(false);
-  const [slow, setSlow] = useState(false);
 
-  // If the frame never reports back (blocked, offline, slow network) offer the direct link.
+  // The embedded app holds its connection open, so its "load" event can arrive late or
+  // never: the splash is time-boxed so the app is always revealed.
   useEffect(() => {
-    const timer = setTimeout(() => setSlow(true), 12000);
+    const timer = setTimeout(() => setLoaded(true), 2500);
     return () => clearTimeout(timer);
   }, []);
 
@@ -50,26 +50,14 @@ function OrangeWare() {
 
       <div className="relative flex flex-1 flex-col">
         {!loaded && (
-          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background">
             <p className="font-mono text-sm text-muted-foreground">{t("orange.loading")}</p>
-          </div>
-        )}
-        {slow && !loaded && (
-          <div className="absolute inset-x-0 bottom-0 z-20 border-t border-border bg-card p-4 text-center text-sm">
-            <p className="text-muted-foreground">{t("orange.fallback")}</p>
-            <a href={ORANGE_OS_URL} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 font-semibold text-primary-foreground">
-              <ExternalLink className="h-4 w-4" />
-              {t("orange.title")}
-            </a>
           </div>
         )}
         <iframe
           title={t("orange.title")}
           src={ORANGE_OS_URL}
-          onLoad={() => {
-            setLoaded(true);
-            setSlow(false);
-          }}
+          onLoad={() => setLoaded(true)}
           allow="fullscreen; clipboard-read; clipboard-write; autoplay; web-share; encrypted-media; picture-in-picture"
           className="h-full w-full flex-1 border-0 bg-background"
         />
