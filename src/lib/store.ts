@@ -11,7 +11,26 @@ export type SaleItem = Database["public"]["Tables"]["sale_items"]["Row"];
 export type ShopContext = Database["public"]["Functions"]["get_my_shop_context"]["Returns"][number];
 export type CustomerChoice = Database["public"]["Functions"]["get_masked_customers"]["Returns"][number];
 
-export const qk = { products: ["products"], sales: ["sales"], items: ["sale_items"], profile: ["profile"], shop: ["shop-context"], customers: ["customers-masked"], goals: ["sales-goals"], forecasts: ["sales-forecasts"], tip: ["daily-tip"], cashierToday: ["cashier-today"], productSettings: ["product-settings"] };
+export const qk = { products: ["products"], sales: ["sales"], items: ["sale_items"], profile: ["profile"], shop: ["shop-context"], customers: ["customers-masked"], goals: ["sales-goals"], forecasts: ["sales-forecasts"], tip: ["daily-tip"], cashierToday: ["cashier-today"], productSettings: ["product-settings"], plan: ["my-plan"], usage: ["my-usage"] };
+
+export type MyPlan = Database["public"]["Functions"]["get_my_plan"]["Returns"][number];
+export type MyUsage = Database["public"]["Functions"]["get_my_usage"]["Returns"][number];
+export async function fetchMyPlan(): Promise<MyPlan | null> {
+  const { data, error } = await supabase.rpc("get_my_plan");
+  if (error) throw error;
+  return data?.[0] ?? null;
+}
+export async function fetchMyUsage(): Promise<MyUsage | null> {
+  const { data, error } = await supabase.rpc("get_my_usage");
+  if (error) throw error;
+  return data?.[0] ?? null;
+}
+export type PlanLimit = Database["public"]["Tables"]["plan_limits"]["Row"];
+export async function fetchPlanLimits(): Promise<PlanLimit[]> {
+  const { data, error } = await supabase.from("plan_limits").select("*").order("monthly_price_php", { ascending: true });
+  if (error) throw error;
+  return data ?? [];
+}
 
 /** All shop products A→Z, including archived ones (filter with activeProducts). */
 export function fetchAllProducts() { return withOfflineCache("fetchAllProducts", fetchAllProductsLive); }
