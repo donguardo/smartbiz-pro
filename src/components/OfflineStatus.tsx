@@ -5,11 +5,11 @@ import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
 import { peso } from "@/lib/format";
 import { Button } from "@/components/ui/button";
-import { discardQueuedSale, retryQueuedSale, syncQueuedSales, useOnline, useQueuedSales, type QueuedSale } from "@/lib/offline";
+import { discardQueuedSale, parsePriceChange, retryQueuedSale, syncQueuedSales, useOnline, useQueuedSales, type QueuedSale } from "@/lib/offline";
 
 /** App-wide offline banner and automatic sync of sales recorded without internet. */
 export function OfflineStatus() {
-  const { t } = useT();
+  const { t, lang } = useT();
   const online = useOnline();
   const queue = useQueuedSales();
   const qc = useQueryClient();
@@ -35,23 +35,24 @@ export function OfflineStatus() {
 
 /** Sales the server refused during sync (for example, not enough stock any more). */
 export function FailedQueuedSales() {
-  const { t } = useT();
+  const { t, lang } = useT();
   const failed = useQueuedSales().filter((s): s is QueuedSale & { error: string } => !!s.error);
   if (!failed.length) return null;
   return (
     <section className="rounded-2xl border border-destructive/50 bg-destructive/10 p-4">
       <h2 className="font-bold text-destructive">{t("offline.failedTitle")}</h2>
       <ul className="mt-2 space-y-2">
-        {failed.map((s) => (
+        {failed.map((s) => {
+          const prices = s.priceChange ?? parsePriceChange(s.error);
+          return (
           <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
-            <span>{new Date(s.createdAt).toLocaleString("en-PH")} · {peso(s.total)} · <span className="text-destructive">{s.error}</span></span>
-            <span className="flex gap-2">
-              {s.error.startsWith("PRICE_CHANGED:") && <Button variant="outline" size="sm" onClick={() => { if (confirm(t("offline.acceptPriceConfirm"))) void retryQueuedSale(s.id, true); }}>{t("offline.acceptPrice")}</Button>}
-              <Button variant="outline" size="sm" onClick={() => void retryQueuedSale(s.id)}><RefreshCw className="h-3 w-3" />{t("offline.retry")}</Button>
+            <div className="min-w-0"><p>{new Date(s.createdAt).toLocaleString(lang === "tl" ? "fil-PH" : "en-PH")} · {peso(s.total)}</p><p className="text-destructive">{prices ? t("offline.priceChanged", { old: peso(prices.old), new: peso(prices.new) }) : s.error}</p>{prices && s.method === "cash" && <p>{t("offline.cashPriceChanged", { new: peso(prices.new), tendered: peso(s.tendered) })}</p>}</div>
+            <span className="flex flex-wrap gap-2">
+              {prices ? <Button variant="outline" size="sm" onClick={() => { if (confirm(t("offline.acceptPriceConfirm"))) void retryQueuedSale(s.id, true); }}>{t("offline.recordTodayPrices")}</Button> : <Button variant="outline" size="sm" onClick={() => void retryQueuedSale(s.id)}><RefreshCw className="h-3 w-3" />{t("offline.retry")}</Button>}
               <Button variant="outline" size="sm" onClick={() => { if (confirm(t("offline.discardConfirm"))) void discardQueuedSale(s.id); }}><Trash2 className="h-3 w-3" />{t("offline.discard")}</Button>
             </span>
           </li>
-        ))}
+        ); })}
       </ul>
     </section>
   );
