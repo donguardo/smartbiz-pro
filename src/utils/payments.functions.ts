@@ -42,6 +42,7 @@ const RETURN_HOSTS = new Set([
   "www.mvp.com.ai",
   "smartbiz-pro.lovable.app",
   "id-preview--7743ade6-55a2-4176-8349-318ea4c04396.lovable.app",
+  "7743ade6-55a2-4176-8349-318ea4c04396.lovableproject.com",
 ]);
 
 function isAllowedReturnUrl(returnUrl: string): boolean {
