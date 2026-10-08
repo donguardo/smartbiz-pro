@@ -375,7 +375,7 @@ export function FloatingBizBot() {
                     <p className="mt-1 text-sm text-muted-foreground">{t("bot.welcomeBody")}</p>
                   </div>
                   <div className="mt-2 flex flex-wrap justify-center gap-2">
-                    {[t("bot.promptFeatures"), t("bot.promptReorder"), t("bot.promptPricing"), t("bot.promptTrial")].map((prompt) => (
+                    {[t("bot.promptFeatures"), t("bot.promptReorder"), t("bot.promptPricing")].map((prompt) => (
                       <Button key={prompt} variant="outline" size="sm" onClick={() => submit(prompt)}>{prompt}</Button>
                     ))}
                   </div>
