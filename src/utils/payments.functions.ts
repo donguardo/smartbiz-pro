@@ -87,14 +87,34 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       }
       if (!customerId) {
         const email = (context.claims as { email?: string }).email;
-        const c = await stripe.customers.create({
-          ...(email ? { email } : {}),
-          name: shop.name,
-          metadata: { userId: context.userId, account_id: account.id, shop_id: shop.shopId },
-        });
+        // Idempotent so two first checkouts at the same moment make one customer. Key = account id + hour
+        // (never the shop name), so a customer deleted in Stripe can be created again a hour later.
+        const params = { ...(email ? { email } : {}), metadata: { userId: context.userId, account_id: account.id } };
+        let c: { id: string };
+        try {
+          c = await stripe.customers.create(params, { idempotencyKey: `bizmanager-customer-${env}-${account.id}-${new Date().toISOString().slice(0, 13)}` });
+        } catch (e) {
+          const err = e as { type?: string; rawType?: string };
+          if (err.type !== "StripeIdempotencyError" && err.rawType !== "idempotency_error") throw e;
+          // Same key, different details (for example the e-mail changed this hour): use the customer that is already saved, else create one without a key.
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const { data: saved } = await supabaseAdmin.from("business_accounts").select("stripe_customer_id").eq("id", account.id).maybeSingle();
+          c = saved?.stripe_customer_id ? { id: saved.stripe_customer_id } : await stripe.customers.create(params);
+        }
         customerId = c.id;
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         await supabaseAdmin.from("business_accounts").update({ stripe_customer_id: customerId }).eq("id", account.id);
+      }
+
+      // A4: no second subscription for one account, even if two checkouts start at the same moment.
+      const existing = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 20 });
+      if (existing.data.some((s) => ["active", "trialing", "past_due", "unpaid"].includes(s.status))) {
+        return { error: "This account already has a plan. Use Manage billing to change it." };
+      }
+      // Only the newest checkout can be paid: close this customer's other unfinished checkouts.
+      const open = await stripe.checkout.sessions.list({ customer: customerId, status: "open", limit: 20 });
+      for (const old of open.data) {
+        try { await stripe.checkout.sessions.expire(old.id); } catch { /* already finished or expired */ }
       }
 
       const meta = { userId: context.userId, account_id: account.id, shop_id: shop.shopId, managed_payments: "false" };
