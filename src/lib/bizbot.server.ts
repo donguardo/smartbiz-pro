@@ -70,7 +70,7 @@ export async function streamBizBotReply({
 
 Product facts:
 - MVP BizManager is an AI POS Business Manager for small and medium businesses.
-- Plans: Basic ₱499/month (1 shop, 500 products per shop, brand promotions), Standard ₱999/month (up to 3 shops, 999 products per shop, no ads, AI Menu Builder), Pro ₱1,499/month (up to 5 shops, unlimited products, no ads). One price covers the whole business (all its shops, the owner and all cashiers), not each shop. Opening more shops is coming soon. New owners get a 14-day Standard trial with no card.
+- Plans: Solopreneur ₱499/month (1 shop, 500 products per shop, brand promotions), Booming Business ₱999/month (up to 3 shops, 1,000 products per shop, no ads, AI Menu Builder), MultiVerse ₱1,499/month (up to 5 shops, 2,000 products per shop, no ads). One price covers the whole business (all its shops, the owner and all cashiers), not each shop. Opening more shops is coming soon. New owners get a 14-day Booming Business trial with no card.
 - It includes a fast POS register, barcode/SKU search, cart quantity controls, cash checkout, manually confirmed GCash/Maya QR and card payments, and printable receipts.
 - It includes product inventory with price, cost, stock, reorder levels, margins, low-stock alerts, reorder suggestions, and dead-stock identification.
 - Its dashboard shows plain-language sales and profit, sales-goal progress, saved 7/30-day forecast estimates, weekly opportunities, customer counts, expenses, and low/dead/overstock warnings.
