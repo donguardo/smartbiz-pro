@@ -145,7 +145,7 @@ type PortalResult = { url: string } | { error: string };
 const NO_CANCEL_TAG = "bizmanager-no-cancel-v1";
 async function noCancelPortalConfig(stripe: ReturnType<typeof createStripeClient>): Promise<string> {
   const list = await stripe.billingPortal.configurations.list({ active: true, limit: 100 });
-  const mine = list.data.find((c) => c.metadata?.app === NO_CANCEL_TAG);
+  const mine = list.data.find((c) => c.metadata?.["app"] === NO_CANCEL_TAG);
   if (mine) return mine.id;
   const base = list.data.find((c) => c.is_default);
   const f = base?.features;

@@ -241,7 +241,7 @@ function CancellationRequests() {
     if (decision === "contacted" && !notes[id]?.trim()) return setErr("Write a message to the owner first.");
     if (decision === "approved" && !window.confirm("Approve? The plan will end at the end of its paid month.")) return;
     setBusy(id); setErr(null);
-    const r = await decide({ data: { id, decision, note: notes[id] } });
+    const r = await decide({ data: { id, decision, note: notes[id] ?? "" } });
     if ("error" in r) setErr(r.error);
     setBusy(null); void load();
   };
