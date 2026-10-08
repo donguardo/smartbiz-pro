@@ -144,6 +144,24 @@ export type Database = {
           },
         ]
       }
+      bizbot_runs: {
+        Row: {
+          created_at: string
+          id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       business_accounts: {
         Row: {
           created_at: string
@@ -1599,6 +1617,7 @@ export type Database = {
       }
       anonymize_customer: { Args: { _customer_id: string }; Returns: undefined }
       assert_platform_admin_mfa: { Args: never; Returns: undefined }
+      bizbot_begin_run: { Args: never; Returns: undefined }
       can_edit_products: { Args: { _shop_id: string }; Returns: boolean }
       cancel_shop_invite: { Args: { _invite_id: string }; Returns: undefined }
       create_reorder_from_alerts: {
