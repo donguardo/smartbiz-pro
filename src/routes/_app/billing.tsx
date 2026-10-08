@@ -17,6 +17,7 @@ import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { OwnerRedirect } from "@/components/OwnerRedirect";
 import { downloadShopData } from "@/lib/export-data";
 import { BillingLinkCheck, BillingEventLog } from "@/components/BillingDiagnostics";
+import { CancelPlan } from "@/components/CancelPlan";
 
 export const Route = createFileRoute("/_app/billing")({
   head: () => ({ meta: [
@@ -148,6 +149,7 @@ export function BillingPanel() {
           {!b.has_access && <Button variant="outline" disabled={busy} onClick={downloadData}><Download className="h-4 w-4" /> {t("billing.download")}</Button>}
         </div>
       )}
+      {accountOwner && subscribed && <CancelPlan canRequest={paid && !b.cancel_at_period_end} />}
       {paying && (
         <div className="space-y-2">
           <div className="flex justify-end"><Button size="sm" variant="ghost" onClick={() => setPaying(null)}><X className="h-4 w-4" /> {t("billing.close")}</Button></div>

@@ -186,6 +186,56 @@ export type Database = {
         }
         Relationships: []
       }
+      cancellation_requests: {
+        Row: {
+          account_id: string
+          admin_note: string | null
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          id: string
+          reason: string | null
+          requested_by: string
+          status: string
+          subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          admin_note?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          reason?: string | null
+          requested_by: string
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          admin_note?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          reason?: string | null
+          requested_by?: string
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cancellation_requests_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "business_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_messages: {
         Row: {
           created_at: string
@@ -1577,6 +1627,32 @@ export type Database = {
           deletions: number
         }[]
       }
+      admin_cancellation_requests: {
+        Args: never
+        Returns: {
+          admin_note: string
+          created_at: string
+          decided_at: string
+          id: string
+          owner_email: string
+          period_end: string
+          plan: string
+          reason: string
+          shop_names: string
+          status: string
+        }[]
+      }
+      admin_cancellation_target: {
+        Args: { _id: string }
+        Returns: {
+          env: string
+          stripe_subscription_id: string
+        }[]
+      }
+      admin_decide_cancellation: {
+        Args: { _decision: string; _id: string; _note: string }
+        Returns: undefined
+      }
       admin_platform_totals: {
         Args: never
         Returns: {
@@ -1704,6 +1780,17 @@ export type Database = {
           name: string
         }[]
       }
+      get_my_cancellation_request: {
+        Args: never
+        Returns: {
+          admin_note: string
+          created_at: string
+          decided_at: string
+          id: string
+          reason: string
+          status: string
+        }[]
+      }
       get_my_plan: {
         Args: never
         Returns: {
@@ -1802,6 +1889,16 @@ export type Database = {
       is_platform_admin: { Args: never; Returns: boolean }
       is_shop_member: { Args: { _shop_id: string }; Returns: boolean }
       is_shop_owner: { Args: { _shop_id: string }; Returns: boolean }
+      mark_cancel_anyway: { Args: { _request_id: string }; Returns: undefined }
+      my_cancel_anyway_target: {
+        Args: never
+        Returns: {
+          env: string
+          request_id: string
+          stripe_subscription_id: string
+        }[]
+      }
+      my_owned_account: { Args: never; Returns: string }
       payments_env: { Args: never; Returns: string }
       plan_for_lookup_key: { Args: { _key: string }; Returns: string }
       receive_purchase_order: {
@@ -1827,6 +1924,7 @@ export type Database = {
       refresh_all_forecasts: { Args: never; Returns: undefined }
       remove_product: { Args: { _id: string }; Returns: string }
       remove_shop_cashier: { Args: { _member_id: string }; Returns: undefined }
+      request_cancellation: { Args: { _reason: string }; Returns: string }
       seed_sample_store: { Args: never; Returns: undefined }
       shop_has_access: { Args: { _shop_id: string }; Returns: boolean }
       shop_has_access_unchecked: {
@@ -1843,6 +1941,7 @@ export type Database = {
       }
       update_product: { Args: { _data: Json; _id: string }; Returns: undefined }
       void_sale: { Args: { _sale_id: string }; Returns: undefined }
+      withdraw_cancellation: { Args: never; Returns: undefined }
     }
     Enums: {
       document_type: "permit" | "receipt" | "contract" | "other"

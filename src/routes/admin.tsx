@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatPeso } from "@/lib/admin-format";
+import { useServerFn } from "@tanstack/react-start";
+import { adminDecideCancellation } from "@/utils/cancellation.functions";
 
 // Platform Super Admin (view-only). Served on admin.mvp.com.ai; hidden on the shop app's public hosts.
 // Allowlist is managed by SQL only — see AGENTS.md / README "Platform admins".
@@ -200,6 +202,7 @@ function Dashboard({ onDenied }: { onDenied: () => void }) {
           <div key={String(k)} className="rounded-lg border border-border bg-card p-4"><p className="text-xs uppercase text-muted-foreground">{k}</p><p className="mt-1 text-2xl font-bold">{String(v ?? 0)}</p></div>
         ))}
       </section>
+      <CancellationRequests />
       <Panel title="New signups (last 30 days)">
         <div className="flex h-32 items-end gap-1">
           {d.signups.map((x) => <div key={x.day} title={`${x.day}: ${x.signups}`} className="flex-1 rounded-t bg-primary" style={{ height: `${(Number(x.signups) / maxSignups) * 100}%`, minHeight: 2 }} />)}
@@ -217,6 +220,58 @@ function Dashboard({ onDenied }: { onDenied: () => void }) {
         </Panel>
       </div>
     </main>
+  );
+}
+
+type CancelReq = { id: string; status: string; reason: string | null; admin_note: string | null; created_at: string; decided_at: string | null; owner_email: string | null; shop_names: string | null; plan: string | null; period_end: string | null };
+
+function CancellationRequests() {
+  const decide = useServerFn(adminDecideCancellation);
+  const [rows, setRows] = useState<CancelReq[] | null>(null);
+  const [notes, setNotes] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const load = useCallback(async () => {
+    const { data, error } = await supabase.rpc("admin_cancellation_requests");
+    if (error) return setErr("Could not load cancel requests");
+    setRows(data as CancelReq[]);
+  }, []);
+  useEffect(() => { void load(); }, [load]);
+  const act = async (id: string, decision: "approved" | "contacted") => {
+    if (decision === "contacted" && !notes[id]?.trim()) return setErr("Write a message to the owner first.");
+    if (decision === "approved" && !window.confirm("Approve? The plan will end at the end of its paid month.")) return;
+    setBusy(id); setErr(null);
+    const r = await decide({ data: { id, decision, note: notes[id] ?? "" } });
+    if ("error" in r) setErr(r.error);
+    setBusy(null); void load();
+  };
+  const open = rows?.filter((r) => r.status === "pending" || r.status === "contacted") ?? [];
+  const done = rows?.filter((r) => !open.includes(r)) ?? [];
+  return (
+    <Panel title={`Cancel requests${open.length ? ` — ${open.length} waiting` : ""}`}>
+      {err && <p className="mb-2 text-sm text-destructive">{err}</p>}
+      {!rows ? <p className="text-sm text-muted-foreground">Loading…</p> : !open.length ? <p className="text-sm text-muted-foreground">No open requests.</p> : (
+        <div className="space-y-3">
+          {open.map((r) => (
+            <div key={r.id} className="space-y-2 rounded-lg border border-primary p-3 text-sm">
+              <div className="flex flex-wrap justify-between gap-2">
+                <p className="font-semibold">{r.shop_names ?? "—"} · {r.owner_email ?? "—"}</p>
+                <span className="rounded-full bg-primary/15 px-2 text-xs text-primary">{r.status === "contacted" ? "Waiting for owner" : "New"}</span>
+              </div>
+              <p className="text-muted-foreground">Plan: {r.plan ?? "—"} · paid until {r.period_end ? new Date(r.period_end).toLocaleDateString() : "—"} · asked {new Date(r.created_at).toLocaleString()}</p>
+              <p>Reason: {r.reason ?? "(none given)"}</p>
+              {r.admin_note && <p className="text-muted-foreground">Your message: {r.admin_note}</p>}
+              <Input placeholder="Message to the owner (e.g. an offer to stay)" maxLength={1000} value={notes[r.id] ?? ""} onChange={(e) => setNotes({ ...notes, [r.id]: e.target.value })} />
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" disabled={busy === r.id} onClick={() => act(r.id, "approved")}>Approve cancel</Button>
+                <Button size="sm" variant="outline" disabled={busy === r.id} onClick={() => act(r.id, "contacted")}>Reach out instead</Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {done.length > 0 && <div className="mt-4"><Table head={["Shop", "Owner", "Result", "Date"]} rows={done.map((r) => [r.shop_names ?? "—", r.owner_email ?? "—", ({ approved: "Approved", withdrawn: "Owner kept plan", owner_cancelled: "Owner cancelled anyway" } as Record<string, string>)[r.status] ?? r.status, new Date(r.decided_at ?? r.created_at).toLocaleDateString()])} /></div>}
+    </Panel>
   );
 }
 
