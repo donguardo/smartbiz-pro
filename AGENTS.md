@@ -32,3 +32,4 @@
 - Retry stripe_tax_inactive without tax only in sandbox with metadata; live failures block checkout.
 - Offline queues are user/shop-scoped with locks and stable IDs/times; deliberate logout clears only that user's data, unexpected logout clears read caches but retains queues — prevents lost sales and account leaks.
 - Inline Nitro's createRequire guard in nitro.config.ts — prevents startup/missing-helper failures.
+- Plan cancellation requires platform-admin review (cancellation_requests via SECURITY DEFINER RPCs; Stripe billing portal uses a no-cancel configuration) — owners can still cancel after being contacted, so cancellation is never hard-blocked.

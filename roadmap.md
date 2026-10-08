@@ -137,3 +137,4 @@
 - [x] Switched billing from Paddle to built-in Stripe
 - [x] Sandbox-only unsupported-tax retry preserves live tax settings and shop linkage; focused tests added.
 - [ ] Verify embedded test-card checkout after tax fix; live setup awaits sandbox claim and verification.
+- [ ] Email admin@mvp.com.ai on new cancel requests — blocked: email domain not set up
