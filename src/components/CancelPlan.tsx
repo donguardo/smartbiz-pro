@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/lib/i18n";
 import { billingKey } from "@/lib/billing";
-import { ownerCancelAnyway } from "@/utils/cancellation.functions";
+import { ownerCancelAnyway, requestCancellation } from "@/utils/cancellation.functions";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -15,6 +15,7 @@ export function CancelPlan({ canRequest }: { canRequest: boolean }) {
   const { t } = useT();
   const qc = useQueryClient();
   const anyway = useServerFn(ownerCancelAnyway);
+  const ask = useServerFn(requestCancellation);
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
@@ -61,8 +62,8 @@ export function CancelPlan({ canRequest }: { canRequest: boolean }) {
       <Textarea maxLength={1000} placeholder={t("cancel.reason")} value={reason} onChange={(e) => setReason(e.target.value)} />
       <div className="flex flex-wrap gap-2">
         <Button size="sm" variant="destructive" disabled={busy} onClick={() => run(async () => {
-          const { error } = await supabase.rpc("request_cancellation", { _reason: reason });
-          if (error) throw new Error(error.message.includes("already") ? t("cancel.alreadyOpen") : t("cancel.failed"));
+          const r = await ask({ data: { reason } });
+          if ("error" in r) throw new Error(r.error === "already_open" ? t("cancel.alreadyOpen") : t("cancel.failed"));
           setOpen(false); setReason(""); toast.success(t("cancel.sent"));
         })}>{t("cancel.send")}</Button>
         <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>{t("billing.close")}</Button>
