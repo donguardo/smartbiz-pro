@@ -46,3 +46,32 @@ export const ownerCancelAnyway = createServerFn({ method: "POST" })
       return { error: getStripeErrorMessage(e) };
     }
   });
+
+// Owner asks to cancel: the database checks ownership and the open-request rule; then the platform admin is emailed.
+export const requestCancellation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { reason: string }) => z.object({ reason: z.string().max(1000) }).parse(d))
+  .handler(async ({ data, context }): Promise<Result> => {
+    const { data: id, error } = await context.supabase.rpc("request_cancellation", { _reason: data.reason });
+    if (error) return { error: error.message.includes("already") ? "already_open" : "failed" };
+    try {
+      const [{ data: shops }, { data: plan }] = await Promise.all([
+        context.supabase.from("shops").select("name"),
+        context.supabase.rpc("get_my_plan"),
+      ]);
+      const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+      await sendTemplateEmail("cancel-request-admin", "admin@mvp.com.ai", {
+        templateData: {
+          shop: (shops ?? []).map((s) => s.name).join(", ") || "A shop",
+          ownerEmail: (context.claims as { email?: string }).email ?? "—",
+          plan: plan?.[0]?.label ?? "—",
+          reason: data.reason,
+        },
+        idempotencyKey: `cancel-request-admin-${String(id)}`,
+      });
+    } catch (e) {
+      // The request is saved and shows in Platform Admin even if the alert email fails.
+      console.error("cancel request email failed", e instanceof Error ? e.message : e);
+    }
+    return { ok: true };
+  });
