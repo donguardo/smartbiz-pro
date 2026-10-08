@@ -129,6 +129,7 @@ export function BillingPanel() {
           <div key={l.plan} className={`flex flex-col gap-3 rounded-xl border p-4 ${l.plan === myPlan?.plan ? "border-primary" : "border-border"}`}>
             <div>
               <p className="font-bold">{l.label}{l.plan === myPlan?.plan && <span className="ml-2 text-xs font-medium text-primary">{t("plan.current")}</span>}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">{t(`plan.${l.plan}.tagline`)}</p>
               <p className="font-display text-2xl font-bold">₱{php(l.monthly_price_php)}<span className="text-xs font-normal text-muted-foreground">{t("plan.perMonth")}</span></p>
             </div>
             <ul className="flex-1 space-y-1 text-xs">
