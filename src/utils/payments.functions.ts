@@ -140,6 +140,36 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
 
 type PortalResult = { url: string } | { error: string };
 
+// Cancelling goes through the in-app request (reviewed by the platform admin), so the
+// billing portal keeps every default feature except "Cancel plan".
+const NO_CANCEL_TAG = "bizmanager-no-cancel-v1";
+async function noCancelPortalConfig(stripe: ReturnType<typeof createStripeClient>): Promise<string> {
+  const list = await stripe.billingPortal.configurations.list({ active: true, limit: 100 });
+  const mine = list.data.find((c) => c.metadata?.app === NO_CANCEL_TAG);
+  if (mine) return mine.id;
+  const base = list.data.find((c) => c.is_default);
+  const f = base?.features;
+  const update = f?.subscription_update;
+  const created = await stripe.billingPortal.configurations.create({
+    metadata: { app: NO_CANCEL_TAG },
+    features: {
+      invoice_history: { enabled: true },
+      payment_method_update: { enabled: true },
+      customer_update: { enabled: true, allowed_updates: ["email", "address", "name"] },
+      subscription_cancel: { enabled: false },
+      ...(update?.enabled && update.products?.length ? {
+        subscription_update: {
+          enabled: true,
+          default_allowed_updates: update.default_allowed_updates,
+          proration_behavior: update.proration_behavior,
+          products: update.products.map((p) => ({ product: p.product, prices: p.prices })),
+        },
+      } : {}),
+    },
+  });
+  return created.id;
+}
+
 export const createBillingPortal = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { environment: StripeEnv; returnUrl: string }) =>
@@ -158,7 +188,9 @@ export const createBillingPortal = createServerFn({ method: "POST" })
         customer = sub?.paddle_customer_id ?? shop.customerId;
       }
       if (!customer) return { error: "No subscription found yet" };
-      const portal = await createStripeClient(env).billingPortal.sessions.create({ customer, return_url: data.returnUrl });
+      const stripe = createStripeClient(env);
+      const configuration = await noCancelPortalConfig(stripe);
+      const portal = await stripe.billingPortal.sessions.create({ customer, return_url: data.returnUrl, configuration });
       return { url: portal.url };
     } catch (error) {
       return { error: getStripeErrorMessage(error) };
