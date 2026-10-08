@@ -10,6 +10,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { toast } from "sonner";
+import { Link } from "@tanstack/react-router";
 import bizBotImage from "@/assets/bizbot-transparent.png";
 import {
   Conversation,
@@ -29,11 +30,10 @@ import { Shimmer } from "@/components/ai-elements/shimmer";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/lib/i18n";
-import { fetchDailyTip, fetchForecasts, fetchGoals, fetchProducts, fetchShopContext } from "@/lib/store";
+import { useSession } from "@/lib/auth";
 
 const CHAT_KEY = "bizbot-conversation-v1";
 const BOT_POSITION_KEY = "bizbot-position-v1";
-const MAX_CONTEXT_PRODUCTS = 80;
 const BOT_SIZE = 68;
 const BOT_MARGIN = 16;
 type BotPosition = { x: number; y: number };
@@ -105,7 +105,10 @@ export function FloatingBizBot() {
   const [hydrated, setHydrated] = useState(false);
   const [listening, setListening] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
-  const [storeContext, setStoreContext] = useState("");
+  const { session } = useSession();
+  const signedIn = Boolean(session);
+  const [localFaq, setLocalFaq] = useState<UIMessage[]>([]);
+  const hadSessionRef = useRef(false);
   const [botPosition, setBotPosition] = useState<BotPosition | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
@@ -117,9 +120,15 @@ export function FloatingBizBot() {
     () =>
       new DefaultChatTransport<UIMessage>({
         api: "/api/public/bizbot",
-        body: { language: lang, storeContext },
+        prepareSendMessagesRequest: async ({ id, messages }) => {
+          const { data } = await supabase.auth.getSession();
+          return {
+            headers: data.session ? { Authorization: `Bearer ${data.session.access_token}` } : {},
+            body: { id, language: lang, messages: messages.slice(-20) },
+          };
+        },
       }),
-    [lang, storeContext],
+    [lang],
   );
 
   const speak = useCallback(
@@ -144,7 +153,8 @@ export function FloatingBizBot() {
     },
     onError: (chatError) => {
       voiceReplyRef.current = false;
-      toast.error(chatError.message || t("bot.error"));
+      const m = chatError.message || "";
+      if (!m.startsWith("Sign in")) toast.error(m.startsWith("This conversation is too long") ? t("bot.tooLong") : m || t("bot.error"));
     },
   });
 
@@ -164,35 +174,30 @@ export function FloatingBizBot() {
   useEffect(() => {
     if (!open) return;
     window.setTimeout(() => textareaRef.current?.focus(), 0);
-    let active = true;
-    void supabase.auth.getSession().then(async ({ data }) => {
-      if (!data.session || !active) {
-        setStoreContext("");
-        return;
-      }
-      const shop = await fetchShopContext();
-      const [products, goals, forecasts, dailyTip] = await Promise.all([fetchProducts(), shop?.member_role === "owner" ? fetchGoals() : Promise.resolve([]), shop?.member_role === "owner" ? fetchForecasts() : Promise.resolve([]), fetchDailyTip()]);
-      const [{ data: customers }, { data: sales }] = await Promise.all([
-        supabase.rpc("get_masked_customers"),
-        shop?.member_role === "owner" ? supabase.from("sales").select("total,cost_total,payment_method,created_at").order("created_at", { ascending: false }).limit(200) : Promise.resolve({ data: [] }),
-      ]);
-      if (!active) return;
-      const context = {
-        generatedAt: new Date().toISOString(),
-        role: shop?.member_role,
-        products: products.slice(0, MAX_CONTEXT_PRODUCTS).map((product) => ({ name: product.name, category: product.category, price: product.price, stock: product.stock, reorderLevel: product.reorder_level, ...(shop?.member_role === "owner" ? { cost: product.cost } : {}) })),
-        recentSales: sales ?? [],
-        goals,
-        forecasts,
-        dailyTip: dailyTip?.tip_text ?? null,
-        customerCount: customers?.length ?? 0,
-      };
-      setStoreContext(JSON.stringify(context));
-    });
-    return () => {
-      active = false;
-    };
   }, [open]);
+
+  // Sign-out privacy: a shared phone must not keep the previous user's store answers.
+  useEffect(() => {
+    if (session) {
+      hadSessionRef.current = true;
+      return;
+    }
+    if (hadSessionRef.current) {
+      hadSessionRef.current = false;
+      setMessages([]);
+      setLocalFaq([]);
+      localStorage.removeItem(CHAT_KEY);
+    }
+  }, [session, setMessages]);
+
+  const addFaq = (question: string, answer: string) => {
+    const now = Date.now();
+    setLocalFaq((prev) => [
+      ...prev,
+      { id: `faq-q-${now}`, role: "user", parts: [{ type: "text", text: question }] },
+      { id: `faq-a-${now}`, role: "assistant", parts: [{ type: "text", text: answer }] },
+    ]);
+  };
 
   useEffect(() => {
     const onOpen = () => {
@@ -226,11 +231,11 @@ export function FloatingBizBot() {
   const submit = useCallback(
     (text: string, byVoice = false) => {
       const trimmed = text.trim();
-      if (!trimmed || busy) return;
+      if (!trimmed || busy || !signedIn) return;
       voiceReplyRef.current = byVoice;
       void sendMessage({ text: trimmed });
     },
-    [busy, sendMessage],
+    [busy, sendMessage, signedIn],
   );
 
   const startListening = () => {
@@ -265,6 +270,7 @@ export function FloatingBizBot() {
   const clearConversation = () => {
     if (busy) void stop();
     setMessages([]);
+    setLocalFaq([]);
     localStorage.removeItem(CHAT_KEY);
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     textareaRef.current?.focus();
@@ -337,7 +343,27 @@ export function FloatingBizBot() {
 
           <Conversation className="min-h-0 flex-1">
             <ConversationContent className="gap-5 p-4">
-              {messages.length === 0 ? (
+              {!signedIn ? (
+                <>
+                  <div className="rounded-lg border border-primary/50 bg-card p-4 text-sm">
+                    <h3 className="font-display text-base font-bold">{t("bot.signInTitle")}</h3>
+                    <p className="mt-1 text-muted-foreground">{t("bot.signInBody")}</p>
+                    <Button asChild size="sm" className="mt-3"><Link to="/auth">{t("bot.signIn")}</Link></Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {([["bot.promptFeatures", "bot.faqFeatures"], ["bot.promptPricing", "bot.faqPricing"], ["bot.promptTrial", "bot.faqTrial"]] as const).map(([q, a]) => (
+                      <Button key={q} variant="outline" size="sm" onClick={() => addFaq(t(q), t(a))}>{t(q)}</Button>
+                    ))}
+                  </div>
+                  {localFaq.map((message) => (
+                    <Message key={message.id} from={message.role}>
+                      <MessageContent className="group-[.is-user]:bg-primary group-[.is-user]:text-primary-foreground">
+                        <MessageResponse>{textOf(message)}</MessageResponse>
+                      </MessageContent>
+                    </Message>
+                  ))}
+                </>
+              ) : messages.length === 0 ? (
                 <ConversationEmptyState
                   icon={<img src={bizBotImage} alt="" className="mx-auto h-28 w-28 object-contain" />}
                   title={t("bot.welcomeTitle")}
@@ -370,12 +396,20 @@ export function FloatingBizBot() {
                 ))
               )}
               {status === "submitted" && <Shimmer className="text-sm">{t("bot.thinking")}</Shimmer>}
-              {error && <p role="alert" className="text-sm text-destructive">{error.message || t("bot.error")}</p>}
+              {signedIn && error && (error.message.startsWith("Sign in") ? (
+                <div className="rounded-lg border border-primary/50 bg-card p-4 text-sm">
+                  <h3 className="font-display text-base font-bold">{t("bot.signInTitle")}</h3>
+                  <p className="mt-1 text-muted-foreground">{t("bot.signInBody")}</p>
+                  <Button asChild size="sm" className="mt-3"><Link to="/auth">{t("bot.signIn")}</Link></Button>
+                </div>
+              ) : (
+                <p role="alert" className="text-sm text-destructive">{error.message.startsWith("This conversation is too long") ? t("bot.tooLong") : error.message || t("bot.error")}</p>
+              ))}
             </ConversationContent>
             <ConversationScrollButton />
           </Conversation>
 
-          <div className="shrink-0 border-t border-border bg-card/80 p-3">
+          {signedIn && <div className="shrink-0 border-t border-border bg-card/80 p-3">
             <PromptInput onSubmit={({ text }) => submit(text)}>
               <PromptInputTextarea ref={textareaRef} disabled={busy} placeholder={t("bot.placeholder")} className="max-h-28 min-h-12" />
               <PromptInputFooter>
@@ -396,7 +430,7 @@ export function FloatingBizBot() {
                 <PromptInputSubmit status={status} onStop={stop} disabled={!hydrated} />
               </PromptInputFooter>
             </PromptInput>
-          </div>
+          </div>}
         </section>
       )}
 
