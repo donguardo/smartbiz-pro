@@ -77,11 +77,10 @@ export default defineConfig({
     build: { manifest: true },
     // Email rendering needs entities v4 (hoisted); a nested newer copy lacks lib/decode.js.
     resolve: {
-      alias: {
-        "entities/lib/decode.js": resolve("node_modules/entities/lib/decode.js"),
-        "entities/lib/encode.js": resolve("node_modules/entities/lib/encode.js"),
-        entities: resolve("node_modules/entities"),
-      },
+      alias: [
+        { find: /^entities\/lib\/decode\.js$/, replacement: resolve("node_modules/entities/lib/decode.js") },
+        { find: /^entities\/lib\/encode\.js$/, replacement: resolve("node_modules/entities/lib/encode.js") },
+      ],
     },
     plugins: [
       precacheOrigins,
