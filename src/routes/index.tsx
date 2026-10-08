@@ -214,7 +214,9 @@ function Landing() {
             <div key={id} className={`flex flex-col gap-4 rounded-lg border bg-card p-6 ${id === "standard" ? "border-primary" : "border-border"}`}>
               <div>
                 <p className="text-lg font-bold">{t(`plan.${id}.name`)}</p>
-                <p className="mt-1 font-display text-4xl font-bold">₱{PLAN_PRICES[id].toLocaleString("en-PH")}<span className="text-base font-medium text-muted-foreground">{t("price.per")}</span></p>
+                <p className="mt-1 text-sm text-muted-foreground">{t(`plan.${id}.tagline`)}</p>
+                <p className="mt-3 font-display text-4xl font-bold">₱{PLAN_PRICES[id].toLocaleString("en-PH")}<span className="text-base font-medium text-muted-foreground">{t("price.per")}</span></p>
+                <p className="mt-2 inline-block rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground">{t(`plan.${id}.best`)}</p>
               </div>
               <ul className="flex-1 space-y-2 text-sm">
                 {[...PLAN_FEATURES[id], ...PLAN_ALL_FEATURES].map((f) => <li key={f} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{t(f)}</li>)}
