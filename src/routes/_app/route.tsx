@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Bot, Download, LayoutDashboard, LogOut, Package, ScanLine, Settings, Users, BriefcaseBusiness, ClipboardList, CreditCard } from "lucide-react";
+import { Bot, Download, LayoutDashboard, LogOut, Package, ScanLine, Settings, Users, BriefcaseBusiness, ClipboardList, CreditCard, Hammer } from "lucide-react";
 import { useSession } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeToggle, syncThemeFromAccount } from "@/lib/theme";
@@ -17,6 +17,7 @@ import { clearOfflineDataFor, countOfflineSalesFor, setIntentionalSignOut, useOn
 import { openInstallPrompt } from "@/lib/install";
 import { offlineLocked, useBilling } from "@/lib/billing";
 import { BillingPanel } from "./billing";
+import { StoreSwitcher } from "@/components/StoreSwitcher";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 export const Route = createFileRoute("/_app")({
@@ -76,7 +77,8 @@ function AppLayout() {
   return (
     <div className="min-h-screen md:grid md:grid-cols-[232px_1fr]">
       <aside className="sticky top-0 hidden h-screen flex-col border-r border-sidebar-border bg-sidebar p-4 backdrop-blur-xl md:flex">
-        <div className="mb-4"><StoreIdentity name={businessName} logoSrc={business?.logoSrc} /></div>
+        <div className="mb-4 flex items-center gap-2"><StoreIdentity name={businessName} logoSrc={business?.logoSrc} />{shop?.member_role === "owner" && <HammerLink />}</div>
+        {shop?.member_role === "owner" && <StoreSwitcher className="mb-2 w-full max-w-none" />}
         <nav className="mt-2 space-y-1">
           {visibleNav.map((n) => {
             const active = path.startsWith(n.to);
@@ -110,6 +112,8 @@ function AppLayout() {
       <header className="sticky top-0 z-20 flex items-center justify-between gap-1 border-b border-border bg-card/95 px-3 py-3 backdrop-blur-md md:hidden">
         <StoreIdentity name={businessName} logoSrc={business?.logoSrc} />
         <div className="flex shrink-0 gap-1">
+          {shop?.member_role === "owner" && <StoreSwitcher className="hidden min-[440px]:block" />}
+          {shop?.member_role === "owner" && <HammerLink />}
           {shop?.member_role === "owner" && <StockAlertsBell />}
           <Button variant="ghost" size="icon" onClick={openInstallPrompt} aria-label={t("install.open")} title={t("install.open")} className="hidden min-[420px]:inline-flex">
             <Download className="h-4 w-4" />
@@ -145,5 +149,14 @@ function AppLayout() {
         })}
       </nav>
     </div>
+  );
+}
+
+function HammerLink() {
+  const { t } = useT();
+  return (
+    <Link to="/stores" aria-label={t("stores.open_builder")} title={t("stores.open_builder")} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-primary/20 hover:bg-primary/30">
+      <Hammer className="h-4 w-4 text-foreground" strokeWidth={2.5} />
+    </Link>
   );
 }

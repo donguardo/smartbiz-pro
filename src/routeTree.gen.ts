@@ -37,6 +37,7 @@ import { Route as AppInventoryRouteImport } from './routes/_app/inventory'
 import { Route as AppPosRouteImport } from './routes/_app/pos'
 import { Route as AppReordersRouteImport } from './routes/_app/reorders'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
+import { Route as AppStoresRouteImport } from './routes/_app/stores'
 import { Route as ApiStoreImageRouteImport } from './routes/api/store-image'
 import { Route as ShowcaseIndexRouteImport } from './routes/showcase/index'
 import { Route as ShowcaseBusinessRouteImport } from './routes/showcase/$business'
@@ -184,6 +185,11 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppStoresRoute = AppStoresRouteImport.update({
+  id: '/stores',
+  path: '/stores',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const ApiStoreImageRoute = ApiStoreImageRouteImport.update({
   id: '/api/store-image',
   path: '/api/store-image',
@@ -251,6 +257,7 @@ export interface FileRoutesByFullPath {
   '/pos': typeof AppPosRoute
   '/reorders': typeof AppReordersRoute
   '/settings': typeof AppSettingsRoute
+  '/stores': typeof AppStoresRoute
   '/api/store-image': typeof ApiStoreImageRoute
   '/showcase/$business': typeof ShowcaseBusinessRoute
   '/showcase/': typeof ShowcaseIndexRoute
@@ -287,6 +294,7 @@ export interface FileRoutesByTo {
   '/pos': typeof AppPosRoute
   '/reorders': typeof AppReordersRoute
   '/settings': typeof AppSettingsRoute
+  '/stores': typeof AppStoresRoute
   '/api/store-image': typeof ApiStoreImageRoute
   '/showcase/$business': typeof ShowcaseBusinessRoute
   '/showcase': typeof ShowcaseIndexRoute
@@ -325,6 +333,7 @@ export interface FileRoutesById {
   '/_app/pos': typeof AppPosRoute
   '/_app/reorders': typeof AppReordersRoute
   '/_app/settings': typeof AppSettingsRoute
+  '/_app/stores': typeof AppStoresRoute
   '/api/store-image': typeof ApiStoreImageRoute
   '/showcase/$business': typeof ShowcaseBusinessRoute
   '/showcase/': typeof ShowcaseIndexRoute
@@ -363,6 +372,7 @@ export interface FileRouteTypes {
     | '/pos'
     | '/reorders'
     | '/settings'
+    | '/stores'
     | '/api/store-image'
     | '/showcase/$business'
     | '/showcase/'
@@ -399,6 +409,7 @@ export interface FileRouteTypes {
     | '/pos'
     | '/reorders'
     | '/settings'
+    | '/stores'
     | '/api/store-image'
     | '/showcase/$business'
     | '/showcase'
@@ -436,6 +447,7 @@ export interface FileRouteTypes {
     | '/_app/pos'
     | '/_app/reorders'
     | '/_app/settings'
+    | '/_app/stores'
     | '/api/store-image'
     | '/showcase/$business'
     | '/showcase/'
@@ -672,6 +684,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/_app/stores': {
+      id: '/_app/stores'
+      path: '/stores'
+      fullPath: '/stores'
+      preLoaderRoute: typeof AppStoresRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/api/store-image': {
       id: '/api/store-image'
       path: '/api/store-image'
@@ -734,6 +753,7 @@ interface AppRouteRouteChildren {
   AppPosRoute: typeof AppPosRoute
   AppReordersRoute: typeof AppReordersRoute
   AppSettingsRoute: typeof AppSettingsRoute
+  AppStoresRoute: typeof AppStoresRoute
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
@@ -746,6 +766,7 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppPosRoute: AppPosRoute,
   AppReordersRoute: AppReordersRoute,
   AppSettingsRoute: AppSettingsRoute,
+  AppStoresRoute: AppStoresRoute,
 }
 
 const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
