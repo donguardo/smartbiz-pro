@@ -9,6 +9,7 @@ import { useT } from "@/lib/i18n";
 import { fetchMyPlan, fetchShopContext, qk } from "@/lib/store";
 import { storeErrorMessage, storesKey, useMyStores, useSwitchStore } from "@/lib/stores";
 import { BusinessProfile } from "@/components/BusinessProfile";
+import { SkuBuilderButton } from "@/components/SkuBuilderButton";
 
 export const Route = createFileRoute("/_app/stores")({
   head: () => ({
@@ -73,7 +74,8 @@ function StoreBuilder() {
           <h1 className="flex items-center gap-2 text-2xl font-bold"><Hammer className="h-6 w-6 text-primary" />{t("stores.title")}</h1>
           <p className="text-sm text-muted-foreground">{t("stores.subtitle", { used: String(owned), max: String(maxStores), plan: plan?.label ?? "…" })}</p>
         </div>
-        <Link to="/settings" className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted"><Settings className="h-4 w-4" />{t("app.nav.settings")}</Link>
+        <div className="flex flex-wrap gap-2"><SkuBuilderButton />
+        <Link to="/settings" className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted"><Settings className="h-4 w-4" />{t("app.nav.settings")}</Link></div>
       </div>
 
       <section className="rounded-lg border border-border bg-card p-5">
