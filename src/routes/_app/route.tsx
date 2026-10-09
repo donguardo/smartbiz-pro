@@ -113,7 +113,8 @@ function AppLayout() {
         <div className="flex min-w-0 items-center">
           <StoreIdentity name={businessName} logoSrc={business?.logoSrc} />
         </div>
-        <div className="mt-2 flex flex-wrap items-center justify-end gap-1">
+        <div className="mt-2 flex items-center gap-1 overflow-x-auto [scrollbar-width:none]">
+          <div className="ml-auto flex shrink-0 items-center gap-1">
           {shop?.member_role === "owner" && <StoreSwitcher />}
           {shop?.member_role === "owner" && <HammerLink />}
           {shop?.member_role === "owner" && <StockAlertsBell />}
@@ -124,6 +125,7 @@ function AppLayout() {
           <LanguageToggle />
           <ThemeToggle />
           <button aria-label="Sign out" onClick={signOut} className="flex h-9 w-9 items-center justify-center rounded-lg border border-border"><LogOut className="h-4 w-4" /></button>
+          </div>
         </div>
       </header>
 
