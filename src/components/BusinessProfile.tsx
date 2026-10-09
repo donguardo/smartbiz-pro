@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ImagePlus, Store, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
-import { qk } from "@/lib/store";
+import { fetchMyPlan, qk } from "@/lib/store";
+import { storeErrorMessage } from "@/lib/stores";
 import { useShopProfile } from "@/lib/shop-profile";
 import { StoreImagePicker } from "@/components/StoreImagePicker";
 
@@ -20,6 +21,8 @@ export function BusinessProfile({ shopId }: { shopId: string }) {
   const [cats, setCats] = useState<string[]>([]);
   const [newCat, setNewCat] = useState("");
   const [busy, setBusy] = useState(false);
+  const { data: plan } = useQuery({ queryKey: qk.plan, queryFn: fetchMyPlan });
+  const maxCats = plan?.plan === "basic" ? 1 : MAX_CATEGORIES;
 
   useEffect(() => {
     if (data) { setName(data.name); setCats(data.business_categories ?? []); }
@@ -27,8 +30,8 @@ export function BusinessProfile({ shopId }: { shopId: string }) {
 
   const addCat = (c: string) => {
     const v = c.trim().slice(0, 40);
-    if (!v || cats.some((x) => x.toLowerCase() === v.toLowerCase()) || cats.length >= MAX_CATEGORIES) return;
-    setCats([...cats, v]); setNewCat("");
+    if (!v || cats.some((x) => x.toLowerCase() === v.toLowerCase()) || (maxCats > 1 && cats.length >= maxCats)) return;
+    setCats(maxCats === 1 ? [v] : [...cats, v]); setNewCat("");
   };
 
   const uploadLogo = async (file: File) => {
@@ -75,9 +78,9 @@ export function BusinessProfile({ shopId }: { shopId: string }) {
       const { error } = await supabase.from("shops").update({ name: n, business_categories: cats }).eq("id", shopId).select("id").single();
       if (error) throw error;
       toast.success(t("profile.saved"));
-      await Promise.all([qc.invalidateQueries({ queryKey: ["shop-profile", shopId] }), qc.invalidateQueries({ queryKey: qk.shop })]);
+      await Promise.all([qc.invalidateQueries({ queryKey: ["shop-profile", shopId] }), qc.invalidateQueries({ queryKey: qk.shop }), qc.invalidateQueries({ queryKey: ["my-stores"] })]);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : typeof error === "object" && error && "message" in error ? String(error.message) : t("profile.nameRequired"));
+      toast.error(storeErrorMessage(error, t));
     } finally { setBusy(false); }
   };
 
@@ -105,7 +108,7 @@ export function BusinessProfile({ shopId }: { shopId: string }) {
             <input id="biz-name" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2" />
           </div>
           <div>
-            <p className="text-sm font-medium">{t("profile.categories")}</p>
+            <p className="text-sm font-medium">{maxCats === 1 ? t("stores.chooseOne") : t("profile.categories")}</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {cats.map((c) => (
                 <span key={c} className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-3 py-1 text-sm text-foreground">

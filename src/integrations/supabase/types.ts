@@ -1696,6 +1696,10 @@ export type Database = {
       bizbot_begin_run: { Args: never; Returns: undefined }
       can_edit_products: { Args: { _shop_id: string }; Returns: boolean }
       cancel_shop_invite: { Args: { _invite_id: string }; Returns: undefined }
+      create_my_store: {
+        Args: { _categories?: string[]; _name: string }
+        Returns: string
+      }
       create_reorder_from_alerts: {
         Args: { _alert_ids: string[]; _supplier_id?: string }
         Returns: string
@@ -1889,6 +1893,17 @@ export type Database = {
       is_platform_admin: { Args: never; Returns: boolean }
       is_shop_member: { Args: { _shop_id: string }; Returns: boolean }
       is_shop_owner: { Args: { _shop_id: string }; Returns: boolean }
+      list_my_stores: {
+        Args: never
+        Returns: {
+          business_categories: string[]
+          is_current: boolean
+          logo_url: string
+          member_role: Database["public"]["Enums"]["shop_role"]
+          shop_id: string
+          shop_name: string
+        }[]
+      }
       mark_cancel_anyway: { Args: { _request_id: string }; Returns: undefined }
       my_cancel_anyway_target: {
         Args: never
@@ -1939,6 +1954,7 @@ export type Database = {
         Args: { _s: Database["public"]["Tables"]["subscriptions"]["Row"] }
         Returns: boolean
       }
+      switch_my_store: { Args: { _shop_id: string }; Returns: undefined }
       update_product: { Args: { _data: Json; _id: string }; Returns: undefined }
       void_sale: { Args: { _sale_id: string }; Returns: undefined }
       withdraw_cancellation: { Args: never; Returns: undefined }
