@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight, Check, Hammer, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Hammer, Plus, Trash2, Upload, Download } from "lucide-react";
+import { parseProductCsv, SAMPLE_CSV, type CsvProduct, type CsvRow } from "@/lib/product-csv";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,8 @@ function SetupWizard() {
   const [mobile, setMobile] = useState("");
   const [items, setItems] = useState<Item[]>([{ ...blank }]);
   const [busy, setBusy] = useState(false);
+  const [tried, setTried] = useState<boolean[]>([false, false, false, false]);
+  const [csvRows, setCsvRows] = useState<CsvRow[] | null>(null);
 
   if (shop && shop.member_role !== "owner") return <div className="p-6 text-muted-foreground">{t("stores.ownerOnly")}</div>;
   const maxCats = plan?.plan === "basic" ? 1 : 12;
@@ -60,12 +63,52 @@ function SetupWizard() {
     if (cats.includes(v)) setCats(cats.filter((x) => x !== v));
     else setCats(maxCats === 1 ? [v] : cats.length < maxCats ? [...cats, v] : cats);
   };
-  const validItems = items.filter((i) => i.name.trim() && i.price !== "" && Number(i.price) >= 0);
-  const mobileOk = mobile === "" || /^09\d{9}$/.test(mobile);
-  const canNext = [cats.length > 0, name.trim().length > 0 && mobileOk, true, true][step];
+  const filled = (i: Item) => i.name.trim() !== "" || i.price !== "" || (i.stock !== "" && i.stock !== "0");
+  const itemErr = (i: Item, idx: number) => {
+    const e: { name?: string; price?: string; stock?: string } = {};
+    if (!filled(i)) return e;
+    if (!i.name.trim()) e.name = t("wizard.err.pName");
+    else if (items.some((x, j) => j < idx && x.name.trim().toLowerCase() === i.name.trim().toLowerCase())) e.name = t("wizard.err.dup");
+    if (i.price === "") e.price = t("wizard.err.price");
+    else if (!/^\d+(\.\d{1,2})?$/.test(i.price) || Number(i.price) > 10_000_000) e.price = t("wizard.err.priceInvalid");
+    if (i.stock !== "" && (!/^\d+$/.test(i.stock) || Number(i.stock) > 1_000_000)) e.stock = t("wizard.err.stock");
+    return e;
+  };
+  const errs = {
+    cat: cats.length === 0 ? t("wizard.err.cat") : "",
+    name: !name.trim() ? t("wizard.err.name") : name.trim().length > 80 ? t("wizard.err.long") : "",
+    owner: owner.trim().length > 80 ? t("wizard.err.long") : "",
+    mobile: mobile !== "" && !/^09\d{9}$/.test(mobile) ? t("wizard.mobileInvalid") : "",
+  };
+  const rowErrs = items.map(itemErr);
+  const csvGood: CsvProduct[] = (csvRows ?? []).flatMap((r) => (r.data && !r.errors.length ? [r.data] : []));
+  const csvBad = (csvRows ?? []).filter((r) => r.errors.length);
+  const stepErrors = [
+    errs.cat ? [errs.cat] : [],
+    [errs.name, errs.owner, errs.mobile].filter(Boolean),
+    [...rowErrs.flatMap((e) => Object.values(e)), ...(csvBad.length ? [t("wizard.err.csv")] : [])],
+    [],
+  ];
+  const validItems = items.filter((i, idx) => filled(i) && !Object.keys(itemErr(i, idx)).length);
+  const show = tried[step];
+  const goNext = () => {
+    setTried(tried.map((v, i) => (i === step ? true : v)));
+    if (stepErrors[step]!.length) { toast.error(t("wizard.err.fix")); return; }
+    setStep(step + 1);
+  };
+  const fieldErr = (m: string) => (show && m ? <p className="mt-1 text-xs text-destructive" role="alert">{m}</p> : null);
+  const bad = (m: string | undefined) => (show && m ? " border-destructive" : "");
+  const loadCsv = async (f: File) => {
+    if (f.size > 1024 * 1024) { toast.error(t("wizard.err.csvSize")); return; }
+    const rows = parseProductCsv(await f.text(), new Set());
+    if (!rows.length) { toast.error(t("wizard.err.csvEmpty")); return; }
+    setCsvRows(rows.slice(0, 500));
+  };
   const steps = [t("wizard.s1"), t("wizard.s2"), t("wizard.s3"), t("wizard.s4")];
 
   const finish = async () => {
+    const firstBad = stepErrors.findIndex((e) => e.length);
+    if (firstBad >= 0) { setTried([true, true, true, true]); setStep(firstBad); toast.error(t("wizard.err.fix")); return; }
     setBusy(true);
     try {
       const { data: newId, error } = await supabase.rpc("create_my_store", { _name: name.trim(), _categories: cats });
@@ -73,12 +116,13 @@ function SetupWizard() {
       if (owner.trim() || mobile) {
         await supabase.from("shops").update({ owner_name: owner.trim().slice(0, 80) || null, mobile: mobile || null }).eq("id", newId as string);
       }
-      if (validItems.length) {
-        const cat = cats[0] ?? "General";
-        const rows = validItems.map((i, n) => ({
+      const cat = cats[0] ?? "General";
+      if (validItems.length || csvGood.length) {
+        const rows: Record<string, unknown>[] = csvGood.map((p, n) => ({ ...p, sku: p.sku || `SKU-${Date.now().toString(36).toUpperCase()}-C${n + 1}`, category: p.category || cat }));
+        rows.push(...validItems.map((i, n) => ({
           name: i.name.trim().slice(0, 120), sku: `SKU-${Date.now().toString(36).toUpperCase()}-${n + 1}`, category: cat,
           price: Number(i.price), unit: "pc", track_stock: true, stock_qty: Math.max(0, Math.round(Number(i.stock || 0))), reorder_level: 5, cost: null,
-        }));
+        })));
         const { error: pe } = await supabase.from("products").insert(rows as never);
         if (pe) toast.error(t("wizard.productsFailed"));
       }
@@ -119,16 +163,16 @@ function SetupWizard() {
               <input value={custom} maxLength={40} onChange={(e) => setCustom(e.target.value)} placeholder={t("profile.addCategoryPlaceholder")} className="min-w-0 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm" />
               <Button type="submit" variant="outline" size="sm" className="self-center">{t("profile.add")}</Button>
             </form>
+            {fieldErr(errs.cat)}
           </div>
         )}
 
         {step === 1 && (
           <div className="space-y-3">
             <h2 className="text-lg font-bold">{t("wizard.detailsTitle")}</h2>
-            <label className="block text-sm font-medium">{t("profile.businessName")} *<input value={name} maxLength={80} onChange={(e) => setName(e.target.value)} className={input} /></label>
-            <label className="block text-sm font-medium">{t("wizard.owner")}<input value={owner} maxLength={80} onChange={(e) => setOwner(e.target.value)} className={input} /></label>
-            <label className="block text-sm font-medium">{t("wizard.mobile")}<input value={mobile} inputMode="numeric" maxLength={11} placeholder="09XXXXXXXXX" onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))} className={input} /></label>
-            {!mobileOk && <p className="text-xs text-destructive">{t("wizard.mobileInvalid")}</p>}
+            <label className="block text-sm font-medium">{t("profile.businessName")} *<input value={name} maxLength={80} aria-invalid={show && !!errs.name} onChange={(e) => setName(e.target.value)} className={input + bad(errs.name)} />{fieldErr(errs.name)}</label>
+            <label className="block text-sm font-medium">{t("wizard.owner")}<input value={owner} maxLength={80} onChange={(e) => setOwner(e.target.value)} className={input + bad(errs.owner)} />{fieldErr(errs.owner)}</label>
+            <label className="block text-sm font-medium">{t("wizard.mobile")}<input value={mobile} inputMode="numeric" maxLength={11} placeholder="09XXXXXXXXX" aria-invalid={show && !!errs.mobile} onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))} className={input + bad(errs.mobile)} />{fieldErr(errs.mobile)}</label>
           </div>
         )}
 
@@ -137,14 +181,40 @@ function SetupWizard() {
             <h2 className="text-lg font-bold">{t("wizard.productsTitle")}</h2>
             <p className="text-sm text-muted-foreground">{t("wizard.productsHint")}</p>
             {items.map((it, i) => (
-              <div key={i} className="grid grid-cols-[1fr_5.5rem_4.5rem_auto] items-end gap-2">
-                <label className="text-xs">{t("wizard.pName")}<input value={it.name} maxLength={120} onChange={(e) => setItems(items.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} className={input} /></label>
-                <label className="text-xs">{t("wizard.pPrice")}<input value={it.price} inputMode="decimal" onChange={(e) => setItems(items.map((x, j) => j === i ? { ...x, price: e.target.value.replace(/[^\d.]/g, "") } : x))} className={input} /></label>
-                <label className="text-xs">{t("wizard.pStock")}<input value={it.stock} inputMode="numeric" onChange={(e) => setItems(items.map((x, j) => j === i ? { ...x, stock: e.target.value.replace(/\D/g, "") } : x))} className={input} /></label>
-                <button type="button" aria-label={t("showcase.remove")} onClick={() => setItems(items.length > 1 ? items.filter((_, j) => j !== i) : [{ ...blank }])} className="mb-1 flex h-9 w-9 items-center justify-center rounded-md border border-border"><Trash2 className="h-4 w-4" /></button>
+              <div key={i} className="grid grid-cols-[1fr_5.5rem_4.5rem_auto] items-start gap-2">
+                <label className="text-xs">{t("wizard.pName")}<input value={it.name} maxLength={120} onChange={(e) => setItems(items.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} className={input + bad(rowErrs[i]?.name)} />{fieldErr(rowErrs[i]?.name ?? "")}</label>
+                <label className="text-xs">{t("wizard.pPrice")}<input value={it.price} inputMode="decimal" onChange={(e) => setItems(items.map((x, j) => j === i ? { ...x, price: e.target.value.replace(/[^\d.]/g, "") } : x))} className={input + bad(rowErrs[i]?.price)} />{fieldErr(rowErrs[i]?.price ?? "")}</label>
+                <label className="text-xs">{t("wizard.pStock")}<input value={it.stock} inputMode="numeric" onChange={(e) => setItems(items.map((x, j) => j === i ? { ...x, stock: e.target.value.replace(/\D/g, "") } : x))} className={input + bad(rowErrs[i]?.stock)} />{fieldErr(rowErrs[i]?.stock ?? "")}</label>
+                <button type="button" aria-label={t("showcase.remove")} onClick={() => setItems(items.length > 1 ? items.filter((_, j) => j !== i) : [{ ...blank }])} className="mt-5 flex h-9 w-9 items-center justify-center rounded-md border border-border"><Trash2 className="h-4 w-4" /></button>
               </div>
             ))}
             {items.length < 10 && <Button variant="outline" size="sm" onClick={() => setItems([...items, { ...blank }])}><Plus className="h-4 w-4" />{t("wizard.addRow")}</Button>}
+            <div className="mt-4 space-y-2 rounded-lg border border-dashed border-border p-3">
+              <p className="text-sm font-medium">{t("wizard.csvTitle")}</p>
+              <p className="text-xs text-muted-foreground">{t("wizard.csvHint")}</p>
+              <div className="flex flex-wrap gap-2">
+                <label className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-input px-3 py-1.5 text-sm font-medium hover:bg-muted">
+                  <Upload className="h-4 w-4" />{t("wizard.csvUpload")}
+                  <input type="file" accept=".csv,text/csv" className="sr-only" onChange={(e) => { const f = e.target.files?.[0]; if (f) void loadCsv(f); e.target.value = ""; }} />
+                </label>
+                <a href={`data:text/csv;charset=utf-8,${encodeURIComponent(SAMPLE_CSV)}`} download="products-sample.csv" className="inline-flex items-center gap-1 rounded-md border border-input px-3 py-1.5 text-sm hover:bg-muted"><Download className="h-4 w-4" />{t("wizard.csvSample")}</a>
+                {csvRows && <button type="button" onClick={() => setCsvRows(null)} className="text-xs text-muted-foreground underline">{t("wizard.csvClear")}</button>}
+              </div>
+              {csvRows && (
+                <div className="text-sm">
+                  <p className="text-primary">{t("wizard.csvReady", { n: String(csvGood.length) })}</p>
+                  {csvBad.length > 0 && (
+                    <div role="alert" className="mt-2 rounded-md border border-destructive/50 bg-destructive/10 p-2 text-xs">
+                      <p className="font-semibold text-destructive">{t("wizard.csvBad", { n: String(csvBad.length) })}</p>
+                      <ul className="mt-1 max-h-32 list-disc overflow-auto pl-4">
+                        {csvBad.slice(0, 20).map((r) => <li key={r.line}>{t("wizard.csvLine", { n: String(r.line) })}: {r.errors.join("; ")}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            {show && stepErrors[2]!.length > 0 && <p className="text-xs text-destructive" role="alert">{t("wizard.err.fix")}</p>}
           </div>
         )}
 
@@ -155,7 +225,7 @@ function SetupWizard() {
             <p><span className="text-muted-foreground">{t("profile.businessName")}:</span> {name}</p>
             {owner && <p><span className="text-muted-foreground">{t("wizard.owner")}:</span> {owner}</p>}
             {mobile && <p><span className="text-muted-foreground">{t("wizard.mobile")}:</span> {mobile}</p>}
-            <p><span className="text-muted-foreground">{t("wizard.s3")}:</span> {validItems.length ? validItems.map((i) => `${i.name} (₱${i.price})`).join(", ") : t("wizard.noProducts")}</p>
+            <p><span className="text-muted-foreground">{t("wizard.s3")}:</span> {validItems.length || csvGood.length ? [...validItems.map((i) => `${i.name} (₱${i.price})`), ...(csvGood.length ? [t("wizard.csvReady", { n: String(csvGood.length) })] : [])].join(", ") : t("wizard.noProducts")}</p>
           </div>
         )}
       </section>
@@ -163,7 +233,7 @@ function SetupWizard() {
       <div className="flex justify-between">
         <Button variant="outline" disabled={step === 0 || busy} onClick={() => setStep(step - 1)}><ArrowLeft className="h-4 w-4" />{t("wizard.back")}</Button>
         {step < 3
-          ? <Button disabled={!canNext} onClick={() => setStep(step + 1)}>{step === 2 && !validItems.length ? t("wizard.skip") : t("wizard.next")}<ArrowRight className="h-4 w-4" /></Button>
+          ? <Button onClick={goNext}>{step === 2 && !validItems.length && !csvGood.length ? t("wizard.skip") : t("wizard.next")}<ArrowRight className="h-4 w-4" /></Button>
           : <Button disabled={busy} onClick={finish}><Check className="h-4 w-4" />{t("stores.create")}</Button>}
       </div>
     </div>
