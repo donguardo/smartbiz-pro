@@ -33,7 +33,7 @@ function DeleteAccountPage() {
           <ul className="mt-3 list-disc space-y-1 pl-5 text-muted-foreground"><li>{t("account.whatLogin")}</li><li>{t("account.whatCashier")}</li><li>{t("account.wholeShop")}</li><li>{t("account.pageAudit")}</li></ul></section>
         <section><h2 className="text-xl font-semibold">{t("account.pageNoApp")}</h2>
           <p className="mt-3 text-muted-foreground">{t("account.pageEmail")} <a className="font-semibold text-primary underline" href={`mailto:${SUPPORT_EMAIL}?subject=Account%20deletion%20request`}>{SUPPORT_EMAIL}</a></p></section>
-        <div className="flex flex-wrap gap-4 border-t border-border pt-6 text-sm"><Link to="/" className="font-semibold text-primary">MVP BizManager</Link><Link to="/privacy">Privacy Notice</Link><Link to="/terms">Terms of Service</Link></div>
+        <div className="flex flex-wrap gap-4 border-t border-border pt-6 text-sm"><Link to="/" className="font-semibold text-primary">MVP BizManager</Link><Link to="/privacy">Privacy Policy</Link><Link to="/terms">Terms of Service</Link></div>
       </main>
     </div>
   );

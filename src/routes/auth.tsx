@@ -165,7 +165,7 @@ function AuthPage() {
               {busy ? "Please wait…" : mode === "signup" ? "Create account" : mode === "forgot" ? "Send reset link" : "Sign in"}
             </Button>
           </form>
-          {mode === "signup" && <p className="mt-3 text-center text-xs text-muted-foreground">By creating an account, you agree to the <Link to="/terms" className="text-primary hover:underline">Terms of Service</Link> and acknowledge the <Link to="/privacy" className="text-primary hover:underline">Privacy Notice</Link>.</p>}
+          {mode === "signup" && <p className="mt-3 text-center text-xs text-muted-foreground">By creating an account, you agree to the <Link to="/terms" className="text-primary hover:underline">Terms of Service</Link> and acknowledge the <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.</p>}
           <p className="mt-5 text-center text-sm text-muted-foreground">
             {mode === "signup" ? "Already have an account?" : mode === "forgot" ? "Remembered your password?" : "New here?"}{" "}
             <button onClick={() => { setMode(mode === "signup" ? "signin" : mode === "forgot" ? "signin" : "signup"); setMessage(null); setDone(false); }} className="font-semibold text-primary">
