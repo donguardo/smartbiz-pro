@@ -5,7 +5,7 @@ import { ThemeToggle } from "@/lib/theme";
 export type LegalSection = {
   title: string;
   /** One or more paragraphs; separate paragraphs with a blank line. */
-  body: string;
+  body?: string;
   /** Optional bulleted list rendered after the paragraphs. */
   items?: string[];
   /** Optional inline link rendered after the paragraphs/list. */
