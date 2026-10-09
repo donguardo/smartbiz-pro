@@ -18,6 +18,7 @@ import { Route as AppReturnRouteImport } from './routes/app-return'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BlockholeRouteImport } from './routes/blockhole'
 import { Route as DeleteAccountRouteImport } from './routes/delete-account'
+import { Route as EtherneomRouteImport } from './routes/etherneom'
 import { Route as InstallRouteImport } from './routes/install'
 import { Route as InviteRouteImport } from './routes/invite'
 import { Route as LoopRouteImport } from './routes/loop'
@@ -86,6 +87,11 @@ const BlockholeRoute = BlockholeRouteImport.update({
 const DeleteAccountRoute = DeleteAccountRouteImport.update({
   id: '/delete-account',
   path: '/delete-account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EtherneomRoute = EtherneomRouteImport.update({
+  id: '/etherneom',
+  path: '/etherneom',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InstallRoute = InstallRouteImport.update({
@@ -226,6 +232,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/blockhole': typeof BlockholeRoute
   '/delete-account': typeof DeleteAccountRoute
+  '/etherneom': typeof EtherneomRoute
   '/install': typeof InstallRoute
   '/invite': typeof InviteRoute
   '/loop': typeof LoopRoute
@@ -261,6 +268,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/blockhole': typeof BlockholeRoute
   '/delete-account': typeof DeleteAccountRoute
+  '/etherneom': typeof EtherneomRoute
   '/install': typeof InstallRoute
   '/invite': typeof InviteRoute
   '/loop': typeof LoopRoute
@@ -298,6 +306,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/blockhole': typeof BlockholeRoute
   '/delete-account': typeof DeleteAccountRoute
+  '/etherneom': typeof EtherneomRoute
   '/install': typeof InstallRoute
   '/invite': typeof InviteRoute
   '/loop': typeof LoopRoute
@@ -335,6 +344,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/blockhole'
     | '/delete-account'
+    | '/etherneom'
     | '/install'
     | '/invite'
     | '/loop'
@@ -370,6 +380,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/blockhole'
     | '/delete-account'
+    | '/etherneom'
     | '/install'
     | '/invite'
     | '/loop'
@@ -406,6 +417,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/blockhole'
     | '/delete-account'
+    | '/etherneom'
     | '/install'
     | '/invite'
     | '/loop'
@@ -443,6 +455,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BlockholeRoute: typeof BlockholeRoute
   DeleteAccountRoute: typeof DeleteAccountRoute
+  EtherneomRoute: typeof EtherneomRoute
   InstallRoute: typeof InstallRoute
   InviteRoute: typeof InviteRoute
   LoopRoute: typeof LoopRoute
@@ -524,6 +537,13 @@ declare module '@tanstack/react-router' {
       path: '/delete-account'
       fullPath: '/delete-account'
       preLoaderRoute: typeof DeleteAccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/etherneom': {
+      id: '/etherneom'
+      path: '/etherneom'
+      fullPath: '/etherneom'
+      preLoaderRoute: typeof EtherneomRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/install': {
@@ -742,6 +762,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BlockholeRoute: BlockholeRoute,
   DeleteAccountRoute: DeleteAccountRoute,
+  EtherneomRoute: EtherneomRoute,
   InstallRoute: InstallRoute,
   InviteRoute: InviteRoute,
   LoopRoute: LoopRoute,
