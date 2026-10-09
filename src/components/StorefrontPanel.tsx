@@ -92,6 +92,9 @@ export function StorefrontPanel({ shopId, isOwner }: { shopId: string; isOwner: 
           <Button variant={sf.storefront_enabled ? "outline" : "default"} disabled={busy} onClick={() => save(!sf.storefront_enabled, sf.slug)}>
             {sf.storefront_enabled ? t("sf.owner.turnOff") : t("sf.owner.turnOn")}
           </Button>
+          <Button variant="outline" disabled={testBusy} onClick={sendTest}>
+            <Mail className="h-4 w-4" />{t("sf.owner.testEmail")}
+          </Button>
         </div>
       )}
 
