@@ -81,24 +81,36 @@ function Landing() {
             <ThemeToggle />
             <Link to="/auth" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90">{t("cta.getStarted")}</Link>
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button className="sm:hidden" variant="outline" size="icon" aria-label="Open menu"><Menu className="h-4 w-4" /></Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 p-2">
-              <div className="flex items-center justify-between gap-2 p-1"><LanguageToggle /></div>
-              <DropdownMenuSeparator />
-              {session && (
-                <>
-                  <DropdownMenuItem asChild><Link to="/dashboard" className="font-semibold text-primary"><Store className="h-4 w-4" />{t("nav.myStore")}</Link></DropdownMenuItem>
-                  <DropdownMenuItem asChild><Link to="/stores" className="font-semibold text-primary"><Hammer className="h-4 w-4" />{t("nav.storeBuilder")}</Link></DropdownMenuItem>
-                </>
-              )}
-              <DropdownMenuItem onSelect={openInstallPrompt}><Download className="h-4 w-4" />{t("install.open")}</DropdownMenuItem>
-               <DropdownMenuItem asChild><Link to="/showcase">{t("nav.showcase")}</Link></DropdownMenuItem>
-              <DropdownMenuItem asChild><Link to="/auth" className="font-semibold">{t("cta.getStarted")}</Link></DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-2">
+            {session && (
+              <Link
+                to="/dashboard"
+                aria-label={t("nav.myStore")}
+                title={t("nav.myStore")}
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-primary/50 bg-primary/10 text-primary hover:bg-primary/20 sm:hidden"
+              >
+                <CashRegisterIcon className="h-4 w-4" />
+              </Link>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="sm:hidden" variant="outline" size="icon" aria-label="Open menu"><Menu className="h-4 w-4" /></Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 p-2">
+                <div className="flex items-center justify-between gap-2 p-1"><LanguageToggle /></div>
+                <DropdownMenuSeparator />
+                {session && (
+                  <>
+                    <DropdownMenuItem asChild><Link to="/dashboard" className="font-semibold text-primary"><Store className="h-4 w-4" />{t("nav.myStore")}</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link to="/stores" className="font-semibold text-primary"><Hammer className="h-4 w-4" />{t("nav.storeBuilder")}</Link></DropdownMenuItem>
+                  </>
+                )}
+                <DropdownMenuItem onSelect={openInstallPrompt}><Download className="h-4 w-4" />{t("install.open")}</DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/showcase">{t("nav.showcase")}</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/auth" className="font-semibold">{t("cta.getStarted")}</Link></DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </header>
 
