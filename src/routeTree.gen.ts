@@ -20,6 +20,7 @@ import { Route as BlockholeRouteImport } from './routes/blockhole'
 import { Route as DeleteAccountRouteImport } from './routes/delete-account'
 import { Route as InstallRouteImport } from './routes/install'
 import { Route as InviteRouteImport } from './routes/invite'
+import { Route as LoopRouteImport } from './routes/loop'
 import { Route as OrangewareRouteImport } from './routes/orangeware'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -95,6 +96,11 @@ const InstallRoute = InstallRouteImport.update({
 const InviteRoute = InviteRouteImport.update({
   id: '/invite',
   path: '/invite',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoopRoute = LoopRouteImport.update({
+  id: '/loop',
+  path: '/loop',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrangewareRoute = OrangewareRouteImport.update({
@@ -222,6 +228,7 @@ export interface FileRoutesByFullPath {
   '/delete-account': typeof DeleteAccountRoute
   '/install': typeof InstallRoute
   '/invite': typeof InviteRoute
+  '/loop': typeof LoopRoute
   '/orangeware': typeof OrangewareRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -256,6 +263,7 @@ export interface FileRoutesByTo {
   '/delete-account': typeof DeleteAccountRoute
   '/install': typeof InstallRoute
   '/invite': typeof InviteRoute
+  '/loop': typeof LoopRoute
   '/orangeware': typeof OrangewareRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -292,6 +300,7 @@ export interface FileRoutesById {
   '/delete-account': typeof DeleteAccountRoute
   '/install': typeof InstallRoute
   '/invite': typeof InviteRoute
+  '/loop': typeof LoopRoute
   '/orangeware': typeof OrangewareRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -328,6 +337,7 @@ export interface FileRouteTypes {
     | '/delete-account'
     | '/install'
     | '/invite'
+    | '/loop'
     | '/orangeware'
     | '/pricing'
     | '/privacy'
@@ -362,6 +372,7 @@ export interface FileRouteTypes {
     | '/delete-account'
     | '/install'
     | '/invite'
+    | '/loop'
     | '/orangeware'
     | '/pricing'
     | '/privacy'
@@ -397,6 +408,7 @@ export interface FileRouteTypes {
     | '/delete-account'
     | '/install'
     | '/invite'
+    | '/loop'
     | '/orangeware'
     | '/pricing'
     | '/privacy'
@@ -433,6 +445,7 @@ export interface RootRouteChildren {
   DeleteAccountRoute: typeof DeleteAccountRoute
   InstallRoute: typeof InstallRoute
   InviteRoute: typeof InviteRoute
+  LoopRoute: typeof LoopRoute
   OrangewareRoute: typeof OrangewareRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -525,6 +538,13 @@ declare module '@tanstack/react-router' {
       path: '/invite'
       fullPath: '/invite'
       preLoaderRoute: typeof InviteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/loop': {
+      id: '/loop'
+      path: '/loop'
+      fullPath: '/loop'
+      preLoaderRoute: typeof LoopRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/orangeware': {
@@ -724,6 +744,7 @@ const rootRouteChildren: RootRouteChildren = {
   DeleteAccountRoute: DeleteAccountRoute,
   InstallRoute: InstallRoute,
   InviteRoute: InviteRoute,
+  LoopRoute: LoopRoute,
   OrangewareRoute: OrangewareRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
