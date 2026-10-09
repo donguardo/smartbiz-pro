@@ -8,7 +8,7 @@ export function StoreSwitcher({ className = "" }: { className?: string }) {
   const { data: stores } = useMyStores();
   const switchStore = useSwitchStore();
   if (!stores || stores.length < 2) return null;
-  const current = stores.find((s) => s.is_current)?.shop_id ?? stores[0].shop_id;
+  const current = stores.find((s) => s.is_current)?.shop_id ?? stores[0]?.shop_id ?? "";
   return (
     <select
       aria-label={t("stores.switch")}
