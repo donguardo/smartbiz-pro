@@ -136,8 +136,14 @@ function RootShell({ children }: { children: ReactNode }) {
 function BizBotOutsideAuth() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   // /orangeware, /blockhole, /loop and /etherneom are full-screen embeds of another app: the floating bot would sit on top of them.
-  if (pathname.startsWith("/auth") || pathname.startsWith("/orangeware") || pathname.startsWith("/blockhole") || pathname.startsWith("/loop") || pathname.startsWith("/etherneom")) return null;
+  if (pathname.startsWith("/s/") || pathname.startsWith("/auth") || pathname.startsWith("/orangeware") || pathname.startsWith("/blockhole") || pathname.startsWith("/loop") || pathname.startsWith("/etherneom")) return null;
   return <FloatingBizBot />;
+}
+
+// Public storefronts (/s/...) are for shoppers, so the owner app's intro video and install prompt stay hidden there.
+function OwnerAppExtras({ children }: { children: React.ReactNode }) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  return pathname.startsWith("/s/") ? null : <>{children}</>;
 }
 
 function RootComponent() {
@@ -152,10 +158,14 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
-        <FirstVisitIntro />
+        <OwnerAppExtras>
+          <FirstVisitIntro />
+        </OwnerAppExtras>
         <Outlet />
         <BizBotOutsideAuth />
-        <InstallPrompt />
+        <OwnerAppExtras>
+          <InstallPrompt />
+        </OwnerAppExtras>
       </I18nProvider>
       <Toaster richColors position="top-center" />
     </QueryClientProvider>

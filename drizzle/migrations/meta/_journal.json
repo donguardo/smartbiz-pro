@@ -330,6 +330,13 @@
       "when": 1791536306166,
       "tag": "0046_delete_wizard_draft_on_account_deletion",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1791538498311,
+      "tag": "0047_public_storefront",
+      "breakpoints": true
     }
   ]
 }
