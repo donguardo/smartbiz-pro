@@ -24,6 +24,7 @@ export const Route = createFileRoute("/_app/setup-store")({
 });
 
 const CATEGORIES = ["Sari-sari store", "Coffee shop", "Café", "Restaurant", "Laundry", "Beauty parlor", "Bakery", "Pharmacy", "Hardware", "Grocery"];
+type Draft = { ts?: unknown; step?: unknown; cats?: unknown; name?: unknown; owner?: unknown; mobile?: unknown; items?: unknown; csvRows?: unknown };
 type Item = { name: string; price: string; stock: string };
 const blank: Item = { name: "", price: "", stock: "0" };
 const input = "mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
@@ -51,7 +52,7 @@ function SetupWizard() {
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [restored, setRestored] = useState(false);
   const [synced, setSynced] = useState<"idle" | "saving" | "synced" | "offline">("idle");
-  const applyDraft = (d: Record<string, unknown>) => {
+  const applyDraft = (d: Draft) => {
     if (Array.isArray(d.cats)) setCats(d.cats.filter((x: unknown): x is string => typeof x === "string").slice(0, 12));
     if (typeof d.name === "string") setName(d.name.slice(0, 80));
     if (typeof d.owner === "string") setOwner(d.owner.slice(0, 80));
@@ -64,15 +65,15 @@ function SetupWizard() {
     if (!draftKey || !session || loaded.current) return;
     let cancelled = false;
     (async () => {
-      let local: Record<string, unknown> | null = null;
+      let local: Draft | null = null;
       try { local = JSON.parse(localStorage.getItem(draftKey) ?? "null"); } catch { local = null; }
-      let remote: Record<string, unknown> | null = null;
+      let remote: Draft | null = null;
       try {
         const { data } = await supabase.from("wizard_drafts").select("data").eq("user_id", session.user.id).maybeSingle();
-        remote = (data?.data as Record<string, unknown> | undefined) ?? null;
+        remote = (data?.data as Draft | undefined) ?? null;
       } catch { remote = null; }
       if (cancelled) return;
-      const ts = (d: Record<string, unknown> | null) => (d && typeof d.ts === "number" ? d.ts : 0);
+      const ts = (d: Draft | null) => (d && typeof d.ts === "number" ? d.ts : 0);
       const pickD = ts(remote) > ts(local) ? remote : local;
       if (pickD && typeof pickD === "object") { applyDraft(pickD); setRestored(true); }
       loaded.current = true;
