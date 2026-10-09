@@ -1,4 +1,5 @@
 import { template as cancelRequestAdmin } from './cancel-request-admin'
+import { template as newOrderOwner } from './new-order-owner'
 import type { ComponentType } from 'react'
 
 export interface TemplateEntry {
@@ -20,6 +21,7 @@ export interface TemplateEntry {
  */
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'cancel-request-admin': cancelRequestAdmin,
+  'new-order-owner': newOrderOwner,
   // Add templates here as they are created, e.g.:
   // 'welcome': welcomeTemplate,
 }
