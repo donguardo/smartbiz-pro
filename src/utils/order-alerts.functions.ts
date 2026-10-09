@@ -9,7 +9,7 @@ export const sendTestOrderEmail = createServerFn({ method: "POST" })
   .handler(async ({ context }): Promise<{ ok: true }> => {
     const { data: ctx } = await context.supabase.rpc("get_my_shop_context");
     const row = Array.isArray(ctx) ? ctx[0] : ctx;
-    if (!row || row.role !== "owner") throw new Error("Owners only");
+    if (!row || row.member_role !== "owner") throw new Error("Owners only");
     const { data: u } = await context.supabase.auth.getUser();
     const email = u.user?.email;
     if (!email) throw new Error("No email on this account");
