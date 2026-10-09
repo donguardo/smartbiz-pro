@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSession } from "@/lib/auth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, Check, Hammer, Plus, Trash2, Upload, Download } from "lucide-react";
 import { parseProductCsv, SAMPLE_CSV, type CsvProduct, type CsvRow } from "@/lib/product-csv";
@@ -44,6 +45,43 @@ function SetupWizard() {
   const [busy, setBusy] = useState(false);
   const [tried, setTried] = useState<boolean[]>([false, false, false, false]);
   const [csvRows, setCsvRows] = useState<CsvRow[] | null>(null);
+  const { session } = useSession();
+  const draftKey = session ? `store-wizard-draft-v1:${session.user.id}` : null;
+  const loaded = useRef(false);
+  const [savedAt, setSavedAt] = useState<number | null>(null);
+  const [restored, setRestored] = useState(false);
+  useEffect(() => {
+    if (!draftKey || loaded.current) return;
+    loaded.current = true;
+    try {
+      const d = JSON.parse(localStorage.getItem(draftKey) ?? "null");
+      if (d && typeof d === "object") {
+        if (Array.isArray(d.cats)) setCats(d.cats.filter((x: unknown) => typeof x === "string").slice(0, 12));
+        if (typeof d.name === "string") setName(d.name.slice(0, 80));
+        if (typeof d.owner === "string") setOwner(d.owner.slice(0, 80));
+        if (typeof d.mobile === "string") setMobile(d.mobile.replace(/\D/g, "").slice(0, 11));
+        if (Array.isArray(d.items) && d.items.length) setItems(d.items.slice(0, 10).map((i: Item) => ({ name: String(i?.name ?? ""), price: String(i?.price ?? ""), stock: String(i?.stock ?? "0") })));
+        if (Array.isArray(d.csvRows)) setCsvRows(d.csvRows.slice(0, 500));
+        if (Number.isInteger(d.step) && d.step >= 0 && d.step <= 3) setStep(d.step);
+        setRestored(true);
+      }
+    } catch { /* ignore broken draft */ }
+  }, [draftKey]);
+  useEffect(() => {
+    if (!draftKey || !loaded.current) return;
+    const id = setTimeout(() => {
+      try {
+        localStorage.setItem(draftKey, JSON.stringify({ step, cats, name, owner, mobile, items, csvRows }));
+        setSavedAt(Date.now());
+      } catch { /* storage full or blocked */ }
+    }, 400);
+    return () => clearTimeout(id);
+  }, [draftKey, step, cats, name, owner, mobile, items, csvRows]);
+  const clearDraft = () => { if (draftKey) localStorage.removeItem(draftKey); };
+  const startOver = () => {
+    clearDraft(); setStep(0); setCats([]); setName(""); setOwner(""); setMobile(""); setItems([{ ...blank }]); setCsvRows(null);
+    setTried([false, false, false, false]); setRestored(false);
+  };
 
   if (shop && shop.member_role !== "owner") return <div className="p-6 text-muted-foreground">{t("stores.ownerOnly")}</div>;
   const maxCats = plan?.plan === "basic" ? 1 : 12;
@@ -128,6 +166,7 @@ function SetupWizard() {
       }
       await qc.invalidateQueries();
       toast.success(t("stores.created"));
+      clearDraft();
       navigate({ to: "/dashboard" });
     } catch (e) { toast.error(storeErrorMessage(e, t)); }
     finally { setBusy(false); }
@@ -138,6 +177,10 @@ function SetupWizard() {
       <div className="flex items-center justify-between gap-3">
         <h1 className="flex items-center gap-2 text-2xl font-bold"><Hammer className="h-6 w-6 text-primary" />{t("wizard.title")}</h1>
         <Link to="/stores" className="text-sm text-muted-foreground underline">{t("wizard.cancel")}</Link>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground" aria-live="polite">
+        <span>{restored ? t("wizard.restored") + " · " : ""}{savedAt ? t("wizard.autosaved") : t("wizard.autosaveOn")}</span>
+        <button type="button" onClick={() => { if (confirm(t("wizard.startOverConfirm"))) startOver(); }} className="underline">{t("wizard.startOver")}</button>
       </div>
 
       <ol className="grid grid-cols-4 gap-2">
@@ -203,6 +246,27 @@ function SetupWizard() {
               {csvRows && (
                 <div className="text-sm">
                   <p className="text-primary">{t("wizard.csvReady", { n: String(csvGood.length) })}</p>
+                  {csvGood.length > 0 && (
+                    <div className="mt-2 max-h-72 overflow-auto rounded-md border border-border">
+                      <table className="w-full text-left text-xs">
+                        <caption className="sr-only">{t("wizard.csvPreview")}</caption>
+                        <thead className="sticky top-0 bg-muted">
+                          <tr><th className="px-2 py-1.5">{t("wizard.pName")}</th><th className="px-2 py-1.5 text-right">{t("wizard.pPrice")}</th><th className="px-2 py-1.5 text-right">{t("wizard.pStock")}</th><th className="px-2 py-1.5">{t("wizard.s1")}</th></tr>
+                        </thead>
+                        <tbody>
+                          {csvGood.map((p, i) => (
+                            <tr key={i} className="border-t border-border">
+                              <td className="px-2 py-1.5">{p.name}</td>
+                              <td className="px-2 py-1.5 text-right">{p.price.toLocaleString("en-PH", { minimumFractionDigits: 2 })}</td>
+                              <td className="px-2 py-1.5 text-right">{p.track_stock ? `${p.stock_qty} ${p.unit}` : "—"}</td>
+                              <td className="px-2 py-1.5">{p.category || <span className="text-muted-foreground">{cats[0] ?? "General"} *</span>}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                  {csvGood.some((p) => !p.category) && <p className="mt-1 text-xs text-muted-foreground">{t("wizard.csvDefaultCat")}</p>}
                   {csvBad.length > 0 && (
                     <div role="alert" className="mt-2 rounded-md border border-destructive/50 bg-destructive/10 p-2 text-xs">
                       <p className="font-semibold text-destructive">{t("wizard.csvBad", { n: String(csvBad.length) })}</p>
