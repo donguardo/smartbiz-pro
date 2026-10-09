@@ -61,9 +61,17 @@ function Landing() {
           </nav>
           <div className="hidden items-center gap-2 sm:flex">
             {session && (
-              <Link to="/dashboard" className="inline-flex items-center gap-1.5 rounded-lg border border-primary/50 bg-primary/10 px-3 py-2 text-sm font-semibold text-primary hover:bg-primary/20">
-                <Store className="h-4 w-4" />{t("nav.goToStore")}
-              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="inline-flex items-center gap-1.5 rounded-lg border border-primary/50 bg-primary/10 px-3 py-2 text-sm font-semibold text-primary hover:bg-primary/20">
+                    <Store className="h-4 w-4" />{t("nav.goToStore")}<ChevronDown className="h-3.5 w-3.5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52 p-2">
+                  <DropdownMenuItem asChild><Link to="/dashboard"><Store className="h-4 w-4" />{t("nav.myStore")}</Link></DropdownMenuItem>
+                  <DropdownMenuItem asChild><Link to="/stores"><Hammer className="h-4 w-4" />{t("nav.storeBuilder")}</Link></DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
             <Button variant="ghost" size="sm" onClick={openInstallPrompt} aria-label={t("install.open")} title={t("install.open")}>
               <Download className="h-4 w-4" /><span className="hidden lg:inline">{t("install.open")}</span>
@@ -80,7 +88,10 @@ function Landing() {
               <div className="flex items-center justify-between gap-2 p-1"><LanguageToggle /></div>
               <DropdownMenuSeparator />
               {session && (
-                <DropdownMenuItem asChild><Link to="/dashboard" className="font-semibold text-primary"><Store className="h-4 w-4" />{t("nav.goToStore")}</Link></DropdownMenuItem>
+                <>
+                  <DropdownMenuItem asChild><Link to="/dashboard" className="font-semibold text-primary"><Store className="h-4 w-4" />{t("nav.myStore")}</Link></DropdownMenuItem>
+                  <DropdownMenuItem asChild><Link to="/stores" className="font-semibold text-primary"><Hammer className="h-4 w-4" />{t("nav.storeBuilder")}</Link></DropdownMenuItem>
+                </>
               )}
               <DropdownMenuItem onSelect={openInstallPrompt}><Download className="h-4 w-4" />{t("install.open")}</DropdownMenuItem>
                <DropdownMenuItem asChild><Link to="/showcase">{t("nav.showcase")}</Link></DropdownMenuItem>
