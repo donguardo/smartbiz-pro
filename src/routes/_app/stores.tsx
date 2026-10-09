@@ -10,6 +10,7 @@ import { fetchMyPlan, fetchShopContext, qk } from "@/lib/store";
 import { storeErrorMessage, storesKey, useMyStores, useSwitchStore } from "@/lib/stores";
 import { BusinessProfile } from "@/components/BusinessProfile";
 import { SkuBuilderButton } from "@/components/SkuBuilderButton";
+import { StorefrontPanel } from "@/components/StorefrontPanel";
 
 export const Route = createFileRoute("/_app/stores")({
   head: () => ({
@@ -133,6 +134,7 @@ function StoreBuilder() {
         )}
       </section>
 
+      {shop?.shop_id && <StorefrontPanel shopId={shop.shop_id} isOwner />}
       {shop?.shop_id && <BusinessProfile shopId={shop.shop_id} />}
     </div>
   );

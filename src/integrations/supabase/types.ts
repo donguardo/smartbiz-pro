@@ -1146,6 +1146,8 @@ export type Database = {
           mobile: string | null
           name: string
           owner_name: string | null
+          slug: string | null
+          storefront_enabled: boolean
           stripe_customer_id: string | null
           updated_at: string
         }
@@ -1162,6 +1164,8 @@ export type Database = {
           mobile?: string | null
           name?: string
           owner_name?: string | null
+          slug?: string | null
+          storefront_enabled?: boolean
           stripe_customer_id?: string | null
           updated_at?: string
         }
@@ -1178,6 +1182,8 @@ export type Database = {
           mobile?: string | null
           name?: string
           owner_name?: string | null
+          slug?: string | null
+          storefront_enabled?: boolean
           stripe_customer_id?: string | null
           updated_at?: string
         }
@@ -1295,6 +1301,108 @@ export type Database = {
           },
           {
             foreignKeyName: "stock_movements_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      storefront_order_items: {
+        Row: {
+          id: string
+          name: string
+          order_id: string
+          price: number
+          product_id: string | null
+          qty: number
+          shop_id: string
+          unit: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          order_id: string
+          price: number
+          product_id?: string | null
+          qty: number
+          shop_id: string
+          unit: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          order_id?: string
+          price?: number
+          product_id?: string | null
+          qty?: number
+          shop_id?: string
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storefront_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "storefront_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "storefront_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "storefront_order_items_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      storefront_orders: {
+        Row: {
+          created_at: string
+          customer_mobile: string
+          customer_name: string
+          id: string
+          note: string | null
+          order_no: string
+          shop_id: string
+          status: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_mobile: string
+          customer_name: string
+          id?: string
+          note?: string | null
+          order_no: string
+          shop_id: string
+          status?: string
+          total: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_mobile?: string
+          customer_name?: string
+          id?: string
+          note?: string | null
+          order_no?: string
+          shop_id?: string
+          status?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storefront_orders_shop_id_fkey"
             columns: ["shop_id"]
             isOneToOne: false
             referencedRelation: "shops"
@@ -1844,6 +1952,13 @@ export type Database = {
           shop_name: string
         }[]
       }
+      get_my_storefront: {
+        Args: never
+        Returns: {
+          slug: string
+          storefront_enabled: boolean
+        }[]
+      }
       get_my_usage: {
         Args: never
         Returns: {
@@ -1933,7 +2048,36 @@ export type Database = {
       }
       my_owned_account: { Args: never; Returns: string }
       payments_env: { Args: never; Returns: string }
+      place_storefront_order: {
+        Args: {
+          _items: Json
+          _mobile: string
+          _name: string
+          _note: string
+          _slug: string
+        }
+        Returns: string
+      }
       plan_for_lookup_key: { Args: { _key: string }; Returns: string }
+      public_storefront: {
+        Args: { _slug: string }
+        Returns: {
+          categories: string[]
+          shop_name: string
+          slug: string
+        }[]
+      }
+      public_storefront_products: {
+        Args: { _slug: string }
+        Returns: {
+          category: string
+          id: string
+          in_stock: boolean
+          name: string
+          price: number
+          unit: string
+        }[]
+      }
       receive_purchase_order: {
         Args: { _order_id: string }
         Returns: undefined
@@ -1959,6 +2103,14 @@ export type Database = {
       remove_shop_cashier: { Args: { _member_id: string }; Returns: undefined }
       request_cancellation: { Args: { _reason: string }; Returns: string }
       seed_sample_store: { Args: never; Returns: undefined }
+      set_my_storefront: {
+        Args: { _enabled: boolean; _slug: string }
+        Returns: string
+      }
+      set_storefront_order_status: {
+        Args: { _id: string; _status: string }
+        Returns: undefined
+      }
       shop_has_access: { Args: { _shop_id: string }; Returns: boolean }
       shop_has_access_unchecked: {
         Args: { _shop_id: string }
@@ -1968,6 +2120,10 @@ export type Database = {
       shop_plan: { Args: { _shop_id: string }; Returns: string }
       shop_plan_unchecked: { Args: { _shop_id: string }; Returns: string }
       shop_shows_brand_ads: { Args: { _shop_id: string }; Returns: boolean }
+      storefront_unique_slug: {
+        Args: { _name: string; _shop: string }
+        Returns: string
+      }
       subscription_is_paid: {
         Args: { _s: Database["public"]["Tables"]["subscriptions"]["Row"] }
         Returns: boolean
