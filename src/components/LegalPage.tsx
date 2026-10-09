@@ -33,12 +33,8 @@ export function LegalPage({ title, updated, intro, sections }: { title: string; 
           {sections.map((section, i) => (
             <section key={section.title || `section-${i}`}>
               {section.title && <h2 className="text-xl font-semibold">{section.title}</h2>}
-              {section.title && section.body && section.body.length > 0 && <p className="mt-3 max-w-3xl leading-7 text-muted-foreground first-of-type:mt-0">{section.body.split("\n\n")[0]}</p>}
-              {section.title && section.body && section.body.includes("\n\n") && section.body.split("\n\n").slice(1).map((para, j) => (
-                <p key={j} className="mt-3 max-w-3xl leading-7 text-muted-foreground">{para}</p>
-              ))}
-              {section.body.split("\n\n").map((para, i) => (
-                <p key={i} className="mt-3 max-w-3xl leading-7 text-muted-foreground">{para}</p>
+              {section.body.split("\n\n").map((para, j) => (
+                <p key={j} className={j === 0 && !section.title && section.items ? "mt-4 max-w-3xl font-medium leading-7 text-foreground" : "mt-3 max-w-3xl leading-7 text-muted-foreground"}>{para}</p>
               ))}
               {section.items && (
                 <ul className="mt-3 max-w-3xl list-disc space-y-1.5 pl-5 leading-7 text-muted-foreground">
