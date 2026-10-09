@@ -1,4 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { notifyNewStorefrontOrder } from "@/utils/order-alerts.functions";
 import { useMemo, useState } from "react";
 import { Minus, Plus, Search, ShoppingBag, Store, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -89,6 +90,7 @@ function Storefront() {
       return setErr(t((code && ERRORS[code]) || "sf.err.generic"));
     }
     setDone(data as string);
+    void notifyNewStorefrontOrder({ data: { slug: store.slug, orderNo: data as string } }).catch(() => {});
     setCart({});
   };
 
