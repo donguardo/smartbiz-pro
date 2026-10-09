@@ -135,8 +135,8 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function BizBotOutsideAuth() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  // /orangeware, /blockhole and /loop are full-screen embeds of another app: the floating bot would sit on top of them.
-  if (pathname.startsWith("/auth") || pathname.startsWith("/orangeware") || pathname.startsWith("/blockhole") || pathname.startsWith("/loop")) return null;
+  // /orangeware, /blockhole, /loop and /etherneom are full-screen embeds of another app: the floating bot would sit on top of them.
+  if (pathname.startsWith("/auth") || pathname.startsWith("/orangeware") || pathname.startsWith("/blockhole") || pathname.startsWith("/loop") || pathname.startsWith("/etherneom")) return null;
   return <FloatingBizBot />;
 }
 
