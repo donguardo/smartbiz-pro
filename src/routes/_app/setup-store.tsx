@@ -50,34 +50,54 @@ function SetupWizard() {
   const loaded = useRef(false);
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [restored, setRestored] = useState(false);
+  const [synced, setSynced] = useState<"idle" | "saving" | "synced" | "offline">("idle");
+  const applyDraft = (d: Record<string, unknown>) => {
+    if (Array.isArray(d.cats)) setCats(d.cats.filter((x: unknown): x is string => typeof x === "string").slice(0, 12));
+    if (typeof d.name === "string") setName(d.name.slice(0, 80));
+    if (typeof d.owner === "string") setOwner(d.owner.slice(0, 80));
+    if (typeof d.mobile === "string") setMobile(d.mobile.replace(/\D/g, "").slice(0, 11));
+    if (Array.isArray(d.items) && d.items.length) setItems((d.items as Item[]).slice(0, 10).map((i) => ({ name: String(i?.name ?? ""), price: String(i?.price ?? ""), stock: String(i?.stock ?? "0") })));
+    if (Array.isArray(d.csvRows)) setCsvRows((d.csvRows as CsvRow[]).slice(0, 500));
+    if (Number.isInteger(d.step) && (d.step as number) >= 0 && (d.step as number) <= 3) setStep(d.step as number);
+  };
   useEffect(() => {
-    if (!draftKey || loaded.current) return;
-    loaded.current = true;
-    try {
-      const d = JSON.parse(localStorage.getItem(draftKey) ?? "null");
-      if (d && typeof d === "object") {
-        if (Array.isArray(d.cats)) setCats(d.cats.filter((x: unknown) => typeof x === "string").slice(0, 12));
-        if (typeof d.name === "string") setName(d.name.slice(0, 80));
-        if (typeof d.owner === "string") setOwner(d.owner.slice(0, 80));
-        if (typeof d.mobile === "string") setMobile(d.mobile.replace(/\D/g, "").slice(0, 11));
-        if (Array.isArray(d.items) && d.items.length) setItems(d.items.slice(0, 10).map((i: Item) => ({ name: String(i?.name ?? ""), price: String(i?.price ?? ""), stock: String(i?.stock ?? "0") })));
-        if (Array.isArray(d.csvRows)) setCsvRows(d.csvRows.slice(0, 500));
-        if (Number.isInteger(d.step) && d.step >= 0 && d.step <= 3) setStep(d.step);
-        setRestored(true);
-      }
-    } catch { /* ignore broken draft */ }
-  }, [draftKey]);
-  useEffect(() => {
-    if (!draftKey || !loaded.current) return;
-    const id = setTimeout(() => {
+    if (!draftKey || !session || loaded.current) return;
+    let cancelled = false;
+    (async () => {
+      let local: Record<string, unknown> | null = null;
+      try { local = JSON.parse(localStorage.getItem(draftKey) ?? "null"); } catch { local = null; }
+      let remote: Record<string, unknown> | null = null;
       try {
-        localStorage.setItem(draftKey, JSON.stringify({ step, cats, name, owner, mobile, items, csvRows }));
-        setSavedAt(Date.now());
-      } catch { /* storage full or blocked */ }
+        const { data } = await supabase.from("wizard_drafts").select("data").eq("user_id", session.user.id).maybeSingle();
+        remote = (data?.data as Record<string, unknown> | undefined) ?? null;
+      } catch { remote = null; }
+      if (cancelled) return;
+      const ts = (d: Record<string, unknown> | null) => (d && typeof d.ts === "number" ? d.ts : 0);
+      const pickD = ts(remote) > ts(local) ? remote : local;
+      if (pickD && typeof pickD === "object") { applyDraft(pickD); setRestored(true); }
+      loaded.current = true;
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftKey, session]);
+  useEffect(() => {
+    if (!draftKey || !session || !loaded.current) return;
+    const payload = { v: 1, ts: Date.now(), step, cats, name, owner, mobile, items, csvRows };
+    const localId = setTimeout(() => {
+      try { localStorage.setItem(draftKey, JSON.stringify(payload)); setSavedAt(Date.now()); } catch { /* storage blocked */ }
     }, 400);
-    return () => clearTimeout(id);
-  }, [draftKey, step, cats, name, owner, mobile, items, csvRows]);
-  const clearDraft = () => { if (draftKey) localStorage.removeItem(draftKey); };
+    const remoteId = setTimeout(async () => {
+      if (!navigator.onLine) { setSynced("offline"); return; }
+      setSynced("saving");
+      const { error } = await supabase.from("wizard_drafts").upsert({ user_id: session.user.id, data: payload as never }, { onConflict: "user_id" });
+      setSynced(error ? "offline" : "synced");
+    }, 1500);
+    return () => { clearTimeout(localId); clearTimeout(remoteId); };
+  }, [draftKey, session, step, cats, name, owner, mobile, items, csvRows]);
+  const clearDraft = () => {
+    if (draftKey) localStorage.removeItem(draftKey);
+    if (session) void supabase.from("wizard_drafts").delete().eq("user_id", session.user.id);
+  };
   const startOver = () => {
     clearDraft(); setStep(0); setCats([]); setName(""); setOwner(""); setMobile(""); setItems([{ ...blank }]); setCsvRows(null);
     setTried([false, false, false, false]); setRestored(false);
@@ -119,12 +139,27 @@ function SetupWizard() {
     mobile: mobile !== "" && !/^09\d{9}$/.test(mobile) ? t("wizard.mobileInvalid") : "",
   };
   const rowErrs = items.map(itemErr);
-  const csvGood: CsvProduct[] = (csvRows ?? []).flatMap((r) => (r.data && !r.errors.length ? [r.data] : []));
+  const csvGoodRows = (csvRows ?? []).filter((r) => r.data && !r.errors.length);
+  const csvGood: CsvProduct[] = csvGoodRows.map((r) => r.data!);
+  const csvEditErr = (p: CsvProduct, idx: number) => {
+    if (!p.name.trim()) return t("wizard.err.pName");
+    if (p.name.length > 120) return t("wizard.err.long");
+    if (csvGood.some((x, j) => j < idx && x.name.trim().toLowerCase() === p.name.trim().toLowerCase())) return t("wizard.err.dup");
+    if (!Number.isFinite(p.price) || p.price < 0 || p.price > 10_000_000) return t("wizard.err.priceInvalid");
+    if (!Number.isFinite(p.stock_qty) || p.stock_qty < 0 || p.stock_qty > 1_000_000) return t("wizard.err.stock");
+    if (p.category.length > 40) return t("wizard.err.long");
+    return "";
+  };
+  const csvEditErrs = csvGood.map(csvEditErr);
+  const editCsv = (line: number, patch: Partial<CsvProduct>) =>
+    setCsvRows((rows) => (rows ?? []).map((r) => (r.line === line && r.data ? { ...r, data: { ...r.data, ...patch } } : r)));
+  const removeCsv = (line: number) => setCsvRows((rows) => { const next = (rows ?? []).filter((r) => r.line !== line); return next.length ? next : null; });
+  const formulaSafe = (v: string) => v.replace(/^[=+\-@\t\r]+/, "");
   const csvBad = (csvRows ?? []).filter((r) => r.errors.length);
   const stepErrors = [
     errs.cat ? [errs.cat] : [],
     [errs.name, errs.owner, errs.mobile].filter(Boolean),
-    [...rowErrs.flatMap((e) => Object.values(e)), ...(csvBad.length ? [t("wizard.err.csv")] : [])],
+    [...rowErrs.flatMap((e) => Object.values(e)), ...(csvBad.length ? [t("wizard.err.csv")] : []), ...csvEditErrs.filter(Boolean)],
     [],
   ];
   const validItems = items.filter((i, idx) => filled(i) && !Object.keys(itemErr(i, idx)).length);
@@ -179,7 +214,7 @@ function SetupWizard() {
         <Link to="/stores" className="text-sm text-muted-foreground underline">{t("wizard.cancel")}</Link>
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground" aria-live="polite">
-        <span>{restored ? t("wizard.restored") + " · " : ""}{savedAt ? t("wizard.autosaved") : t("wizard.autosaveOn")}</span>
+        <span>{restored ? t("wizard.restored") + " · " : ""}{savedAt ? t("wizard.autosaved") : t("wizard.autosaveOn")}{synced === "synced" ? " · " + t("wizard.synced") : synced === "saving" ? " · " + t("wizard.syncing") : synced === "offline" ? " · " + t("wizard.syncOffline") : ""}</span>
         <button type="button" onClick={() => { if (confirm(t("wizard.startOverConfirm"))) startOver(); }} className="underline">{t("wizard.startOver")}</button>
       </div>
 
@@ -251,17 +286,25 @@ function SetupWizard() {
                       <table className="w-full text-left text-xs">
                         <caption className="sr-only">{t("wizard.csvPreview")}</caption>
                         <thead className="sticky top-0 bg-muted">
-                          <tr><th className="px-2 py-1.5">{t("wizard.pName")}</th><th className="px-2 py-1.5 text-right">{t("wizard.pPrice")}</th><th className="px-2 py-1.5 text-right">{t("wizard.pStock")}</th><th className="px-2 py-1.5">{t("wizard.s1")}</th></tr>
+                          <tr><th className="px-2 py-1.5">{t("wizard.pName")}</th><th className="px-2 py-1.5">{t("wizard.pPrice")}</th><th className="px-2 py-1.5">{t("wizard.pStock")}</th><th className="px-2 py-1.5">{t("wizard.s1")}</th><th className="px-1 py-1.5"><span className="sr-only">{t("showcase.remove")}</span></th></tr>
                         </thead>
                         <tbody>
-                          {csvGood.map((p, i) => (
-                            <tr key={i} className="border-t border-border">
-                              <td className="px-2 py-1.5">{p.name}</td>
-                              <td className="px-2 py-1.5 text-right">{p.price.toLocaleString("en-PH", { minimumFractionDigits: 2 })}</td>
-                              <td className="px-2 py-1.5 text-right">{p.track_stock ? `${p.stock_qty} ${p.unit}` : "—"}</td>
-                              <td className="px-2 py-1.5">{p.category || <span className="text-muted-foreground">{cats[0] ?? "General"} *</span>}</td>
-                            </tr>
-                          ))}
+                          {csvGoodRows.map((row, i) => {
+                            const p = row.data!; const e = csvEditErrs[i];
+                            const cell = "w-full min-w-0 rounded border bg-background px-1.5 py-1 text-xs " + (e ? "border-destructive" : "border-input");
+                            return (
+                              <tr key={row.line} className="border-t border-border align-top">
+                                <td className="px-1 py-1 min-w-[8rem]">
+                                  <input aria-label={`${t("wizard.pName")} ${t("wizard.csvLine", { n: String(row.line) })}`} value={p.name} maxLength={120} onChange={(ev) => editCsv(row.line, { name: formulaSafe(ev.target.value) })} className={cell} />
+                                  {e && <p role="alert" className="mt-0.5 text-[11px] text-destructive">{e}</p>}
+                                </td>
+                                <td className="px-1 py-1 w-20"><input aria-label={t("wizard.pPrice")} inputMode="decimal" value={String(p.price)} onChange={(ev) => { const v = ev.target.value.replace(/[^\d.]/g, ""); editCsv(row.line, { price: v === "" ? NaN : Number(v) }); }} className={cell} /></td>
+                                <td className="px-1 py-1 w-16"><input aria-label={t("wizard.pStock")} inputMode="decimal" disabled={!p.track_stock} value={p.track_stock ? String(p.stock_qty) : "—"} onChange={(ev) => { const v = ev.target.value.replace(/[^\d.]/g, ""); editCsv(row.line, { stock_qty: v === "" ? 0 : Number(v) }); }} className={cell} /></td>
+                                <td className="px-1 py-1 min-w-[6rem]"><input aria-label={t("wizard.s1")} value={p.category} maxLength={40} placeholder={`${cats[0] ?? "General"} *`} onChange={(ev) => editCsv(row.line, { category: formulaSafe(ev.target.value) })} className={cell} /></td>
+                                <td className="px-1 py-1"><button type="button" aria-label={`${t("showcase.remove")} ${p.name}`} onClick={() => removeCsv(row.line)} className="flex h-7 w-7 items-center justify-center rounded border border-border hover:bg-muted"><Trash2 className="h-3.5 w-3.5" /></button></td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
