@@ -4,6 +4,8 @@ export type Lang = "en" | "tl";
 export const DICT: Record<string, { en: string; tl: string }> = {
   "nav.demo": { en: "Live demo", tl: "Live demo" },
   "nav.goToStore": { en: "Go to Store", tl: "Pumunta sa Tindahan" },
+  "nav.myStore": { en: "Open my store", tl: "Buksan ang tindahan ko" },
+  "nav.storeBuilder": { en: "Store Builder", tl: "Store Builder" },
   "nav.setup": { en: "Setup guide", tl: "Gabay sa pag-setup" },
   "nav.pricing": { en: "Pricing", tl: "Presyo" },
   "cta.getStarted": { en: "Get started", tl: "Magsimula" },
