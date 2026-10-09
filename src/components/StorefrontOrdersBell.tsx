@@ -56,7 +56,7 @@ export function StorefrontOrdersBell({ className = "" }: { className?: string })
               ))}
             </ul>
           )}
-          <Link to="/store-builder" onClick={() => setOpen(false)} className="mt-2 block text-center text-sm font-semibold text-primary underline">Manage orders</Link>
+          <Link to="/stores" onClick={() => setOpen(false)} className="mt-2 block text-center text-sm font-semibold text-primary underline">Manage orders</Link>
         </div>
       )}
     </div>
