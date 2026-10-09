@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Copy, ExternalLink, Globe, Share2 } from "lucide-react";
+import { Copy, ExternalLink, Globe, Mail, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,18 @@ export function StorefrontPanel({ shopId, isOwner }: { shopId: string; isOwner: 
   });
   const [slug, setSlug] = useState("");
   const [busy, setBusy] = useState(false);
+  const [testBusy, setTestBusy] = useState(false);
+  const sendTest = async () => {
+    setTestBusy(true);
+    try {
+      const { sendTestOrderEmail } = await import("@/utils/order-alerts.functions");
+      await sendTestOrderEmail();
+      toast.success(t("sf.owner.testEmailSent"));
+    } catch {
+      toast.error(t("sf.owner.testEmailFailed"));
+    }
+    setTestBusy(false);
+  };
   useEffect(() => { if (sf?.slug) setSlug(sf.slug); }, [sf?.slug]);
 
   if (!sf) return null;
@@ -91,6 +103,9 @@ export function StorefrontPanel({ shopId, isOwner }: { shopId: string; isOwner: 
           <Button variant="outline" disabled={busy || slug === sf.slug} onClick={() => save(sf.storefront_enabled)}>{t("sf.owner.saveLink")}</Button>
           <Button variant={sf.storefront_enabled ? "outline" : "default"} disabled={busy} onClick={() => save(!sf.storefront_enabled, sf.slug)}>
             {sf.storefront_enabled ? t("sf.owner.turnOff") : t("sf.owner.turnOn")}
+          </Button>
+          <Button variant="outline" disabled={testBusy} onClick={sendTest}>
+            <Mail className="h-4 w-4" />{t("sf.owner.testEmail")}
           </Button>
         </div>
       )}

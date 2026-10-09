@@ -1,5 +1,35 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+// Owner-only: sends a sample new-order email to the signed-in owner's own address
+// so they can verify alerts before sharing their storefront link.
+export const sendTestOrderEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ ok: true }> => {
+    const { data: ctx } = await context.supabase.rpc("get_my_shop_context");
+    const row = Array.isArray(ctx) ? ctx[0] : ctx;
+    if (!row || row.member_role !== "owner") throw new Error("Owners only");
+    const { data: u } = await context.supabase.auth.getUser();
+    const email = u.user?.email;
+    if (!email) throw new Error("No email on this account");
+    const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+    await sendTemplateEmail("new-order-owner", email, {
+      templateData: {
+        shop: row.shop_name ?? "My Store",
+        orderNo: "TEST-0001",
+        customer: "Juan Dela Cruz",
+        note: "This is a test order email.",
+        total: "₱250.00",
+        items: [
+          { name: "Sample product A", qty: 2, unit: "pcs" },
+          { name: "Sample product B", qty: 1, unit: "pcs" },
+        ],
+      },
+      idempotencyKey: `test-order-email-${context.userId}-${Date.now()}`,
+    });
+    return { ok: true };
+  });
 
 // Public: called by the storefront right after an order is placed. It returns nothing,
 // only acts on a real order created in the last 10 minutes, and each order emails at most once.
