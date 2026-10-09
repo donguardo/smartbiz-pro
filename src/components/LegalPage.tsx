@@ -10,6 +10,8 @@ export type LegalSection = {
   items?: string[];
   /** Optional inline link rendered after the paragraphs/list. */
   link?: { to: string; label: string };
+  /** Optional external link rendered after the paragraphs/list. */
+  externalLink?: { href: string; label: string };
   email?: string;
 };
 
@@ -42,6 +44,7 @@ export function LegalPage({ title, updated, intro, sections }: { title: string; 
                 </ul>
               )}
               {section.link && <Link className="mt-3 inline-block font-semibold text-primary underline" to={section.link.to}>{section.link.label}</Link>}
+              {section.externalLink && <a className="mt-3 inline-block font-semibold text-primary underline" href={section.externalLink.href} target="_blank" rel="noopener noreferrer">{section.externalLink.label}</a>}
               {section.email && <a className="mt-2 inline-block font-semibold text-primary underline" href={`mailto:${section.email}`}>{section.email}</a>}
             </section>
           ))}
