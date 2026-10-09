@@ -323,6 +323,13 @@
       "when": 1791536164296,
       "tag": "0045_wizard_drafts",
       "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1791536306166,
+      "tag": "0046_delete_wizard_draft_on_account_deletion",
+      "breakpoints": true
     }
   ]
 }
