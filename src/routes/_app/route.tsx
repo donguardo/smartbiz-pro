@@ -8,6 +8,7 @@ import { ThemeToggle, syncThemeFromAccount } from "@/lib/theme";
 import { LanguageToggle, useT } from "@/lib/i18n";
 import { StoreIdentity } from "@/components/StoreIdentity";
 import { StockAlertsBell } from "@/components/StockAlerts";
+import { StorefrontOrdersBell } from "@/components/StorefrontOrdersBell";
 import { BillingFailureAlert } from "@/components/BillingDiagnostics";
 import { useShopProfile } from "@/lib/shop-profile";
 import { fetchMyPlan, fetchProfile, fetchShopContext, qk } from "@/lib/store";
@@ -100,7 +101,7 @@ function AppLayout() {
             {t("app.plan")}: <span className="font-semibold text-foreground">{!myPlan ? "…" : trialDays !== null ? t("plan.trialSidebar", { label: myPlan.label, n: String(trialDays) }) : t("plan.sidebar", { label: myPlan.label, price: myPlan.monthly_price_php.toLocaleString("en-PH") })}</span>
           </div>
           <div className="flex items-center gap-2">
-            {shop?.member_role === "owner" && <StockAlertsBell />}
+            {shop?.member_role === "owner" && <><StorefrontOrdersBell /><StockAlertsBell /></>}
             <ThemeToggle />
             <button onClick={signOut} className="flex h-9 flex-1 items-center justify-center gap-2 rounded-lg border border-border text-sm hover:bg-muted">
               <LogOut className="h-4 w-4" /> {t("app.signOut")}
@@ -117,7 +118,7 @@ function AppLayout() {
           <div className="ml-auto flex shrink-0 items-center gap-1">
           {shop?.member_role === "owner" && <StoreSwitcher />}
           {shop?.member_role === "owner" && <HammerLink />}
-          {shop?.member_role === "owner" && <StockAlertsBell />}
+          {shop?.member_role === "owner" && <><StorefrontOrdersBell /><StockAlertsBell /></>}
           <Button variant="ghost" size="icon" onClick={openInstallPrompt} aria-label={t("install.open")} title={t("install.open")}>
             <Download className="h-4 w-4" />
           </Button>
