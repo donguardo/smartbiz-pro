@@ -60,6 +60,11 @@ function Landing() {
             <a href="#pricing" className="hover:text-foreground">{t("nav.pricing")}</a>
           </nav>
           <div className="hidden items-center gap-2 sm:flex">
+            {session && (
+              <Link to="/dashboard" className="inline-flex items-center gap-1.5 rounded-lg border border-primary/50 bg-primary/10 px-3 py-2 text-sm font-semibold text-primary hover:bg-primary/20">
+                <Store className="h-4 w-4" />{t("nav.goToStore")}
+              </Link>
+            )}
             <Button variant="ghost" size="sm" onClick={openInstallPrompt} aria-label={t("install.open")} title={t("install.open")}>
               <Download className="h-4 w-4" /><span className="hidden lg:inline">{t("install.open")}</span>
             </Button>
@@ -74,6 +79,9 @@ function Landing() {
             <DropdownMenuContent align="end" className="w-56 p-2">
               <div className="flex items-center justify-between gap-2 p-1"><LanguageToggle /></div>
               <DropdownMenuSeparator />
+              {session && (
+                <DropdownMenuItem asChild><Link to="/dashboard" className="font-semibold text-primary"><Store className="h-4 w-4" />{t("nav.goToStore")}</Link></DropdownMenuItem>
+              )}
               <DropdownMenuItem onSelect={openInstallPrompt}><Download className="h-4 w-4" />{t("install.open")}</DropdownMenuItem>
                <DropdownMenuItem asChild><Link to="/showcase">{t("nav.showcase")}</Link></DropdownMenuItem>
               <DropdownMenuItem asChild><Link to="/auth" className="font-semibold">{t("cta.getStarted")}</Link></DropdownMenuItem>

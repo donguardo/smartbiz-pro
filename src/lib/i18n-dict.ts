@@ -3,6 +3,7 @@ export type Lang = "en" | "tl";
 // Built-in fallback. The live copy is served from the backend `translations` table.
 export const DICT: Record<string, { en: string; tl: string }> = {
   "nav.demo": { en: "Live demo", tl: "Live demo" },
+  "nav.goToStore": { en: "Go to Store", tl: "Pumunta sa Tindahan" },
   "nav.setup": { en: "Setup guide", tl: "Gabay sa pag-setup" },
   "nav.pricing": { en: "Pricing", tl: "Presyo" },
   "cta.getStarted": { en: "Get started", tl: "Magsimula" },
