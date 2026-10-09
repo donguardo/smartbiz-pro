@@ -28,13 +28,15 @@ export function LegalPage({ title, updated, intro, sections }: { title: string; 
         <p className="font-mono text-xs uppercase text-primary">Legal</p>
         <h1 className="mt-2 text-3xl font-bold sm:text-5xl">{title}</h1>
         <p className="mt-3 text-sm text-muted-foreground">Last updated: {updated}</p>
-        <p className="mt-8 max-w-3xl text-base leading-7 text-muted-foreground">{intro}</p>
+        {intro.split("\n\n").map((para, i) => (
+          <p key={i} className="mt-8 max-w-3xl text-base leading-7 text-muted-foreground first:mt-8">{para}</p>
+        ))}
         <div className="mt-10 space-y-10">
           {sections.map((section, i) => (
             <section key={section.title || `section-${i}`}>
               {section.title && <h2 className="text-xl font-semibold">{section.title}</h2>}
               {(section.body ?? "").split("\n\n").map((para, j) => (
-                <p key={j} className={j === 0 && !section.title && section.items ? "mt-4 max-w-3xl font-medium leading-7 text-foreground" : "mt-3 max-w-3xl leading-7 text-muted-foreground"}>{para}</p>
+                <p key={j} className={(j === 0 && !section.title && section.items) || (section.title && section.items && j > 0) ? "mt-4 max-w-3xl font-medium leading-7 text-foreground" : "mt-3 max-w-3xl leading-7 text-muted-foreground"}>{para}</p>
               ))}
               {section.items && (
                 <ul className="mt-3 max-w-3xl list-disc space-y-1.5 pl-5 leading-7 text-muted-foreground">
