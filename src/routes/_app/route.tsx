@@ -109,16 +109,18 @@ function AppLayout() {
         </div>
       </aside>
 
-      <header className="sticky top-0 z-20 flex items-center justify-between gap-1 border-b border-border bg-card/95 px-3 py-3 backdrop-blur-md md:hidden">
-        <StoreIdentity name={businessName} logoSrc={business?.logoSrc} />
-        <div className="flex shrink-0 gap-1">
-          {shop?.member_role === "owner" && <StoreSwitcher className="hidden min-[440px]:block" />}
+      <header className="sticky top-0 z-20 border-b border-border bg-card/95 px-3 pt-2 pb-2 backdrop-blur-md md:hidden">
+        <div className="flex min-w-0 items-center">
+          <StoreIdentity name={businessName} logoSrc={business?.logoSrc} />
+        </div>
+        <div className="mt-2 flex flex-wrap items-center justify-end gap-1">
+          {shop?.member_role === "owner" && <StoreSwitcher />}
           {shop?.member_role === "owner" && <HammerLink />}
           {shop?.member_role === "owner" && <StockAlertsBell />}
-          <Button variant="ghost" size="icon" onClick={openInstallPrompt} aria-label={t("install.open")} title={t("install.open")} className="hidden min-[420px]:inline-flex">
+          <Button variant="ghost" size="icon" onClick={openInstallPrompt} aria-label={t("install.open")} title={t("install.open")}>
             <Download className="h-4 w-4" />
           </Button>
-          <Link to="/settings" aria-label={t("app.nav.settings")} className="hidden h-9 w-9 items-center justify-center rounded-lg border border-border min-[390px]:flex"><Settings className="h-4 w-4" /></Link>
+          <Link to="/settings" aria-label={t("app.nav.settings")} className="flex h-9 w-9 items-center justify-center rounded-lg border border-border"><Settings className="h-4 w-4" /></Link>
           <LanguageToggle />
           <ThemeToggle />
           <button aria-label="Sign out" onClick={signOut} className="flex h-9 w-9 items-center justify-center rounded-lg border border-border"><LogOut className="h-4 w-4" /></button>
