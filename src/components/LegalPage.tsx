@@ -2,7 +2,16 @@ import { Link } from "@tanstack/react-router";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/lib/theme";
 
-type LegalSection = { title: string; body: string; email?: string };
+export type LegalSection = {
+  title: string;
+  /** One or more paragraphs; separate paragraphs with a blank line. */
+  body: string;
+  /** Optional bulleted list rendered after the paragraphs. */
+  items?: string[];
+  /** Optional inline link rendered after the paragraphs/list. */
+  link?: { to: string; label: string };
+  email?: string;
+};
 
 export function LegalPage({ title, updated, intro, sections }: { title: string; updated: string; intro: string; sections: LegalSection[] }) {
   return (
@@ -18,11 +27,21 @@ export function LegalPage({ title, updated, intro, sections }: { title: string; 
         <h1 className="mt-2 text-3xl font-bold sm:text-5xl">{title}</h1>
         <p className="mt-3 text-sm text-muted-foreground">Last updated: {updated}</p>
         <p className="mt-8 max-w-3xl text-base leading-7 text-muted-foreground">{intro}</p>
-        <div className="mt-10 space-y-8">
+        <div className="mt-10 space-y-10">
           {sections.map((section) => (
             <section key={section.title}>
               <h2 className="text-xl font-semibold">{section.title}</h2>
-              <p className="mt-2 max-w-3xl leading-7 text-muted-foreground">{section.body}</p>
+              {section.body.split("\n\n").map((para, i) => (
+                <p key={i} className="mt-3 max-w-3xl leading-7 text-muted-foreground">{para}</p>
+              ))}
+              {section.items && (
+                <ul className="mt-3 max-w-3xl list-disc space-y-1.5 pl-5 leading-7 text-muted-foreground">
+                  {section.items.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              )}
+              {section.link && <Link className="mt-3 inline-block font-semibold text-primary underline" to={section.link.to}>{section.link.label}</Link>}
               {section.email && <a className="mt-2 inline-block font-semibold text-primary underline" href={`mailto:${section.email}`}>{section.email}</a>}
             </section>
           ))}

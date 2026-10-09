@@ -5,9 +5,9 @@ import { seo } from "@/lib/seo";
 export const Route = createFileRoute("/privacy")({
   head: () => ({ ...seo("/privacy"), meta: [
     { title: "Privacy Notice — MVP BizManager" },
-    { name: "description", content: "Privacy Notice for MVP BizManager under the Philippine Data Privacy Act." },
+    { name: "description", content: "Privacy Notice for MVP BizManager under the Philippine Data Privacy Act of 2012." },
     { property: "og:title", content: "Privacy Notice — MVP BizManager" },
-    { property: "og:description", content: "How MVP BizManager handles personal information under Philippine privacy law." },
+    { property: "og:description", content: "How MVP BizManager collects, uses, stores, and protects your personal information under the Philippine Data Privacy Act of 2012." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },
   ] }),
@@ -15,14 +15,79 @@ export const Route = createFileRoute("/privacy")({
 });
 
 const sections = [
-  { title: "Information we collect", body: "Placeholder: Describe account, business, sales, inventory, device, and support information collected when people use MVP BizManager." },
-  { title: "How information is used", body: "Placeholder: Explain how information supports account access, POS and inventory features, AI assistance, service security, support, and improvement." },
-  { title: "Sharing and retention", body: "Placeholder: Identify service providers, legal disclosures, retention periods, and safeguards applied to personal information." },
-  { title: "Your rights", body: "Under Republic Act No. 10173, the Data Privacy Act of 2012, data subjects may have rights to be informed, access, object, correct, erase or block, obtain data portability, and seek damages, subject to applicable law." },
-  { title: "Deleting your account", body: "You can delete your account and data at any time from Settings → Account → \"Delete my account\", or by following the steps on our Delete your account page (/delete-account)." },
-  { title: "Contact and complaints", body: "Write to the address below with any question, complaint, or request about your personal information, including access, correction, or deletion. You may also raise a concern with the National Privacy Commission (Philippines).", email: "orangewareph@gmail.com" },
+  {
+    title: "1. Information We Collect",
+    body: "We may collect the following information when you use MVP BizManager:",
+    items: [
+      "Account information (name, email address, phone number)",
+      "Business information (store name, address, business type)",
+      "Sales, inventory, and transaction data",
+      "Payment-related information (we do not store full card details)",
+      "Device information and usage data",
+      "Support and communication records",
+    ],
+  },
+  {
+    title: "2. How We Use Your Information",
+    body: "We use the information to:",
+    items: [
+      "Provide and operate the POS, inventory, and AI features",
+      "Create and manage your account",
+      "Process sales and generate reports",
+      "Improve the service and AI assistance",
+      "Provide customer support",
+      "Ensure security and prevent fraud",
+      "Comply with legal obligations",
+    ],
+  },
+  {
+    title: "3. Sharing of Information",
+    body: "We do not sell your personal information.\n\nWe may share information only with:",
+    items: [
+      "Trusted service providers who help us operate the platform",
+      "Legal authorities when required by law",
+    ],
+  },
+  {
+    title: "4. Data Storage and Security",
+    body: "Your data is stored securely using industry-standard measures. We take reasonable steps to protect your information from unauthorized access, loss, or misuse.",
+  },
+  {
+    title: "5. Your Rights",
+    body: "Under the Data Privacy Act of 2012, you have the right to:",
+    items: [
+      "Be informed",
+      "Access your data",
+      "Correct inaccurate data",
+      "Object to processing",
+      "Request erasure or blocking of your data",
+      "Data portability",
+      "File a complaint with the National Privacy Commission",
+    ],
+  },
+  {
+    title: "6. Deleting Your Account",
+    body: "You may delete your account and associated data at any time by going to:\n\nSettings → Account → Delete my account\n\nor by visiting our Delete Account page.",
+    link: { to: "/delete-account", label: "Delete Account page" },
+  },
+  {
+    title: "7. Contact Us",
+    body: "If you have any questions, requests, or complaints regarding your personal data, please contact us at:",
+    email: "orangewareph@gmail.com",
+  },
+  {
+    title: "8. Changes to This Notice",
+    body: "We may update this Privacy Notice from time to time. The updated version will be posted on this page with a new “Last updated” date.\n\nYou may also contact the National Privacy Commission of the Philippines.",
+  },
 ];
 
 function PrivacyPage() {
-  return <LegalPage title="Privacy Notice" updated="October 5, 2026" intro="This placeholder notice outlines how MVP BizManager intends to handle personal information in accordance with the Philippine Data Privacy Act. Replace it with legal counsel-approved text before launch." sections={sections} />;
+  return (
+    <LegalPage
+      title="Privacy Notice"
+      updated="October 9, 2026"
+      intro="MVP BizManager (“we”, “us”, or “our”) operates the website mvp.com.ai and the related mobile application. This Privacy Notice explains how we collect, use, store, and protect your personal information in accordance with the Philippine Data Privacy Act of 2012 (Republic Act No. 10173)."
+      sections={sections}
+    />
+  );
 }
