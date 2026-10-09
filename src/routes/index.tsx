@@ -5,6 +5,7 @@ import { ArrowRight, Bot, Check, CreditCard, Download, Menu, PackageSearch, QrCo
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/lib/theme";
 import { LanguageToggle, useT } from "@/lib/i18n";
+import { useSession } from "@/lib/auth";
 import { DemoDashboard } from "@/components/DemoDashboard";
 import { ShowcaseCarousel } from "@/components/ShowcaseCarousel";
 import { PLAN_PRICES } from "@/lib/format";
@@ -37,6 +38,7 @@ const STEPS = [
 
 function Landing() {
   const { t } = useT();
+  const { session } = useSession();
   const [step, setStep] = useState(0);
   useEffect(() => {
     if (window.location.hostname.startsWith("admin.")) window.location.replace("/admin");
