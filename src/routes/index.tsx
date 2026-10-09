@@ -3,6 +3,7 @@ import { seo } from "@/lib/seo";
 import { useEffect, useState } from "react";
 import { ArrowRight, Bot, Check, ChevronDown, CreditCard, Download, Hammer, Menu, PackageSearch, QrCode, ScanLine, Smartphone, UserPlus, Store, Receipt } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { CashRegisterIcon } from "@/components/CashRegisterIcon";
 import { ThemeToggle } from "@/lib/theme";
 import { LanguageToggle, useT } from "@/lib/i18n";
 import { useSession } from "@/lib/auth";
