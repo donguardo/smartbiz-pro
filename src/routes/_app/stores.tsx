@@ -102,6 +102,7 @@ function StoreBuilder() {
           </div>
         ) : (
           <div className="mt-3 space-y-4">
+            <Link to="/setup-store" className="flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground"><Hammer className="h-4 w-4" />{t("wizard.start")}</Link>
             <div>
               <label htmlFor="new-store" className="text-sm font-medium">{t("profile.businessName")}</label>
               <input id="new-store" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2" />
